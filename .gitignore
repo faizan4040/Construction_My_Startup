@@ -1,0 +1,83 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+
+
+
+
+
+
+
+
+
+
+
+# MONGODB_URI="mongodb+srv://faizangtech85040_db_user:jmpWG8bEcJUVUyB1@cluster0.zu8tnvd.mongodb.net/?appName=Cluster0"
+ 
+# SECRET_KEY="pi6+yYYPymcRrgd5jJl9Xh5V8RYxKRukxl1mobDdDs4="
+ 
+# NODEMAILER_HOST="smtp.gmail.com"
+# NODEMAILER_PORT="587"
+# NODEMAILER_EMAIL="faizangtech85040@gmail.com"
+# NODEMAILER_PASSWORD="pqnzuqasrdzuizls"
+ 
+ 
+# NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+# NEXT_PUBLIC_API_BASE_URL="http://localhost:3000/api"
+# NODE_ENV="development"
+ 
+ 
+ 
+# NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="dkxj5ip15"
+# NEXT_PUBLIC_CLOUDINARY_API_KEY="624212573342424"
+# NEXT_PUBLIC_CLOUDINARY_UPDATE_PRESET="Homify-construction"
+# CLOUDINARY_SECRET_KEY="-42p469j8lHdFQxHQ0dWvihLdBg"
+ 
+# # NEXT_PUBLIC_CLOUDINARY_UPDATE_PRESET="Homify-construction"
+ 
+# NEXT_PUBLIC_RAZORPAY_KEY_ID="rzp_test_SEkRlwtRMxC78I"
+# RAZORPAY_KEY_SECRET="bpHJLPF570PqGK2V6xpAGkeC"
+ 
+ 
+# SMTP_FROM_NAME="Homify"
+# NEXT_PUBLIC_STORE_NAME="Homify"
+ 
