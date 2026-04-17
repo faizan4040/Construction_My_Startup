@@ -3,48 +3,62 @@
 import React from "react"
 import { IMAGES } from "@/routes/AllImages"
 import Link from "next/link"
-import { WEBSITE_SHOP } from "@/routes/WebsiteRoute"
 
 const items = [
   {
     id: 1,
-    title: "ASICS",
-    desc: "Gel-Nimbus 28",
-    image: IMAGES.trending_1,
-  },
-  {
-    id: 3,
-    title: "Nike",
-    desc: "structure plus",
-    image: IMAGES.trending_2,
+    title: "Aggregator",
+    desc: "Enabling buyers and suppliers to access the best raw materials across global supply chains.",
+    image: IMAGES.aggregator,
   },
   {
     id: 2,
-    title: "HOKA",
-    desc: "Gaviota 6",
-    image: IMAGES.trending_3,
+    title: "Manufacturer",
+    desc: "30+ world class manufacturing & processing plants in Steel, Aluminium, Energy, Chemicals and Agri.",
+    image: IMAGES.manufacturer,
   },
-  
+  {
+    id: 3,
+    title: "Importer & Exporter",
+    desc: "One of India's largest importers & exporters in Steel, Agri and other product categories.",
+    image: IMAGES.importer_exporter,
+  },
+  {
+    id: 4,
+    title: "SaaS & AI",
+    desc: "Industry-first SME B2B SaaS platforms including AI tools, bidding and credit systems.",
+    image: IMAGES.construction,
+  },
 ]
 
 const TrendingCards = () => {
   return (
-    <section className="w-full px-4 sm:px-8 lg:px-16 py-10 sm:py-14 lg:py-1">
-      
-      {/* HEADER */}
-      <h2 className="text-3xl lg:text-2xl sm:text-4xl font-bold mb-6">
-        Trending Now
-      </h2>
+    <section className="w-full px-4 sm:px-8 lg:px-16 py-14">
+
+      {/* ABOUT TEXT */}
+      <div className="max-w-4xl mb-10">
+        <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+          About OfBusiness Group
+        </h2>
+
+        <p className="text-gray-600 leading-relaxed">
+          We are India's leading B2B Raw Materials procurement and credit platform,
+          dedicated to revolutionising the SME sector. As a dynamic player in over
+          7 supply chains including Steel, Aluminium, Agriculture, Petroleum,
+          Energy, Polymers and Chemicals, we provide high quality raw materials
+          at competitive prices along with access to business credit. Our dual
+          role as both Supplier and Manufacturer positions us uniquely in the market.
+        </p>
+      </div>
 
       {/* CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {items.map((item) => (
-          <Link
+          <div
             key={item.id}
-            href={WEBSITE_SHOP}
             className="
               relative
-              h-105 sm:h-130
+              h-87.5
               rounded-2xl
               overflow-hidden
               group
@@ -62,19 +76,20 @@ const TrendingCards = () => {
               "
             />
 
-           
+            {/* OVERLAY */}
+            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition"></div>
 
             {/* TEXT */}
-            <div className="absolute bottom-8 left-6 right-6 text-black">
-              <h3 className="text-3xl lg:text-xl sm:text-4xl font-bold leading-tight">
+            <div className="absolute bottom-6 left-6 right-6 text-white">
+              <h3 className="text-2xl font-bold">
                 {item.title}
               </h3>
 
-              <p className="mt-2 lg:text-2xl text-sm sm:text-base opacity-90">
+              <p className="mt-2 text-sm opacity-90">
                 {item.desc}
               </p>
             </div>
-          </Link>
+          </div>
         ))}
       </div>
 

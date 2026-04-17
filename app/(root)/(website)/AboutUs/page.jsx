@@ -78,14 +78,14 @@ const AboutUs = () => {
             <h2 className="text-2xl font-bold mb-4">Our history</h2>
 
             <p className="text-gray-700 text-lg mb-4 leading-relaxed">
-            Founded by professional footballer Bruce Bannister, All Spikes
+            Founded by professional footballer Bruce Bannister, Constructezy
             Unlimited opened its doors in 1982 – the first sports store of its kind
             we might add, providing purely technical sports gear for sports people.
             We’ve been trendsetters for a long time now.
             </p>
 
             <p className="text-gray-700 text-lg leading-relaxed">
-            Today we are All Spikes.com, with the UK’s widest, yet most carefully
+            Today we are Constructezy.com, with the UK’s widest, yet most carefully
             curated product range and millions of loyal customers.
             </p>
         </div>

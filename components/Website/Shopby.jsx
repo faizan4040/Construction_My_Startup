@@ -8,22 +8,40 @@ import { WEBSITE_SHOP } from "@/routes/WebsiteRoute"
 const categories = [
   {
     id: 1,
-    title: "Men",
-    image: IMAGES.men,
+    title: "Steel",
+    image: IMAGES.steel,
     gender: "men",   
   },
   {
     id: 2,
-    title: "Women",
-    image: IMAGES.womens,
+    title: "Non-Ferrous",
+    image: IMAGES.non_ferrous,
     gender: "women", 
   },
   {
     id: 3,
-    title: "Kids",
-    image: IMAGES.kids,
+    title: "PVC",
+    image: IMAGES.pvc,
     gender: "kids",  
   },
+  {
+    id: 4,
+    title: "Cement",
+    image: IMAGES.cement,
+    gender: "kids",  
+  },
+  {
+    id: 5,
+    title: "Bricks",
+    image: IMAGES.bricks,
+    gender: "men",   
+  },
+  {
+    id: 6,
+    title: "Tiles",
+    image: IMAGES.tiles,
+    gender: "men",   
+  }
 ]
 
 const Shopby = () => {
@@ -31,7 +49,7 @@ const Shopby = () => {
     <section className="w-full px-4 sm:px-8 lg:px-16 py-10 sm:py-14 lg:py-24">
       
       <h2 className="text-3xl sm:text-4xl font-bold mb-10">
-        Shop by
+        Explore Our Categories
       </h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

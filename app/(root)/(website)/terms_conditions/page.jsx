@@ -23,7 +23,7 @@ const TermsAndConditions = () => {
           {/* GENERAL INFORMATION */}
           <section>
             <h2 className="text-2xl font-semibold mb-3">General Information</h2>
-            <p>All Spikes.com is a trading name of B Sporting Ltd.</p>
+            <p>Constructezy.com is a trading name of B Sporting Ltd.</p>
             <p>1 The Park, Jubilee Way, BD18 1QG, Shipley, United Kingdom</p>
             <p>Registered Company Number: 01627024</p>
             <p>Registered VAT Number: 363879701 (England)</p>
@@ -106,7 +106,7 @@ const TermsAndConditions = () => {
           <section>
             <h2 className="text-2xl font-semibold mb-3">Cancellations</h2>
             <p>
-              Customers may cancel within the cooling-off period. All Spikes
+              Customers may cancel within the cooling-off period. Constructezy
               extends this to 100 days in most cases.
             </p>
           </section>

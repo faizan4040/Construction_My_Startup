@@ -248,7 +248,7 @@ const placeOrder = async (formData) => {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
       amount: totalAmount * 100,
       currency: 'INR',
-      name: 'All Spikes',
+      name: 'Constructezy',
       description: 'Payment for order',
       order_id: generateOrderId.order_id,
 

@@ -11,7 +11,7 @@ const Career = () => {
         </h1>
 
         <h2 className="text-xl lg:text-2xl font-semibold text-gray-600 mb-10">
-          Interested in being part of the All Spikes.com team?
+          Interested in being part of the Constructezy.com team?
         </h2>
 
         {/* Content */}
@@ -31,7 +31,7 @@ const Career = () => {
           </p>
 
           <p>
-            We believe that every member of staff is part of the All Spikes
+            We believe that every member of staff is part of the Constructezy
             family and plays an important role in the success of the business.
             We'll reward your hard work with excellent opportunities to develop
             your career and fulfil your potential.

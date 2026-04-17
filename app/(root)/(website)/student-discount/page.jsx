@@ -79,7 +79,7 @@ const StudentDiscount = () => {
           {/* Left */}
           <div>
             <h2 className="text-7xl mb-4 font-sans">
-              Welcome to the All Spikes Students Discount Page
+              Welcome to the Constructezy Students Discount Page
             </h2>
           </div>
 

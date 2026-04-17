@@ -251,7 +251,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="bg-gray-900 text-center py-4 text-lg text-gray-400">
-          © 2026 All Spikes Limited | All Rights Reserved.
+          © 2026 Constructezy Limited | All Rights Reserved.
         </div>
       </div>
     </footer>

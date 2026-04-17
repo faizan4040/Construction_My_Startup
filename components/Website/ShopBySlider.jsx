@@ -7,14 +7,14 @@ import Link from "next/link"
 import { WEBSITE_SHOP } from "@/routes/WebsiteRoute"
 
 const categories = [
-  { id: 1, title: "Running", image: IMAGES.runnin },
-  { id: 2, title: "Hike", image: IMAGES.hike },
-  { id: 3, title: "Trail", image: IMAGES.trail },
-  { id: 4, title: "hike", image: IMAGES.hyrox },
-  { id: 5, title: "Lifestyle", image: IMAGES.gym },
-  { id: 6, title: "Marathon", image: IMAGES.marathon },
-  { id: 7, title: "Hiking", image: IMAGES. trail },
-  { id: 8, title: "Triathlon", image: IMAGES.triathlon },
+  { id: 1, title: "Electrician", image: IMAGES.Electrician },
+  { id: 2, title: "Plumber", image: IMAGES.Plumber },
+  { id: 3, title: "Carpenter", image: IMAGES.Carpenter },
+  { id: 4, title: "Mason", image: IMAGES.Mason },
+  { id: 5, title: "Painter", image: IMAGES.Painter },
+  { id: 6, title: "Welder", image: IMAGES.Welder },
+  { id: 7, title: "AC Technician", image: IMAGES.Ac_Technician },
+  { id: 8, title: "Tile Fixer", image: IMAGES.Tile_Fixer },
 ]
 
 const ShopBySlider = () => {
@@ -31,7 +31,7 @@ const ShopBySlider = () => {
   return (
     <section className="w-full px-4 sm:px-8 lg:px-16 py-10 sm:py-14 lg:py-1">
       <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl sm:text-3xl font-bold">Shop by</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold">Hire by Service</h2>
 
         <div className="flex gap-3">
           <button
@@ -53,17 +53,12 @@ const ShopBySlider = () => {
       {/* SLIDER */}
       <div
         ref={sliderRef}
-        className="
-          flex gap-6
-          overflow-x-auto
-          scroll-smooth
-          hide-scrollbar
-        "
+        className="flex gap-6 overflow-x-auto scroll-smooth hide-scrollbar"
       >
         {categories.map((item) => (
           <Link
             key={item.id}
-            href={WEBSITE_SHOP}
+            href={`${WEBSITE_SHOP}?category=${item.title}`}
             className="
               min-w-65 sm:min-w-85 lg:min-w-105
               h-85 sm:h-105
@@ -78,15 +73,11 @@ const ShopBySlider = () => {
             <img
               src={item.image}
               alt={item.title}
-              className="
-                w-full h-full object-cover
-                transition-transform duration-500
-                group-hover:scale-110
-              "
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
 
             {/* OVERLAY */}
-            <div className="absolute inset-0 bg-black/20" />
+            <div className="absolute inset-0 bg-black/30" />
 
             {/* TEXT */}
             <div className="absolute bottom-6 left-6">

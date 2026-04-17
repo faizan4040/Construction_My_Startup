@@ -59,11 +59,11 @@ const VideoPack = () => {
 
       <div className="absolute bottom-10 left-6 sm:left-10 max-w-xl text-white z-10">
         <h1 className="lg:text-xl text-3xl sm:text-5xl font-bold tracking-tight">
-          ASICS
+          House
         </h1>
 
         <p className="mt-1 text-lg sm:text-2xl font-medium">
-          Ekiden Pack
+          Construction Service
         </p>
 
         <button
@@ -78,7 +78,7 @@ const VideoPack = () => {
             shadow-xl cursor-pointer
           "
         >
-          Shop Now
+          Contact Us
         </button>
       </div>
     </section>

@@ -28,7 +28,7 @@ const RunningClub = () => {
           </p>
 
           <h1 className="text-4xl lg:text-5xl font-extrabold">
-            Join the All Spikes Family
+            Join the Constructezy Family
           </h1>
         </div>
       </section>
@@ -37,7 +37,7 @@ const RunningClub = () => {
       <section className="py-14 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">
-            Your running club can join our All Spikes family to receive 15% off
+            Your running club can join our Constructezy family to receive 15% off
           </h2>
         </div>
       </section>
@@ -47,7 +47,7 @@ const RunningClub = () => {
         <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-xl p-8">
 
           <p className="text-gray-700 mb-8 text-center">
-            At All Spikes we care about our running, fitness & triathlon community.
+            At Constructezy we care about our running, fitness & triathlon community.
             We offer a special club discount for running & triathlon clubs in the UK,
             Germany, Spain, France and Italy. Get <strong>15% off</strong> in-season
             products for you and your members (exclusions apply).

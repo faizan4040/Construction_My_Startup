@@ -75,7 +75,7 @@ const DiscountCode = () => {
       {/* ---------- INTRO ---------- */}
       <section className="max-w-7xl mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
         <h2 className="text-4xl lg:text-5xl font-bold">
-          Welcome to the All Spikes Discount Codes Page
+          Welcome to the Constructezy Discount Codes Page
         </h2>
 
         <p className="text-lg leading-relaxed text-gray-700">

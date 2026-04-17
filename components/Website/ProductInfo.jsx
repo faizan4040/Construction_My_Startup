@@ -3,12 +3,12 @@ import Link from "next/link"
 import { WEBSITE_SHOP } from "@/routes/WebsiteRoute"
 
 const shopLinks = [
-  { label: "Men's Running Shoes",           gender: "men",   category: "running-shoes"  },
-  { label: "Women's Running Shoes",         gender: "women", category: "running-shoes"  },
-  { label: "Men's Walking Shoes & Boots",   gender: "men",   category: "walking-shoes"  },
-  { label: "Women's Walking Shoes & Boots", gender: "women", category: "walking-shoes"  },
-  { label: "Men's Trail Running Shoes",     gender: "men",   category: "trail-running"  },
-  { label: "Women's Trail Running Shoes",   gender: "women", category: "trail-running"  },
+  { label: "Hire Mason Workers",      category: "mason" },
+  { label: "Hire Carpenter Workers",  category: "carpenter" },
+  { label: "Hire Electricians",       category: "electrician" },
+  { label: "Hire Plumbers",           category: "plumber" },
+  { label: "Hire Tile Fixers",        category: "tile-fixer" },
+  { label: "Hire Painters",           category: "painter" },
 ]
 
 const ProductInfo = () => {
@@ -27,38 +27,31 @@ const ProductInfo = () => {
         {/* LEFT CONTENT */}
         <div>
           <h2 className="text-3xl sm:text-4xl font-bold mb-6 lg:text-lg">
-            Lace up for your next adventure
-            <p className="text-gray-700 leading-relaxed mb-5">
-              Lace up for your next adventure with{" "}
-              <span className="font-semibold">All Spikes.com</span> – India's #1
-              performance destination.
-            </p>
+            Hire Skilled Construction Workers for Your Next Project
           </h2>
 
+          <p className="text-gray-700 leading-relaxed mb-5">
+            Find trusted and experienced construction workers for all your building,
+            renovation, and repair needs. From masons and carpenters to electricians
+            and plumbers, we help you hire skilled labor quickly and easily.
+          </p>
+
           <p className="text-gray-700 leading-relaxed mb-4">
-            Whether you're chasing a PB on the road, pushing your limits on the
-            track, or tackling rugged trails, we're here to power every step of your
-            journey. With 40 years of expertise and over 15,000 products, we bring
-            you the latest innovations from the world's biggest sports brands.
+            Whether you're building a new house, renovating your home, fixing plumbing,
+            installing electrical wiring, or doing interior work, our platform connects
+            you with professional workers for every job.
           </p>
 
           <p className="text-gray-700 leading-relaxed mb-5">
-            From cutting-edge men's and women's running shoes to high-tech hiking
-            boots, lightweight walking shoes, performance apparel and essential
-            outdoor gear, we've got everything you need to go faster, further and
-            stronger.
-          </p>
-
-          <p className="text-gray-700 leading-relaxed mb-5">
-            But we're not just here to sell gear — we're here to inspire. That's why
-            we partner with elite athletes, coaches, and gear experts to bring you
-            training tips, in-depth reviews, and 1,000+ expert articles.
+            We provide workers for house construction, painting, tile fixing, plumbing,
+            electrical work, carpentry, welding, and general labor work. Hire workers
+            for daily work, contract work, or full project work.
           </p>
 
           <p className="text-gray-700 leading-relaxed">
-            We are here to support every step of your journey — the early mornings,
-            late nights, long miles and relentless dedication. No shortcuts, no
-            hacks — just grit, passion and the greatest gear on the market.
+            Our goal is to make hiring construction workers easy, fast, and reliable.
+            Choose skilled workers, compare prices, and book workers for your project
+            with confidence.
           </p>
         </div>
 
@@ -67,8 +60,7 @@ const ProductInfo = () => {
           {shopLinks.map((item, index) => (
             <Link
               key={index}
-              // builds: /shop?gender=men&category=running-shoes
-              href={`${WEBSITE_SHOP}?gender=${item.gender}&category=${item.category}`}
+              href={`${WEBSITE_SHOP}?category=${item.category}`}
               className="
                 w-fit
                 relative

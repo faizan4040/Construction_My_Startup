@@ -1,3 +1,5 @@
+import { manualOrderSchema } from "@/lib/zodSchema";
+
 export const IMAGES = {
   coupon: "/assets/images/coupon.PNG",
   logos: "/assets/images/logo_1.webp",
@@ -24,28 +26,23 @@ export const IMAGES = {
 
   
 
-  // Shopby section image
-  runnin: "/assets/images/running.avif",
-  hike: "/assets/images/hike.avif",
-  hyrox: "/assets/images/hyrox.avif",
-  gym: "/assets/images/gym.avif",
-  marathon: "/assets/images/marathon.avif",
-  trail: "/assets/images/trail.avif",
-  triathlon: "/assets/images/triathlon.avif",
-
 
 
   // JustDrop section image
-  adidas: "/assets/images/adidas.avif",
-  nike: "/assets/images/nike.avif",
-  brooks: "/assets/images/brooks.avif",
-
+  aggregator: "/assets/images/aggregator.jpg",
+  manufacturer: "/assets/images/manufacturer.jpg",
+  importer_exporter: "/assets/images/importer_&_exporter.jpg",
+  delivery: "/assets/images/delivery.jpg",
  
 
-  // Shop section image
-  men: "/assets/images/men.avif",
-  womens: "/assets/images/womens.avif",
-  kids: "/assets/images/kids.avif",
+  // Explore Our Categories
+  steel: "/assets/images/steel.jpg",
+  non_ferrous: "/assets/images/non_ferrous.jpg",
+  pvc: "/assets/images/pvc.jpg",
+  cement: "/assets/images/cement.jpg",
+  bricks: "/assets/images/bricks.jpg",
+  wood: "/assets/images/wood.jpg", 
+  tiles: "/assets/images/tiles.jpg",
 
 
   // Trending section image
@@ -76,6 +73,23 @@ export const IMAGES = {
   confirmorder: "/assets/images/confirmorder.gif",
   emptycart: "/assets/images/empty_cart.gif",
   mastercard: "/assets/images/mastercard.svg",
+
+
+
+  construction: "/assets/images/construction.jpg",
+
+  Ac_Technician: "/assets/images/Ac_Technician.jpg",
+  Carpenter: "/assets/images/Carpenter.jpg",
+  Electrician: "/assets/images/Electrician.jpg",
+  Mason: "/assets/images/Mason.jpg",
+  Painter: "/assets/images/Painter.jpg",
+  Plumber: "/assets/images/Plumber.jpg",
+  Tile_Fixer: "/assets/images/Tile_Fixer.jpg",
+  Welder: "/assets/images/Welder.jpg",
+
+  House_Construction: "/assets/images/House_Construction.jpg",
+  Home_Renovation: "/assets/images/Home_Renovation.jpg",
+  Repair_Maintenance: "/assets/images/Repair_Maintenance.jpg",
 
   
 

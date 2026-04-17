@@ -1,3 +1,4 @@
+import BuyerSupplierSection from '@/components/Website/BuyerSupplierSection'
 import CuponBanner from '@/components/Website/CuponBanner'
 import FeatureProduct from '@/components/Website/FeatureProduct'
 import InventoryCategories from '@/components/Website/InventoryCategories'
@@ -8,6 +9,7 @@ import Shopby from '@/components/Website/Shopby'
 import ShopBySlider from '@/components/Website/ShopBySlider'
 import Testimonial from '@/components/Website/Testimonial'
 import TrendingCards from '@/components/Website/TrendingCards'
+import TrendingPage from '@/components/Website/TrendingPage'
 import Videoads from '@/components/Website/Videoads'
 import VideoPack from '@/components/Website/VideoPack'
 import React from 'react'
@@ -17,6 +19,10 @@ const Home = () => {
    <>
      <section>
        <CuponBanner/>
+     </section>
+
+     <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10">
+       <TrendingPage/>
      </section>
 
      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10">
@@ -47,6 +53,11 @@ const Home = () => {
 
     <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-1">
       <Shopby/>  
+    </section>
+
+
+    <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-1">
+     <BuyerSupplierSection/>
     </section>
 
 
