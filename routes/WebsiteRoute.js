@@ -39,8 +39,8 @@ export const WEBSITE_ORDER_DETAILS = (order_id) => `/order-details/${order_id}`
 export const WEBSITE_ORDER_TRACKING = "/order-tracking"
 export const WEBSITE_DELIVERY_RETURNS = "/delivery-returns"
 export const WEBSITE_GIFT_VOUCHERS = "/gift-vouchers"
-export const WEBSITE_RUNNING_CLUB = "/running-club"
-export const WEBSITE_STUDENT_DISCOUNT = "/student-discount"
+export const WEBSITE_CONSTRUCTION_CLUB = "/construction-club"
+export const WEBSITE_HOME_DISCOUNT = "/home-discount"
 
 
 

@@ -94,7 +94,7 @@ export default function Header() {
             <Link href={WEBSITE_HOME} className="font-bold tracking-wide shrink-0">
               <img
                 src={IMAGES.logo}
-                className="h-9 w-auto md:h-9"
+                className="h-10 w-auto md:h-12"
                 alt="Logo"
               />
             </Link>
@@ -288,7 +288,7 @@ export default function Header() {
 
         <div className="flex h-[calc(100%-65px)]">
           {/* LEFT CATEGORY LIST */}
-          <div className="w-1/3 border-r overflow-y-auto p-2 md:p-4 space-y-1">
+          <div className="w-12/6 border-r overflow-y-auto p-2 md:p-4 space-y-1">
             {categories.map((item) => (
               <button
                 key={item.name}
@@ -307,7 +307,7 @@ export default function Header() {
           </div>
 
           {/* RIGHT CONTENT */}
-          <div className="w-2/3 p-3 md:p-4 overflow-y-auto">
+          <div className="w-12/4 p-3 md:p-4 overflow-y-auto">
             {!activeItem ? (
               <p className="text-gray-400 text-sm mt-4">Select a category</p>
             ) : (

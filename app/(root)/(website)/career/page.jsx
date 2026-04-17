@@ -7,38 +7,45 @@ const Career = () => {
         
         {/* Heading */}
         <h1 className="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
-          Careers Opportunities
+          Career Opportunities
         </h1>
 
         <h2 className="text-xl lg:text-2xl font-semibold text-gray-600 mb-10">
-          Interested in being part of the Constructezy.com team?
+          Interested in building your career with Constructezy?
         </h2>
 
         {/* Content */}
         <div className="space-y-6 text-gray-700 text-lg leading-relaxed">
           <p>
-            We're proud of our fantastic team of enthusiastic and highly trained
-            staff, and we're always looking for great people to join us in a
-            variety of roles.
+            At Constructezy, we are proud of our dedicated team of skilled
+            professionals including engineers, architects, contractors, and
+            labor experts. We are always looking for talented individuals to
+            join us across various construction and infrastructure roles.
           </p>
 
           <p>
-            We look for professional and motivated people with a passion for
-            sport and an enthusiasm for what they do. Our focus on personal
-            development makes us a great place to work and whatever your role
-            with us, we'll provide you with excellent training and a friendly
-            working environment.
+            We seek motivated people with a passion for construction, design,
+            and project execution. Whether you're experienced in site work,
+            materials management, plumbing, electrical, or project planning,
+            we provide a platform to grow and succeed in your field.
           </p>
 
           <p>
-            We believe that every member of staff is part of the Constructezy
-            family and plays an important role in the success of the business.
-            We'll reward your hard work with excellent opportunities to develop
-            your career and fulfil your potential.
+            Our focus on learning and development makes Constructezy a great
+            place to work. From on-site training to professional development
+            programs, we ensure you gain the skills needed to advance your
+            career in the construction industry.
+          </p>
+
+          <p>
+            Every team member plays a vital role in shaping projects and
+            delivering quality results. We value hard work, dedication, and
+            teamwork, and we reward our employees with growth opportunities
+            and a supportive work environment.
           </p>
 
           <p className="font-medium">
-            If you're interested in joining us we'd love to hear from you.
+            If you're ready to build your future with us, we’d love to hear from you.
           </p>
         </div>
 
@@ -47,19 +54,19 @@ const Career = () => {
           <p>
             <span className="font-semibold">Email:</span>{" "}
             <a
-              href="mailto:applications@allspikes.com"
+              href="mailto:careers@constructezy.com"
               className="text-black underline hover:text-gray-600"
             >
-              applications@allspikes.com
+              careers@constructezy.com
             </a>
           </p>
 
           <p>
-            <span className="font-semibold">Phone:</span> 01274 530 530
+            <span className="font-semibold">Phone:</span> +91 6375380848
           </p>
 
           <p>
-            <span className="font-semibold">Fax:</span> 01274 532 222
+            <span className="font-semibold">Location:</span> India
           </p>
         </div>
       </div>

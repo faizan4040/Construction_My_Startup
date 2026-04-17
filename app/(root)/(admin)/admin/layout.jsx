@@ -23,7 +23,7 @@ const layout = ({ children }) => {
             </div>
 
             <div className="border-t h-10 flex justify-center items-center text-sm bg-[#f9f7f7] dark:bg-black">
-              © 2026 Constructezy. All Rights Reserved.
+              © 2026 All Spikes. All Rights Reserved.
             </div>
           </main>
 

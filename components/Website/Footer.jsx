@@ -1,7 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { WEBSITE_ABOUT, WEBSITE_CAREERS, WEBSITE_CONTACT_US, WEBSITE_COOKIE_POLICY, WEBSITE_DELIVERY_RETURNS, WEBSITE_DISCOUNT_CODES, WEBSITE_GIFT_VOUCHERS, WEBSITE_ORDER_TRACKING, WEBSITE_PRICE_BEAT_PROMISE, WEBSITE_PRIVACY_POLICY, WEBSITE_RUNNING_CLUB, WEBSITE_STUDENT_DISCOUNT, WEBSITE_TERMS_CONDITIONS, } from "@/routes/WebsiteRoute"
+import { WEBSITE_ABOUT, WEBSITE_CAREERS, WEBSITE_CONSTRUCTION_CLUB, WEBSITE_CONTACT_US, 
+         WEBSITE_COOKIE_POLICY, WEBSITE_DELIVERY_RETURNS, WEBSITE_DISCOUNT_CODES,
+        WEBSITE_GIFT_VOUCHERS, WEBSITE_HOME_DISCOUNT, WEBSITE_ORDER_TRACKING, WEBSITE_PRICE_BEAT_PROMISE,
+        WEBSITE_PRIVACY_POLICY, WEBSITE_TERMS_CONDITIONS, } from "@/routes/WebsiteRoute"
 import {
   Youtube,
   Instagram,
@@ -118,7 +121,7 @@ const Footer = () => {
                     hover:bg-orange-500 hover:text-white
                     transition cursor-pointer
                     disabled:opacity-50 disabled:cursor-not-allowed
-                    flex items-center justify-center gap-2 min-w-[120px]
+                    flex items-center justify-center gap-2 min-w-30
                   "
                 >
                   {loading
@@ -207,8 +210,8 @@ const Footer = () => {
             <li><Link href={WEBSITE_ORDER_TRACKING} className="text-lg text-white hover:underline transition-all duration-300">Order Tracking</Link></li>
             <li><Link href={WEBSITE_DELIVERY_RETURNS} className="text-lg text-white hover:underline transition-all duration-300">Delivery & Returns</Link></li>
             <li><Link href={WEBSITE_GIFT_VOUCHERS} className="text-lg text-white hover:underline transition-all duration-300">Gift Vouchers</Link></li>
-            <li><Link href={WEBSITE_RUNNING_CLUB} className="text-lg text-white hover:underline transition-all duration-300">SportShoes Running Club</Link></li>
-            <li><Link href={WEBSITE_STUDENT_DISCOUNT} className="text-lg text-white hover:underline transition-all duration-300">Student Discount</Link></li>
+            <li><Link href={WEBSITE_CONSTRUCTION_CLUB} className="text-lg text-white hover:underline transition-all duration-300">Construction Club</Link></li>
+            <li><Link href={WEBSITE_HOME_DISCOUNT} className="text-lg text-white hover:underline transition-all duration-300">Home Discount</Link></li>
           </ul>
         </div>
 

@@ -44,7 +44,7 @@ export async function POST(request){
         .sign(secret);
 
         await sendMail(
-        "Email verification request from Constructezy",
+        "Email verification request from All Spikes",
         email, emailVerificationLink(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/verify-email/${token}`));
 
         return response(false, 400, 'Your email is not verified. We have send a verifation link to your registered email address.')

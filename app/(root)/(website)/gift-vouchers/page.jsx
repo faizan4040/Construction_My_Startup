@@ -43,7 +43,7 @@ const GiftVouchers = () => {
       {/* ================= Banner ================= */}
       <section className="relative h-[70vh] lg:h-[50vh] flex items-center justify-center text-center">
       <img
-        src={IMAGES.  gift_card_banner}
+        src={IMAGES.House_Construction}
         alt="Gift Card Banner"
         className="absolute inset-0 w-full h-full object-cover"
       />

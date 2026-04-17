@@ -11,13 +11,13 @@ const AboutUs = () => {
       <section className="relative h-[60vh] w-full">
         <img
           src={IMAGES.aboutus}
-          alt="About Sports Fitness"
+          alt="About Constructezy"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/50 flex items-center">
           <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-10 text-white">
             <h1 className="text-6xl lg:text-5xl font-extrabold leading-tight">
-              ABOUT US
+              ABOUT CONSTRUCTEZY
             </h1>
           </div>
         </div>
@@ -27,15 +27,13 @@ const AboutUs = () => {
       <section className="max-w-7xl mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
         <div>
             <h2 className="text-5xl mb-4 font-sans">
-             We are the UK’s no. 1 online retailer for run, gym and hike.
+             We are a modern platform connecting you with trusted labor, plumbers, and home service professionals.
             </h2>
           </div>
 
         <p className="rounded-2xl  w-full ">
-            Our mission is to help our customers to lead a happier 
-            and healthier life through running and fitness, 
-            and to help you make the best product choices 
-            to achieve your fitness goals.
+            Our mission is to make it simple and affordable to hire skilled workers for construction, repairs, and daily home needs. 
+            We help customers find reliable professionals quickly while ensuring quality service and fair pricing.
         </p>
       </section>
 
@@ -55,13 +53,12 @@ const AboutUs = () => {
             <h2 className="text-2xl font-bold mb-4">Who are we?</h2>
 
             <p className="text-gray-700 text-lg mb-4 leading-relaxed">
-            We are the UK’s no. 1 online retailer for run, gym and hike.
+            Constructezy is a one-stop solution for all your construction and home service needs.
             </p>
 
             <p className="text-gray-700 text-lg leading-relaxed">
-            Our mission is to help our customers to lead a happier and healthier
-            life through running and fitness, and to help you make the best product
-            choices to achieve your fitness goals.
+            From skilled labor to plumbing and household support, we connect you with verified professionals 
+            who deliver reliable and efficient services at your convenience.
             </p>
         </div>
         </div>
@@ -75,18 +72,15 @@ const AboutUs = () => {
         />
 
         <div className="p-8">
-            <h2 className="text-2xl font-bold mb-4">Our history</h2>
+            <h2 className="text-2xl font-bold mb-4">Our journey</h2>
 
             <p className="text-gray-700 text-lg mb-4 leading-relaxed">
-            Founded by professional footballer Bruce Bannister, Constructezy
-            Unlimited opened its doors in 1982 – the first sports store of its kind
-            we might add, providing purely technical sports gear for sports people.
-            We’ve been trendsetters for a long time now.
+            Constructezy started with a simple goal — to solve the everyday problem of finding reliable workers.
             </p>
 
             <p className="text-gray-700 text-lg leading-relaxed">
-            Today we are Constructezy.com, with the UK’s widest, yet most carefully
-            curated product range and millions of loyal customers.
+            We are building a platform where customers can easily hire trusted professionals without delays, 
+            confusion, or high costs.
             </p>
         </div>
         </div>
@@ -103,19 +97,13 @@ const AboutUs = () => {
               Experts in what we do
             </h2>
             <p className="text-lg leading-relaxed">
-              We live running and fitness and with over 30 years of 
-              expertise we work hard to deliver industry leading 
-              expert advice and support to help you make the best 
-              product choices. From the UK’s only free online gait
-               analysis, to our shoe and jacket finders, live chat 
-               expert advice as well as our Running, Trail and
-                Training advice hubs, we’re on hand now to help 
-                you find your perfect product.
+              We work with experienced and verified professionals who specialize in construction, plumbing, and home services. 
+              Our focus is on delivering quality work, reliable service, and complete customer satisfaction every time.
             </p>
           </div>
 
           <img
-            src={IMAGES.expert}
+            src={IMAGES.Repair_Maintenance}
             alt="Experts"
             className="rounded-2xl shadow-xl w-full object-cover"
           />
@@ -126,53 +114,45 @@ const AboutUs = () => {
       <section className="bg-gray-100 py-20">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12">
 
-            {/* ---------- CARD 1 : WHO ARE WE ---------- */}
+            {/* ---------- CARD 1 : SERVICES ---------- */}
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col">
             <img
                 src={IMAGES.product}
-                alt="Who are we"
+                alt="Services"
                 className="w-full h-64 object-cover"
             />
 
             <div className="p-8">
-                <h2 className="text-2xl font-bold mb-4">Over 12,000 products</h2>
+                <h2 className="text-2xl font-bold mb-4">All services in one place</h2>
 
                 <p className="text-gray-700 text-lg mb-4 leading-relaxed">
-                With over 12,000 run, gym and hike products online, we have the right 
-                product for you – and it’s our role to help you find it. 
-                We are proud to share the most comprehensive, most detailed 
-                product knowledge in the industry with you - and from video 
-                guides to live expert advice, we’re here to help you to make
-                 the most informed choices possible.
+                From construction labor to plumbing and daily home services, we provide everything you need on a single platform.
                 </p>
 
-                
+                <p className="text-gray-700 text-lg leading-relaxed">
+                Our goal is to save your time and effort by giving you quick access to the right professionals whenever you need them.
+                </p>
             </div>
             </div>
 
-            {/* ---------- CARD 2 : OUR HISTORY ---------- */}
+            {/* ---------- CARD 2 : TRUST ---------- */}
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col">
             <img
-                src={IMAGES.winning}
-                alt="Our history"
+                src={IMAGES.Repair_Maintenance}
+                alt="Trust"
                 className="w-full h-64 object-cover"
             />
 
             <div className="p-8">
-                <h2 className="text-2xl font-bold mb-4">Award-winning</h2>
+                <h2 className="text-2xl font-bold mb-4">Trusted & Reliable</h2>
 
                 <p className="text-gray-700 text-lg mb-4 leading-relaxed">
-                    We are incredibly proud to be listed as one of the 
-                    London Stock Exchange’s Companies to Inspire Britain,
-                    as well as being awarded a prestigious Feefo Gold Award 
-                    for excellence in customer service. We’re also very proud
-                    to have been voted Best Online Retailer by the public at
-                    the Running Awards in 2017. We never stop working tirelessly
-                    to make our customer experience better and better and whatever
-                    your fitness goal, we are here to help every step of the way.
+                    We focus on building trust by connecting customers with verified and skilled workers.
                 </p>
 
-               
+                <p className="text-gray-700 text-lg leading-relaxed">
+                    With affordable pricing, transparent service, and reliable professionals, we aim to make your experience smooth and hassle-free.
+                </p>
             </div>
             </div>
 
@@ -186,18 +166,21 @@ const AboutUs = () => {
 
           <div>
             <h2 className="text-4xl font-extrabold mb-6">
-              Leave no footprints
+              Building a Better Future
             </h2>
             <p className="text-lg leading-relaxed mb-4">
-              We believe that there’s no fun to be had standing still. But we know that moving leaves footprints. So we are working in a number of ways to reduce our footprints. We are learning. We are discovering what we don’t know and finding somethings are really complex with no clear answer.
-              We are in it for the long-haul. This is a marathon, not a sprint.
+              We believe in creating opportunities for skilled workers while making services accessible for everyone.
+            </p>
+
+            <p className="text-lg leading-relaxed">
+              Constructezy is committed to improving the way people connect with service providers — making it faster, easier, and more reliable.
             </p>
             
           </div>
 
           <img
-            src={IMAGES.footprints}
-            alt="Sustainability"
+            src={IMAGES.laber}
+            alt="Future"
             className="rounded-2xl shadow-xl w-full object-cover"
           />
         </div>

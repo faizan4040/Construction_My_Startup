@@ -124,7 +124,7 @@ const Loginpage = () => {
           <CardContent className="space-y-6 py-8">
             {/* Logo */}
             <div className="flex justify-center">
-              <img src={IMAGES.logos} alt="logo" width={150} height={70} />
+              <img src={IMAGES.login_logo} alt="logo" width={150} height={70} />
             </div>
 
             {!otpEmail

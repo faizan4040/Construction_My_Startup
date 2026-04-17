@@ -2,7 +2,7 @@ import { manualOrderSchema } from "@/lib/zodSchema";
 
 export const IMAGES = {
   coupon: "/assets/images/coupon.PNG",
-  logos: "/assets/images/logo_1.webp",
+  login_logo: "/assets/images/login_logo.svg",
   logo: "/assets/images/logo.png",
   dashboardlogo:"/assets/images/logo.png", 
   image_placeholder: "/assets/images/image_placeholder.webp",
@@ -51,30 +51,25 @@ export const IMAGES = {
   trending_3: "/assets/images/trending_3.avif",
 
 
-
-
-
   // Websitepages all
 
   ordertrackingposter: "/assets/images/order-tracking-poster.jpg",
-  gift_card_banner: "/assets/images/gift_card_banner.png",
   giftcard: "/assets/images/giftcard.png",
-  runningclub: "/assets/images/runningclub.png",
-  student_discount: "/assets/images/student_discount.png",
+  constructezy_family: "/assets/images/constructezy_family.jpg",
+  home_discount: "/assets/images/home_discount.jpg",
   aboutus: "/assets/images/aboutus.jpg",
   Who_are_we: "/assets/images/Who_are_we.jpg",
   Our_history: "/assets/images/Our_history.jpg",
   expert: "/assets/images/expert.jpg",
   product: "/assets/images/product.jpg",
-  winning: "/assets/images/winning.jpg",
+  Repair_Maintenance: "/assets/images/Repair_Maintenance.jpg",
   footprints: "/assets/images/footprints.jpg",
   discount_code: "/assets/images/discount_code.jpg",
   shipping: "/assets/images/shipping.gif",
   confirmorder: "/assets/images/confirmorder.gif",
   emptycart: "/assets/images/empty_cart.gif",
   mastercard: "/assets/images/mastercard.svg",
-
-
+  laber: "/assets/images/laber.jpg",
 
   construction: "/assets/images/construction.jpg",
 
