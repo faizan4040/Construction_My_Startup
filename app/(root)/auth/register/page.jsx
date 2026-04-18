@@ -1,449 +1,11 @@
-// "use client";
-
-// import React, { useState } from "react";
-// import { useForm } from "react-hook-form";
-// import { z } from "zod";
-// import { zodResolver } from "@hookform/resolvers/zod";
-// import { useRouter } from "next/navigation";
-// import { Input } from "@/components/ui/input";
-// import {
-//   Form,
-//   FormControl,
-//   FormField,
-//   FormItem,
-//   FormLabel,
-//   FormMessage,
-// } from "@/components/ui/form";
-// import Link from "next/link";
-// import axios from "axios";
-// import { FiEye, FiEyeOff, FiUser, FiMail, FiLock, FiCheck, FiArrowRight } from "react-icons/fi";
-// import { HiOutlineShoppingCart, HiOutlineOfficeBuilding, HiOutlineTruck } from "react-icons/hi";
-// import { MdOutlineEngineering, MdOutlineAdminPanelSettings } from "react-icons/md";
-// import { zSchema } from "@/lib/zodSchema";
-// import ButtonLoading from "@/components/Application/ButtonLoading";
-// import { WEBSITE_LOGIN } from "@/routes/WebsiteRoute";
-// import { showToast } from "@/lib/showToast";
-// import { IMAGES } from "@/routes/AllImages";
-
-// /* ─── Role Config ─────────────────────────────────────────────── */
-// const PUBLIC_ROLES = [
-//   {
-//     value: "user",
-//     label: "Buyer",
-//     icon: HiOutlineShoppingCart,
-//     description: "Browse & buy materials",
-//     accent: "text-blue-600",
-//     activeBg: "bg-blue-50 border-blue-500",
-//     activeRing: "ring-2 ring-blue-400/40",
-//     dot: "bg-blue-500",
-//   },
-//   {
-//     value: "shop_owner",
-//     label: "Shop Owner",
-//     icon: HiOutlineOfficeBuilding,
-//     description: "List & sell products",
-//     accent: "text-emerald-600",
-//     activeBg: "bg-emerald-50 border-emerald-500",
-//     activeRing: "ring-2 ring-emerald-400/40",
-//     dot: "bg-emerald-500",
-//   },
-//   {
-//     value: "delivery_boy",
-//     label: "Delivery",
-//     icon: HiOutlineTruck,
-//     description: "Deliver to customers",
-//     accent: "text-amber-600",
-//     activeBg: "bg-amber-50 border-amber-500",
-//     activeRing: "ring-2 ring-amber-400/40",
-//     dot: "bg-amber-500",
-//   },
-//   {
-//     value: "labour",
-//     label: "Labour",
-//     icon: MdOutlineEngineering,
-//     description: "Get hired for work",
-//     accent: "text-rose-600",
-//     activeBg: "bg-rose-50 border-rose-500",
-//     activeRing: "ring-2 ring-rose-400/40",
-//     dot: "bg-rose-500",
-//   },
-// ];
-
-// const ADMIN_ROLE = {
-//   value: "admin",
-//   label: "Admin",
-//   icon: MdOutlineAdminPanelSettings,
-//   description: "Platform management",
-//   accent: "text-violet-600",
-//   activeBg: "bg-violet-50 border-violet-500",
-//   activeRing: "ring-2 ring-violet-400/40",
-//   dot: "bg-violet-500",
-// };
-
-// const ROLE_VISUALS = {
-//   user:         { headline: "Find Everything You Build With", sub: "Browse thousands of construction materials from trusted shops.", emoji: "🧱" },
-//   shop_owner:   { headline: "Grow Your Construction Business", sub: "List your products and reach thousands of buyers near you.", emoji: "🏗️" },
-//   delivery_boy: { headline: "Earn on Every Delivery", sub: "Flexible delivery work in your area with instant payouts.", emoji: "📦" },
-//   labour:       { headline: "Get Hired for Construction Work", sub: "Connect with contractors and builders looking for skilled workers.", emoji: "⚒️" },
-//   admin:        { headline: "Manage the Entire Platform", sub: "Full administrative access to users, orders, and system settings.", emoji: "🛡️" },
-//   default:      { headline: "Build. Buy. Deliver.", sub: "Your all-in-one construction marketplace platform.", emoji: "🏠" },
-// };
-
-// const ADMIN_SECRET = "ADMIN2025";
-
-// const FEATURES = [
-//   { emoji: "✅", text: "Verified Sellers" },
-//   { emoji: "🔐", text: "Secure Payments" },
-//   { emoji: "⚡", text: "Fast Delivery" },
-//   { emoji: "🤝", text: "24/7 Support" },
-// ];
-
-// const RegisterPage = () => {
-//   const router = useRouter();
-//   const [loading, setLoading] = useState(false);
-//   const [showPassword, setShowPassword] = useState(false);
-//   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-//   const [selectedRole, setSelectedRole] = useState("");
-//   const [adminUnlocked, setAdminUnlocked] = useState(false);
-
-//   const visibleRoles = adminUnlocked ? [...PUBLIC_ROLES, ADMIN_ROLE] : PUBLIC_ROLES;
-//   const visual = selectedRole ? ROLE_VISUALS[selectedRole] || ROLE_VISUALS.default : ROLE_VISUALS.default;
-
-//   const formSchema = zSchema
-//     .pick({ name: true, email: true, password: true })
-//     .extend({
-//       role: z.enum(["user", "shop_owner", "delivery_boy", "labour", "admin"], {
-//         required_error: "Please select your role.",
-//       }),
-//       confirmPassword: z.string().min(1, "Confirm password is required."),
-//     })
-//     .refine((data) => data.password === data.confirmPassword, {
-//       message: "Passwords do not match.",
-//       path: ["confirmPassword"],
-//     });
-
-//   const form = useForm({
-//     resolver: zodResolver(formSchema),
-//     defaultValues: { name: "", email: "", password: "", confirmPassword: "", role: "" },
-//   });
-
-//   const handleNameChange = (e, fieldOnChange) => {
-//     const val = e.target.value;
-//     fieldOnChange(e);
-//     if (val.trim() === ADMIN_SECRET) setAdminUnlocked(true);
-//   };
-
-//   const handleRegisterSubmit = async (values) => {
-//     try {
-//       setLoading(true);
-//       const submitValues = { ...values };
-//       delete submitValues.confirmPassword;
-//       const { data: res } = await axios.post("/api/auth/register", submitValues);
-//       if (!res.success) throw new Error(res.message);
-//       form.reset();
-//       setSelectedRole("");
-//       showToast("success", res.message);
-//     } catch (error) {
-//       showToast("error", error.message || "Registration failed. Please try again.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="flex min-h-screen bg-slate-50 font-sans">
-
-//       {/* ── Left Panel ── */}
-//       <div className="hidden lg:flex lg:w-5/12 xl:w-[42%] relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex-col items-center justify-center px-10 py-12 overflow-hidden">
-//         {/* Background geometric accents */}
-//         <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-blue-500/10 -translate-y-1/2 translate-x-1/2" />
-//         <div className="absolute bottom-0 left-0 w-56 h-56 rounded-full bg-blue-400/8 translate-y-1/2 -translate-x-1/2" />
-//         <div className="absolute top-1/2 left-1/2 w-96 h-px bg-gradient-to-r from-transparent via-blue-400/20 to-transparent -translate-x-1/2" />
-
-//         <div className="relative z-10 text-center max-w-sm w-full">
-//           {/* Logo */}
-//           <img src={IMAGES.logos} alt="logo" className="w-32 mx-auto mb-10 brightness-[10]" />
-
-//           {/* Dynamic emoji */}
-//           <div className="text-7xl mb-5 leading-none select-none transition-all duration-500">
-//             {visual.emoji}
-//           </div>
-
-//           {/* Dynamic headline */}
-//           <h2 className="text-2xl font-bold text-white leading-snug mb-3 transition-all duration-300">
-//             {visual.headline}
-//           </h2>
-//           <p className="text-sm text-slate-400 leading-relaxed mb-10 transition-all duration-300">
-//             {visual.sub}
-//           </p>
-
-//           {/* Feature list */}
-//           <div className="grid grid-cols-2 gap-3 text-left">
-//             {FEATURES.map((f) => (
-//               <div
-//                 key={f.text}
-//                 className="flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 backdrop-blur-sm"
-//               >
-//                 <span className="text-base">{f.emoji}</span>
-//                 <span className="text-xs text-slate-300 font-medium">{f.text}</span>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* ── Right Panel ── */}
-//       <div className="flex-1 flex items-start justify-center px-4 sm:px-6 py-8 overflow-y-auto">
-//         <div className="w-full max-w-lg">
-
-//           {/* Mobile logo */}
-//           <div className="flex justify-center mb-6 lg:hidden">
-//             <img src={IMAGES.logos} alt="logo" className="h-9" />
-//           </div>
-
-//           {/* Card */}
-//           <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-100 px-6 sm:px-9 py-8">
-
-//             {/* Header */}
-//             <div className="mb-7">
-//               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-1.5">
-//                 Create Account
-//               </h1>
-//               <p className="text-sm text-slate-500">
-//                 Fill in the details below to get started — it's free.
-//               </p>
-//             </div>
-
-//             <Form {...form}>
-//               <form onSubmit={form.handleSubmit(handleRegisterSubmit)} className="space-y-5">
-
-//                 {/* ── Role Selector ── */}
-//                 <FormField
-//                   control={form.control}
-//                   name="role"
-//                   render={({ field, fieldState }) => (
-//                     <FormItem>
-//                       <FormLabel className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
-//                         I am a…
-//                       </FormLabel>
-//                       <div className={`grid gap-2.5 mt-2 ${visibleRoles.length === 5 ? "grid-cols-3 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-4"}`}>
-//                         {visibleRoles.map((r) => {
-//                           const active = field.value === r.value;
-//                           const Icon = r.icon;
-//                           return (
-//                             <button
-//                               key={r.value}
-//                               type="button"
-//                               onClick={() => {
-//                                 field.onChange(r.value);
-//                                 setSelectedRole(r.value);
-//                               }}
-//                               className={`
-//                                 relative flex flex-col items-center gap-1.5 rounded-xl border-2 px-2 py-3
-//                                 transition-all duration-200 cursor-pointer text-center focus:outline-none
-//                                 ${active
-//                                   ? `${r.activeBg} ${r.activeRing}`
-//                                   : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white"
-//                                 }
-//                               `}
-//                             >
-//                               {active && (
-//                                 <span className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full ${r.dot}`} />
-//                               )}
-//                               <Icon className={`text-xl ${active ? r.accent : "text-slate-400"}`} />
-//                               <span className={`text-xs font-semibold leading-tight ${active ? r.accent : "text-slate-600"}`}>
-//                                 {r.label}
-//                               </span>
-//                               <span className="text-[10px] text-slate-400 leading-tight hidden sm:block">
-//                                 {r.description}
-//                               </span>
-//                             </button>
-//                           );
-//                         })}
-//                       </div>
-//                       {fieldState.error && (
-//                         <p className="text-xs text-red-500 mt-1.5">{fieldState.error.message}</p>
-//                       )}
-//                     </FormItem>
-//                   )}
-//                 />
-
-//                 {/* ── Name ── */}
-//                 <FormField
-//                   control={form.control}
-//                   name="name"
-//                   render={({ field }) => (
-//                     <FormItem>
-//                       <FormLabel className="text-sm font-semibold text-slate-700">Full Name</FormLabel>
-//                       <FormControl>
-//                         <div className="relative mt-1.5">
-//                           <FiUser className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base" />
-//                           <Input
-//                             type="text"
-//                             placeholder="John Doe"
-//                             {...field}
-//                             onChange={(e) => handleNameChange(e, field.onChange)}
-//                             className="pl-10 h-11 text-sm border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-//                           />
-//                         </div>
-//                       </FormControl>
-//                       <FormMessage className="text-xs" />
-//                     </FormItem>
-//                   )}
-//                 />
-
-//                 {/* ── Email ── */}
-//                 <FormField
-//                   control={form.control}
-//                   name="email"
-//                   render={({ field }) => (
-//                     <FormItem>
-//                       <FormLabel className="text-sm font-semibold text-slate-700">Email Address</FormLabel>
-//                       <FormControl>
-//                         <div className="relative mt-1.5">
-//                           <FiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base" />
-//                           <Input
-//                             type="email"
-//                             placeholder="you@example.com"
-//                             {...field}
-//                             className="pl-10 h-11 text-sm border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-//                           />
-//                         </div>
-//                       </FormControl>
-//                       <FormMessage className="text-xs" />
-//                     </FormItem>
-//                   )}
-//                 />
-
-//                 {/* ── Password & Confirm ── */}
-//                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-//                   <FormField
-//                     control={form.control}
-//                     name="password"
-//                     render={({ field }) => (
-//                       <FormItem>
-//                         <FormLabel className="text-sm font-semibold text-slate-700">Password</FormLabel>
-//                         <FormControl>
-//                           <div className="relative mt-1.5">
-//                             <FiLock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base" />
-//                             <Input
-//                               type={showPassword ? "text" : "password"}
-//                               placeholder="••••••••"
-//                               {...field}
-//                               className="pl-10 pr-10 h-11 text-sm border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-//                             />
-//                             <button
-//                               type="button"
-//                               onClick={() => setShowPassword(!showPassword)}
-//                               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-//                             >
-//                               {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-//                             </button>
-//                           </div>
-//                         </FormControl>
-//                         <FormMessage className="text-xs" />
-//                       </FormItem>
-//                     )}
-//                   />
-
-//                   <FormField
-//                     control={form.control}
-//                     name="confirmPassword"
-//                     render={({ field }) => (
-//                       <FormItem>
-//                         <FormLabel className="text-sm font-semibold text-slate-700">Confirm Password</FormLabel>
-//                         <FormControl>
-//                           <div className="relative mt-1.5">
-//                             <FiCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base" />
-//                             <Input
-//                               type={showConfirmPassword ? "text" : "password"}
-//                               placeholder="••••••••"
-//                               {...field}
-//                               className="pl-10 pr-10 h-11 text-sm border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-//                             />
-//                             <button
-//                               type="button"
-//                               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-//                               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-//                             >
-//                               {showConfirmPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-//                             </button>
-//                           </div>
-//                         </FormControl>
-//                         <FormMessage className="text-xs" />
-//                       </FormItem>
-//                     )}
-//                   />
-//                 </div>
-
-//                 {/* ── Submit ── */}
-//                 <div className="pt-1">
-//                   <ButtonLoading
-//                     loading={loading}
-//                     type="submit"
-//                     text={
-//                       <span className="flex items-center justify-center gap-2">
-//                         Create Account <FiArrowRight className="text-base" />
-//                       </span>
-//                     }
-//                     className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg transition-all duration-200 shadow-md shadow-slate-900/20 hover:shadow-lg hover:shadow-slate-900/30"
-//                   />
-//                 </div>
-
-//                 {/* ── Footer ── */}
-//                 <p className="text-center text-sm text-slate-500 pt-0.5">
-//                   Already have an account?{" "}
-//                   <Link
-//                     href={WEBSITE_LOGIN}
-//                     className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
-//                   >
-//                     Sign in
-//                   </Link>
-//                 </p>
-
-//               </form>
-//             </Form>
-//           </div>
-
-//           {/* Bottom trust note */}
-//           <p className="text-center text-xs text-slate-400 mt-5">
-//             🔒 Your data is protected by 256-bit SSL encryption
-//           </p>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default RegisterPage;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
 import {
   Form,
   FormControl,
@@ -452,134 +14,288 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-
-
 import Link from "next/link";
 import axios from "axios";
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
-import { IoClose } from "react-icons/io5";
 import { zSchema } from "@/lib/zodSchema";
 import ButtonLoading from "@/components/Application/ButtonLoading";
 import { WEBSITE_LOGIN } from "@/routes/WebsiteRoute";
 import { showToast } from "@/lib/showToast";
-import { IMAGES } from "@/routes/AllImages";
 
+/* ─── Role Options (admin excluded from self-registration) ─── */
+const ROLES = [
+  {
+    value: "customer",
+    label: "Customer",
+    icon: "🛍️",
+    desc: "Browse & shop products",
+  },
+  {
+    value: "shop owner",
+    label: "Shop Owner",
+    icon: "🏪",
+    desc: "Manage your store",
+  },
+  {
+    value: "laber",
+    label: "Labour",
+    icon: "🔧",
+    desc: "Offer your services",
+  },
+  {
+    value: "delivery boy",
+    label: "Delivery",
+    icon: "🚴",
+    desc: "Deliver orders",
+  },
+];
 
-/* --------------------
-   Zod Schema
--------------------- */
+/* ─── Decorative left-panel illustration (inline SVG) ─── */
+const PanelIllustration = () => (
+  <svg viewBox="0 0 480 560" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full max-w-sm mx-auto">
+    {/* Background blob */}
+    <ellipse cx="240" cy="300" rx="200" ry="220" fill="url(#blobGrad)" opacity="0.18" />
+    {/* Store building */}
+    <rect x="120" y="230" width="240" height="180" rx="12" fill="white" stroke="#e2e8f0" strokeWidth="2"/>
+    <rect x="140" y="250" width="80" height="60" rx="6" fill="url(#windowGrad)" />
+    <rect x="260" y="250" width="80" height="60" rx="6" fill="url(#windowGrad)" />
+    <rect x="185" y="330" width="110" height="80" rx="8" fill="#f1f5f9"/>
+    <rect x="200" y="345" width="30" height="30" rx="4" fill="url(#accentGrad)" opacity="0.6"/>
+    <rect x="250" y="345" width="30" height="30" rx="4" fill="url(#accentGrad)" opacity="0.6"/>
+    {/* Roof / awning */}
+    <path d="M100 232 Q240 190 380 232" stroke="url(#accentGrad)" strokeWidth="6" strokeLinecap="round" fill="none"/>
+    <rect x="100" y="225" width="280" height="18" rx="9" fill="url(#roofGrad)"/>
+    {/* Sign */}
+    <rect x="160" y="195" width="160" height="36" rx="8" fill="url(#signGrad)"/>
+    <circle cx="182" cy="213" r="6" fill="white" opacity="0.7"/>
+    <rect x="196" y="208" width="80" height="4" rx="2" fill="white" opacity="0.7"/>
+    <rect x="196" y="216" width="56" height="4" rx="2" fill="white" opacity="0.5"/>
+    {/* Delivery bike */}
+    <circle cx="370" cy="400" r="24" stroke="url(#accentGrad)" strokeWidth="3" fill="none"/>
+    <circle cx="320" cy="400" r="24" stroke="url(#accentGrad)" strokeWidth="3" fill="none"/>
+    <path d="M320 400 L345 370 L370 400" stroke="#64748b" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+    <rect x="335" y="358" width="26" height="16" rx="4" fill="url(#accentGrad)" opacity="0.8"/>
+    <circle cx="345" cy="370" r="5" fill="#64748b"/>
+    {/* Person / customer */}
+    <circle cx="150" cy="370" r="22" fill="url(#personGrad)"/>
+    <path d="M128 410 Q150 390 172 410" stroke="url(#personGrad)" strokeWidth="10" strokeLinecap="round" fill="none"/>
+    <circle cx="150" cy="363" r="10" fill="#fde68a" stroke="#f59e0b" strokeWidth="1.5"/>
+    {/* Tool / labour icon */}
+    <rect x="200" y="430" width="80" height="30" rx="8" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="1.5"/>
+    <rect x="214" y="438" width="12" height="14" rx="2" fill="url(#accentGrad)" opacity="0.7"/>
+    <rect x="234" y="438" width="32" height="4" rx="2" fill="#94a3b8"/>
+    <rect x="234" y="446" width="22" height="4" rx="2" fill="#cbd5e1"/>
+    {/* Stars / sparkles */}
+    <circle cx="90" cy="250" r="4" fill="#fbbf24" opacity="0.7"/>
+    <circle cx="400" cy="260" r="3" fill="#a78bfa" opacity="0.6"/>
+    <circle cx="410" cy="350" r="5" fill="#34d399" opacity="0.5"/>
+    <circle cx="75" cy="360" r="3" fill="#f472b6" opacity="0.6"/>
+    <defs>
+      <linearGradient id="blobGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#6366f1"/>
+        <stop offset="100%" stopColor="#ec4899"/>
+      </linearGradient>
+      <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#6366f1"/>
+        <stop offset="100%" stopColor="#8b5cf6"/>
+      </linearGradient>
+      <linearGradient id="roofGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stopColor="#6366f1"/>
+        <stop offset="50%" stopColor="#8b5cf6"/>
+        <stop offset="100%" stopColor="#ec4899"/>
+      </linearGradient>
+      <linearGradient id="signGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stopColor="#4f46e5"/>
+        <stop offset="100%" stopColor="#7c3aed"/>
+      </linearGradient>
+      <linearGradient id="windowGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#e0e7ff"/>
+        <stop offset="100%" stopColor="#c7d2fe"/>
+      </linearGradient>
+      <linearGradient id="personGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#6366f1"/>
+        <stop offset="100%" stopColor="#4f46e5"/>
+      </linearGradient>
+    </defs>
+  </svg>
+);
 
-
-  const RegisterPage = () => {
+/* ═══════════════════════════════════════════
+   MAIN COMPONENT
+═══════════════════════════════════════════ */
+const RegisterPage = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(true);
   const [showConfirmPassword, setShowConfirmPassword] = useState(true);
+  const [selectedRole, setSelectedRole] = useState("");
+  const [roleError, setRoleError] = useState("");
+  const [mounted, setMounted] = useState(false);
 
-const formSchema = zSchema.pick({
-   name: true, email: true, password: true
-  }).extend({
-      confirmPassword: z.string()
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  })
+  useEffect(() => setMounted(true), []);
 
+  const formSchema = zSchema
+    .pick({ name: true, email: true, password: true })
+    .extend({ confirmPassword: z.string() })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: "Passwords do not match",
+      path: ["confirmPassword"],
+    });
 
   const form = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
+    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
   });
 
   const handleRegisterSubmit = async (values) => {
+    if (!selectedRole) {
+      setRoleError("Please select your role to continue.");
+      return;
+    }
+    setRoleError("");
     try {
       setLoading(true);
-      const { data: registerResponse } = await axios.post("/api/auth/register", values);
-      if (!registerResponse.success) {
-        throw new Error(registerResponse.message);
-      }
-
+      const { data: res } = await axios.post("/api/auth/register", {
+        ...values,
+        role: selectedRole,
+      });
+      if (!res.success) throw new Error(res.message);
       form.reset();
-      showToast('success', registerResponse.message);
-      
+      setSelectedRole("");
+      showToast("success", res.message);
     } catch (error) {
-      showToast('error', error.message || "Registration failed. Please try again.");
+      showToast("error", error.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <>
-      {/* 🔹 Background Blur */}
-      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" />
+    <div
+      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-indigo-50/40 to-purple-50/30 px-4 py-10"
+      style={{ fontFamily: "'DM Sans', 'Nunito', sans-serif" }}
+    >
+      {/* Card */}
+      <div
+        className={`w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row transition-all duration-700 ${
+          mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+        }`}
+        style={{ boxShadow: "0 24px 80px rgba(99,102,241,0.13), 0 2px 12px rgba(0,0,0,0.07)" }}
+      >
+        {/* ── LEFT PANEL ── */}
+        <div className="hidden lg:flex flex-col justify-between w-5/12 bg-gradient-to-b from-indigo-600 via-violet-600 to-purple-700 px-10 py-12 relative overflow-hidden">
+          {/* Decorative circles */}
+          <div className="absolute -top-16 -left-16 w-56 h-56 rounded-full bg-white/10" />
+          <div className="absolute bottom-10 -right-10 w-40 h-40 rounded-full bg-white/10" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full bg-white/5" />
 
-
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <Card className="relative w-120 shadow-2xl">
-
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="absolute cursor-pointer right-4 top-4 rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition"
-            aria-label="Close"
-          >
-            <IoClose size={22} />
-          </button>
-
-          <CardContent className="space-y-6 py-8">
-
-            {/* Logo */}
-            <div className="flex justify-center">
-              <img src={IMAGES.logos} alt="logo" width={150} height={70} />
+          {/* Brand */}
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow">
+                <span className="text-indigo-600 font-black text-lg">B</span>
+              </div>
+              <span className="text-white font-bold text-xl tracking-wide">BrandName</span>
             </div>
+          </div>
 
-            {/* Heading */}
-            <div className="text-center space-y-1">
-              <h1 className="text-3xl font-bold">Create Account</h1>
-              <p className="text-sm text-muted-foreground">
-                Register into your account by filling out the form below.
-              </p>
+          {/* Illustration */}
+          <div className="relative z-10 flex-1 flex items-center justify-center py-8">
+            <PanelIllustration />
+          </div>
+
+          {/* Copy */}
+          <div className="relative z-10 text-white">
+            <h2 className="text-2xl font-bold leading-snug mb-2">
+              Everything you need,<br />in one place.
+            </h2>
+            <p className="text-indigo-200 text-sm leading-relaxed">
+              Join thousands of customers, shop owners, labourers &amp; delivery partners on our platform.
+            </p>
+            {/* Dots */}
+            <div className="flex gap-2 mt-5">
+              <span className="w-6 h-2 rounded-full bg-white" />
+              <span className="w-2 h-2 rounded-full bg-white/40" />
+              <span className="w-2 h-2 rounded-full bg-white/40" />
             </div>
+          </div>
+        </div>
 
-            {/* Form */}
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(handleRegisterSubmit)}
-                className="space-y-6"
-              >
-                {/* Name */}
+        {/* ── RIGHT PANEL ── */}
+        <div className="flex-1 px-8 sm:px-12 py-10 overflow-y-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <p className="text-indigo-600 text-xs font-semibold uppercase tracking-widest mb-1">Get started</p>
+            <h1 className="text-3xl font-extrabold text-slate-800 leading-tight">Create your account</h1>
+            <p className="text-slate-500 text-sm mt-1">Fill in the details below to register.</p>
+          </div>
+
+          {/* ── ROLE SELECTOR ── */}
+          <div className="mb-7">
+            <p className="text-sm font-semibold text-slate-700 mb-3">I am a…</p>
+            <div className="grid grid-cols-2 gap-3">
+              {ROLES.map((role) => (
+                <button
+                  key={role.value}
+                  type="button"
+                  onClick={() => { setSelectedRole(role.value); setRoleError(""); }}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl border-2 text-left transition-all duration-200 group ${
+                    selectedRole === role.value
+                      ? "border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100"
+                      : "border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/50"
+                  }`}
+                >
+                  <span
+                    className={`text-2xl w-10 h-10 flex items-center justify-center rounded-xl transition-all ${
+                      selectedRole === role.value
+                        ? "bg-indigo-100"
+                        : "bg-slate-100 group-hover:bg-indigo-100"
+                    }`}
+                  >
+                    {role.icon}
+                  </span>
+                  <div>
+                    <p className={`text-sm font-semibold leading-none mb-0.5 ${selectedRole === role.value ? "text-indigo-700" : "text-slate-700"}`}>
+                      {role.label}
+                    </p>
+                    <p className="text-xs text-slate-400 leading-none">{role.desc}</p>
+                  </div>
+                  {selectedRole === role.value && (
+                    <span className="ml-auto w-4 h-4 rounded-full bg-indigo-500 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12">
+                        <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+            {roleError && <p className="text-red-500 text-xs mt-2 font-medium">{roleError}</p>}
+          </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex-1 h-px bg-slate-200" />
+            <span className="text-slate-400 text-xs font-medium">Your details</span>
+            <div className="flex-1 h-px bg-slate-200" />
+          </div>
+
+          {/* ── FORM ── */}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleRegisterSubmit)} className="space-y-5">
+              {/* Name + Email side by side */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <FormControl>
-                        <Input type="text" placeholder="John Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Email */}
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel className="text-slate-700 text-sm font-semibold">Full Name</FormLabel>
                       <FormControl>
                         <Input
-                          type="email"
-                          placeholder="example@gmail.com"
+                          type="text"
+                          placeholder="John Doe"
+                          className="rounded-xl border-slate-200 focus:border-indigo-400 focus:ring-indigo-200 bg-slate-50"
                           {...field}
                         />
                       </FormControl>
@@ -587,28 +303,48 @@ const formSchema = zSchema.pick({
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-700 text-sm font-semibold">Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="you@email.com"
+                          className="rounded-xl border-slate-200 focus:border-indigo-400 focus:ring-indigo-200 bg-slate-50"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-                {/* Password */}
+              {/* Password + Confirm Password */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <FormField
                   control={form.control}
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel className="text-slate-700 text-sm font-semibold">Password</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Input
                             type={showPassword ? "password" : "text"}
                             placeholder="••••••••"
-                            className="pr-10"
+                            className="pr-10 rounded-xl border-slate-200 focus:border-indigo-400 focus:ring-indigo-200 bg-slate-50"
                             {...field}
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-500 transition-colors"
                           >
-                            {showPassword ? <FaRegEye /> : <FaRegEyeSlash />}
+                            {showPassword ? <FaRegEye size={16} /> : <FaRegEyeSlash size={16} />}
                           </button>
                         </div>
                       </FormControl>
@@ -616,34 +352,26 @@ const formSchema = zSchema.pick({
                     </FormItem>
                   )}
                 />
-
-                {/* Confirm Password */}
                 <FormField
                   control={form.control}
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
+                      <FormLabel className="text-slate-700 text-sm font-semibold">Confirm Password</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Input
                             type={showConfirmPassword ? "password" : "text"}
                             placeholder="••••••••"
-                            className="pr-10"
+                            className="pr-10 rounded-xl border-slate-200 focus:border-indigo-400 focus:ring-indigo-200 bg-slate-50"
                             {...field}
                           />
                           <button
                             type="button"
-                            onClick={() =>
-                              setShowConfirmPassword(!showConfirmPassword)
-                            }
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-500 transition-colors"
                           >
-                            {showConfirmPassword ? (
-                              <FaRegEye />
-                            ) : (
-                              <FaRegEyeSlash />
-                            )}
+                            {showConfirmPassword ? <FaRegEye size={16} /> : <FaRegEyeSlash size={16} />}
                           </button>
                         </div>
                       </FormControl>
@@ -651,34 +379,307 @@ const formSchema = zSchema.pick({
                     </FormItem>
                   )}
                 />
+              </div>
 
-                {/* Submit */}
-                <ButtonLoading
-                  loading={loading}
-                  type="submit"
-                  text="Create Account"
-                  className="w-full bg-black text-white"
-                />
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 rounded-2xl font-bold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-200 transition-all duration-200 text-sm tracking-wide disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                    </svg>
+                    Creating Account…
+                  </span>
+                ) : (
+                  "Create Account →"
+                )}
+              </button>
 
-                {/* Footer */}
-                <div className="text-center">
-                  <p>
-                    Already have an account?{" "}
-                    <Link
-                      href={WEBSITE_LOGIN}
-                      className="text-blue-500 hover:underline"
-                    >
-                      Login
-                    </Link>
-                  </p>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+              {/* Footer */}
+              <p className="text-center text-sm text-slate-500">
+                Already have an account?{" "}
+                <Link href={WEBSITE_LOGIN} className="text-indigo-600 font-semibold hover:underline">
+                  Sign in
+                </Link>
+              </p>
+            </form>
+          </Form>
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 
 export default RegisterPage;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// "use client";
+
+// import React, { useState } from "react";
+// import { useForm } from "react-hook-form";
+// import { z } from "zod";
+// import { zodResolver } from "@hookform/resolvers/zod";
+// import { useRouter } from "next/navigation";
+
+// import { Card, CardContent } from "@/components/ui/card";
+// import { Input } from "@/components/ui/input";
+
+// import {
+//   Form,
+//   FormControl,
+//   FormField,
+//   FormItem,
+//   FormLabel,
+//   FormMessage,
+// } from "@/components/ui/form";
+
+
+// import Link from "next/link";
+// import axios from "axios";
+// import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
+// import { IoClose } from "react-icons/io5";
+// import { zSchema } from "@/lib/zodSchema";
+// import ButtonLoading from "@/components/Application/ButtonLoading";
+// import { WEBSITE_LOGIN } from "@/routes/WebsiteRoute";
+// import { showToast } from "@/lib/showToast";
+// import { IMAGES } from "@/routes/AllImages";
+
+
+// /* --------------------
+//    Zod Schema
+// -------------------- */
+
+
+//   const RegisterPage = () => {
+//   const router = useRouter();
+//   const [loading, setLoading] = useState(false);
+//   const [showPassword, setShowPassword] = useState(true);
+//   const [showConfirmPassword, setShowConfirmPassword] = useState(true);
+
+// const formSchema = zSchema.pick({
+//    name: true, email: true, password: true
+//   }).extend({
+//       confirmPassword: z.string()
+//   })
+//   .refine((data) => data.password === data.confirmPassword, {
+//     message: "Passwords do not match",
+//     path: ["confirmPassword"],
+//   })
+
+
+//   const form = useForm({
+//     resolver: zodResolver(formSchema),
+//     defaultValues: {
+//       name: "",
+//       email: "",
+//       password: "",
+//       confirmPassword: "",
+//     },
+//   });
+
+//   const handleRegisterSubmit = async (values) => {
+//     try {
+//       setLoading(true);
+//       const { data: registerResponse } = await axios.post("/api/auth/register", values);
+//       if (!registerResponse.success) {
+//         throw new Error(registerResponse.message);
+//       }
+
+//       form.reset();
+//       showToast('success', registerResponse.message);
+      
+//     } catch (error) {
+//       showToast('error', error.message || "Registration failed. Please try again.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <>
+//       {/* 🔹 Background Blur */}
+//       <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" />
+
+
+//       <div className="fixed inset-0 z-50 flex items-center justify-center">
+//         <Card className="relative w-120 shadow-2xl">
+
+//           <button
+//             type="button"
+//             onClick={() => router.back()}
+//             className="absolute cursor-pointer right-4 top-4 rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition"
+//             aria-label="Close"
+//           >
+//             <IoClose size={22} />
+//           </button>
+
+//           <CardContent className="space-y-6 py-8">
+
+//             {/* Logo */}
+//             <div className="flex justify-center">
+//               <img src={IMAGES.logos} alt="logo" width={150} height={70} />
+//             </div>
+
+//             {/* Heading */}
+//             <div className="text-center space-y-1">
+//               <h1 className="text-3xl font-bold">Create Account</h1>
+//               <p className="text-sm text-muted-foreground">
+//                 Register into your account by filling out the form below.
+//               </p>
+//             </div>
+
+//             {/* Form */}
+//             <Form {...form}>
+//               <form
+//                 onSubmit={form.handleSubmit(handleRegisterSubmit)}
+//                 className="space-y-6"
+//               >
+//                 {/* Name */}
+//                 <FormField
+//                   control={form.control}
+//                   name="name"
+//                   render={({ field }) => (
+//                     <FormItem>
+//                       <FormLabel>Name</FormLabel>
+//                       <FormControl>
+//                         <Input type="text" placeholder="John Doe" {...field} />
+//                       </FormControl>
+//                       <FormMessage />
+//                     </FormItem>
+//                   )}
+//                 />
+
+//                 {/* Email */}
+//                 <FormField
+//                   control={form.control}
+//                   name="email"
+//                   render={({ field }) => (
+//                     <FormItem>
+//                       <FormLabel>Email</FormLabel>
+//                       <FormControl>
+//                         <Input
+//                           type="email"
+//                           placeholder="example@gmail.com"
+//                           {...field}
+//                         />
+//                       </FormControl>
+//                       <FormMessage />
+//                     </FormItem>
+//                   )}
+//                 />
+
+//                 {/* Password */}
+//                 <FormField
+//                   control={form.control}
+//                   name="password"
+//                   render={({ field }) => (
+//                     <FormItem>
+//                       <FormLabel>Password</FormLabel>
+//                       <FormControl>
+//                         <div className="relative">
+//                           <Input
+//                             type={showPassword ? "password" : "text"}
+//                             placeholder="••••••••"
+//                             className="pr-10"
+//                             {...field}
+//                           />
+//                           <button
+//                             type="button"
+//                             onClick={() => setShowPassword(!showPassword)}
+//                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+//                           >
+//                             {showPassword ? <FaRegEye /> : <FaRegEyeSlash />}
+//                           </button>
+//                         </div>
+//                       </FormControl>
+//                       <FormMessage />
+//                     </FormItem>
+//                   )}
+//                 />
+
+//                 {/* Confirm Password */}
+//                 <FormField
+//                   control={form.control}
+//                   name="confirmPassword"
+//                   render={({ field }) => (
+//                     <FormItem>
+//                       <FormLabel>Confirm Password</FormLabel>
+//                       <FormControl>
+//                         <div className="relative">
+//                           <Input
+//                             type={showConfirmPassword ? "password" : "text"}
+//                             placeholder="••••••••"
+//                             className="pr-10"
+//                             {...field}
+//                           />
+//                           <button
+//                             type="button"
+//                             onClick={() =>
+//                               setShowConfirmPassword(!showConfirmPassword)
+//                             }
+//                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+//                           >
+//                             {showConfirmPassword ? (
+//                               <FaRegEye />
+//                             ) : (
+//                               <FaRegEyeSlash />
+//                             )}
+//                           </button>
+//                         </div>
+//                       </FormControl>
+//                       <FormMessage />
+//                     </FormItem>
+//                   )}
+//                 />
+
+//                 {/* Submit */}
+//                 <ButtonLoading
+//                   loading={loading}
+//                   type="submit"
+//                   text="Create Account"
+//                   className="w-full bg-black text-white"
+//                 />
+
+//                 {/* Footer */}
+//                 <div className="text-center">
+//                   <p>
+//                     Already have an account?{" "}
+//                     <Link
+//                       href={WEBSITE_LOGIN}
+//                       className="text-blue-500 hover:underline"
+//                     >
+//                       Login
+//                     </Link>
+//                   </p>
+//                 </div>
+//               </form>
+//             </Form>
+//           </CardContent>
+//         </Card>
+//       </div>
+//     </>
+//   );
+// };
+
+// export default RegisterPage;
