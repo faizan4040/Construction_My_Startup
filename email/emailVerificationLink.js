@@ -208,7 +208,7 @@ export const emailVerificationLink = (link) => {
                                                                          
                                                                     <p style="margin: 0;">Thank you,<br />
                                             
-                                                                    <a href="" target="_blank"> All Spikes </a>
+                                                                    <a href="" target="_blank"> ConstructEzy </a>
                                                                     </p>
                                                                 </div>
                                                             </td>

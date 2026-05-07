@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "All Spikes",
+  title: "ConstructEzy",
   description: "Discover a wide range of athletic.",
 };
 

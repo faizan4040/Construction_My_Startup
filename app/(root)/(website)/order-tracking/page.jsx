@@ -20,7 +20,7 @@ export const metadata = {
     description:
       "Track your order status using order ID, email, and postcode. Fast and reliable order tracking.",
     url: "https://yourwebsite.com/order-tracking",
-    siteName: "All Spikes",
+    siteName: "ConstructEzy",
     images: [
       {
         url: "https://yourwebsite.com/images/order-tracking.jpg",

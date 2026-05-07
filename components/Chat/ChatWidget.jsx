@@ -538,7 +538,7 @@ export default function ChatWidget() {
               style={{ background: "#f8fafc", borderTop: "1px solid #e8ecf0" }}
             >
               <span className="text-[10px] text-gray-400 tracking-wide">
-                Powered by <strong style={{ color: "#0f3460" }}>All Spikes</strong>
+                Powered by <strong style={{ color: "#0f3460" }}>ConstructEzy</strong>
               </span>
             </div>
           </motion.div>

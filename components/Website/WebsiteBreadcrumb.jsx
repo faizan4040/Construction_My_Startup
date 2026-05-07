@@ -8,7 +8,7 @@ const WebsiteBreadcrumb = ({ title, links = [] }) => {
     <div
       className="relative h-55 sm:h-65 md:h-100 bg-cover bg-center"
       style={{
-        backgroundImage: `url(${IMAGES.shopbanner})`,
+        backgroundImage: `url(${IMAGES.customer_banner})`,
       }}
     >
       {/* Overlay */}

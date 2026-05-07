@@ -7,7 +7,7 @@ export const IMAGES = {
   dashboardlogo:"/assets/images/logo.png", 
   image_placeholder: "/assets/images/image_placeholder.webp",
   profile: "/assets/images/profile.jpg",
-  shopbanner: "/assets/images/shopbanner.png",
+  customer_banner: "/assets/images/customer_banner.jpg",
   loading: '/assets/images/loading.gif',
   login: '/assets/images/login.jpg',
   loginfail: '/assets/images/login_fail.jpg',

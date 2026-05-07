@@ -4,7 +4,7 @@ import FeatureProduct from '@/components/Website/FeatureProduct'
 import InventoryCategories from '@/components/Website/InventoryCategories'
 import JustDropped from '@/components/Website/JustDropped'
 import ProductInfo from '@/components/Website/ProductInfo'
-import ProductSlider from '@/components/Website/ProductSlider'
+import LabourSlider from '@/components/Website/LabourSlider'
 import Shopby from '@/components/Website/Shopby'
 import ShopBySlider from '@/components/Website/ShopBySlider'
 import Testimonial from '@/components/Website/Testimonial'
@@ -30,7 +30,7 @@ const Home = () => {
     </section>
 
      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10">
-       <ProductSlider />
+       <LabourSlider/>
     </section>
 
      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10">

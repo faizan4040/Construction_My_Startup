@@ -1,13 +1,9 @@
-// ============================================================
-//  server.js  —  project ROOT
-// ============================================================
 const { createServer } = require("http");
 const { parse }        = require("url");
 const next             = require("next");
 const { Server }       = require("socket.io");
 const mongoose         = require("mongoose");
 
-require("dotenv").config({ path: ".env.local" });
 
 const dev  = process.env.NODE_ENV !== "production";
 const app  = next({ dev });
@@ -266,10 +262,10 @@ app.prepare().then(() => {
 
 
 
-// // ============================================================
-// //  server.js  —  project ROOT  (replaces `next dev` / `next start`)
-// //  Run:  node server.js  OR  npm run dev  (after updating package.json)
-// // ============================================================
+// ============================================================
+//  server.js  —  project ROOT  (replaces `next dev` / `next start`)
+//  Run:  node server.js  OR  npm run dev  (after updating package.json)
+// ============================================================
 // const { createServer } = require("http");
 // const { parse } = require("url");
 // const next = require("next");
@@ -456,3 +452,11 @@ app.prepare().then(() => {
 //     console.log(` Server running → http://localhost:${PORT}`);
 //   });
 // });
+
+
+
+
+
+
+
+

@@ -47,7 +47,7 @@ const RunningClub = () => {
         <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-xl p-8">
 
           <p className="text-gray-700 mb-8 text-center">
-            At All Spikes we care about our running, fitness & triathlon community.
+            At ConstructEzy we care about our running, fitness & triathlon community.
             We offer a special club discount for running & triathlon clubs in the UK,
             Germany, Spain, France and Italy. Get <strong>15% off</strong> in-season
             products for you and your members (exclusions apply).
