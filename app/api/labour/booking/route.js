@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server"
 import connectDB from "@/lib/databaseConnection"
-import Booking from "@/models/Booking.model.js"
 import LabourProfile from "@/models/LabourProfile.model.js"
+import Booking from "@/models/Booking.model.js"
 import { getCurrentUser } from "@/lib/getCurrentUser"
 
-// POST /api/labour/booking — client creates a booking
 export async function POST(request) {
   try {
     await connectDB()
@@ -18,16 +17,22 @@ export async function POST(request) {
     const { labourSlug, clientName, clientPhone, workDate, description, address } = body
 
     if (!labourSlug || !clientName || !clientPhone || !workDate || !description) {
-      return NextResponse.json(
-        { message: "All booking fields are required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ message: "All booking fields are required" }, { status: 400 })
     }
 
-    // Find the labour profile
-    const labourProfile = await LabourProfile.findOne({ slug: labourSlug })
+    //  Search by slug OR _id — handles both cases
+    const isObjectId = /^[a-f\d]{24}$/i.test(labourSlug)
+    const labourProfile = await LabourProfile.findOne(
+      isObjectId
+        ? { $or: [{ slug: labourSlug }, { _id: labourSlug }] }
+        : { slug: labourSlug }
+    )
+
     if (!labourProfile) {
-      return NextResponse.json({ message: "Labour profile not found" }, { status: 404 })
+      return NextResponse.json(
+        { message: `Labour profile not found for: ${labourSlug}` },
+        { status: 404 }
+      )
     }
 
     const booking = await Booking.create({
@@ -44,7 +49,6 @@ export async function POST(request) {
       clientRead:  true,
     })
 
-    // Increment booking count on profile
     await LabourProfile.findByIdAndUpdate(labourProfile._id, {
       $inc: { totalBookings: 1 },
     })
@@ -55,14 +59,10 @@ export async function POST(request) {
     )
   } catch (error) {
     console.error("BOOKING ERROR:", error)
-    return NextResponse.json(
-      { message: error.message || "Server error" },
-      { status: 500 }
-    )
+    return NextResponse.json({ message: error.message || "Server error" }, { status: 500 })
   }
 }
 
-// GET /api/labour/booking — labour gets their own bookings
 export async function GET(request) {
   try {
     await connectDB()
@@ -79,9 +79,6 @@ export async function GET(request) {
     return NextResponse.json({ bookings }, { status: 200 })
   } catch (error) {
     console.error("GET BOOKINGS ERROR:", error)
-    return NextResponse.json(
-      { message: error.message || "Server error" },
-      { status: 500 }
-    )
+    return NextResponse.json({ message: error.message || "Server error" }, { status: 500 })
   }
 }

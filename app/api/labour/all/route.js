@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server"
 import connectDB from "@/lib/databaseConnection"
-import LabourProfile from "@/models/LabourProfile.model"
+import LabourProfile from "@/models/LabourProfile.model.js"
 
-// GET /api/labour/all?profession=&city=&page=1&limit=12
 export async function GET(request) {
   try {
     await connectDB()
@@ -13,7 +12,8 @@ export async function GET(request) {
     const page       = parseInt(searchParams.get("page")) || 1
     const limit      = parseInt(searchParams.get("limit")) || 20
 
-    const filter = { isActive: true, isProfileComplete: true }
+    // Only require isProfileComplete — drop isActive filter so new profiles show
+    const filter = { isProfileComplete: true }
     if (profession) filter.profession = { $regex: profession, $options: "i" }
     if (city)       filter.city       = { $regex: city, $options: "i" }
 
@@ -21,9 +21,7 @@ export async function GET(request) {
 
     const [profiles, total] = await Promise.all([
       LabourProfile.find(filter)
-        .select(
-          "firstName lastName slug profession city state profileImageUrl rating reviewCount experienceYears hourlyRate skills availability isVerified"
-        )
+        .select("firstName lastName slug profession city state profileImageUrl rating reviewCount experienceYears hourlyRate skills availability isVerified")
         .sort({ rating: -1, createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -37,9 +35,11 @@ export async function GET(request) {
     )
   } catch (error) {
     console.error("ALL PROFILES ERROR:", error)
-    return NextResponse.json(
-      { message: error.message || "Server error" },
-      { status: 500 }
-    )
+    return NextResponse.json({ message: error.message || "Server error" }, { status: 500 })
   }
 }
+
+
+
+
+

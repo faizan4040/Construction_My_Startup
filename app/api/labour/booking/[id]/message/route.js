@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import connectDB from "@/lib/connectDB"
-import Booking from "@/models/Booking"
+import connectDB from "@/lib/databaseConnection"
+import Booking from "@/models/Booking.model.js"
 import { getCurrentUser } from "@/lib/getCurrentUser"
 
 // POST /api/labour/booking/[id]/message — send a message
