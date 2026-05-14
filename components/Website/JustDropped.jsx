@@ -1,8 +1,9 @@
 "use client"
 
 import React from "react"
-import { IMAGES } from "@/routes/AllImages"
+import Image from "next/image"
 import Link from "next/link"
+import { IMAGES } from "@/routes/AllImages"
 import { WEBSITE_SHOP } from "@/routes/WebsiteRoute"
 
 const items = [
@@ -32,9 +33,9 @@ const items = [
 const JustDropped = () => {
   return (
     <section className="w-full px-4 sm:px-8 lg:px-16 py-10 sm:py-14 lg:py-24">
-      
+
       {/* HEADER */}
-      <h2 className="text-3xl lg:text-2xl sm:text-4xl font-bold mb-6">
+      <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-8">
         Special Services
       </h2>
 
@@ -46,31 +47,40 @@ const JustDropped = () => {
             href={item.link}
             className="
               relative
-              h-105 sm:h-130
+              block
+              h-[360px]
+              sm:h-[420px]
+              lg:h-[460px]
               rounded-2xl
               overflow-hidden
               group
               cursor-pointer
-              block
             "
           >
+
             {/* IMAGE */}
-            <img
+            <Image
               src={item.image}
               alt={item.title}
+              fill
+              priority={false}
+              loading="lazy"
+              sizes="(max-width: 768px) 100vw, 33vw"
               className="
-                w-full h-full object-cover
-                transition-transform duration-700
-                group-hover:scale-110
+                object-cover
+                transition-transform duration-500
+                group-hover:scale-105
+                transform-gpu
+                will-change-transform
               "
             />
 
-            {/* DARK OVERLAY */}
-            <div className="absolute inset-0 bg-black/40" />
+            {/* OVERLAY */}
+            <div className="absolute inset-0 bg-black/40 z-10" />
 
             {/* TEXT */}
-            <div className="absolute bottom-8 left-6 right-6 text-white">
-              <h3 className="text-3xl sm:text-4xl font-bold leading-tight">
+            <div className="absolute bottom-6 left-5 right-5 z-20 text-white">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">
                 {item.title}
               </h3>
 
@@ -78,16 +88,25 @@ const JustDropped = () => {
                 {item.desc}
               </p>
 
-              <div className="mt-4">
-                <span className="px-5 py-2 border border-white rounded-full text-sm group-hover:bg-white group-hover:text-black transition">
+              <div className="mt-5">
+                <span className="
+                  inline-block
+                  px-5 py-2
+                  border border-white
+                  rounded-full
+                  text-sm
+                  transition
+                  group-hover:bg-white
+                  group-hover:text-black
+                ">
                   Book Service
                 </span>
               </div>
             </div>
+
           </Link>
         ))}
       </div>
-
     </section>
   )
 }

@@ -48,6 +48,13 @@ const ROLES = [
     icon: "🚴",
     desc: "Deliver orders",
   },
+
+   {
+     value: "admin", 
+    label: "Admin", 
+    icon: "👑", 
+    desc: "Manage the entire platform"
+   }
 ];
 
 /* ─── Decorative left-panel illustration (inline SVG) ─── */
@@ -261,7 +268,7 @@ const RegisterPage = () => {
                     <p className="text-xs text-slate-400 leading-none">{role.desc}</p>
                   </div>
                   {selectedRole === role.value && (
-                    <span className="ml-auto w-4 h-4 rounded-full bg-indigo-500 flex items-center justify-center flex-shrink-0">
+                    <span className="ml-auto w-4 h-4 rounded-full bg-indigo-500 flex items-center justify-center shrink-0">
                       <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12">
                         <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
@@ -385,7 +392,7 @@ const RegisterPage = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 rounded-2xl font-bold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-200 transition-all duration-200 text-sm tracking-wide disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                className="w-full py-3 rounded-2xl font-bold text-white bg-linear-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-200 transition-all duration-200 text-sm tracking-wide disabled:opacity-60 disabled:cursor-not-allowed mt-2"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">

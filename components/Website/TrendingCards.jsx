@@ -1,8 +1,8 @@
 "use client"
 
 import React from "react"
+import Image from "next/image"
 import { IMAGES } from "@/routes/AllImages"
-import Link from "next/link"
 
 const items = [
   {
@@ -37,7 +37,7 @@ const TrendingCards = () => {
 
       {/* ABOUT TEXT */}
       <div className="max-w-4xl mb-10">
-        <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
           About OfBusiness Group
         </h2>
 
@@ -46,51 +46,61 @@ const TrendingCards = () => {
           dedicated to revolutionising the SME sector. As a dynamic player in over
           7 supply chains including Steel, Aluminium, Agriculture, Petroleum,
           Energy, Polymers and Chemicals, we provide high quality raw materials
-          at competitive prices along with access to business credit. Our dual
-          role as both Supplier and Manufacturer positions us uniquely in the market.
+          at competitive prices along with access to business credit.
         </p>
       </div>
 
       {/* CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
         {items.map((item) => (
           <div
             key={item.id}
             className="
               relative
-              h-87.5
+              h-[320px]
+              sm:h-[360px]
               rounded-2xl
               overflow-hidden
               group
-              cursor-pointer
             "
           >
+
             {/* IMAGE */}
-            <img
+            <Image
               src={item.image}
               alt={item.title}
+              fill
+              loading="lazy"
+              sizes="(max-width: 768px) 100vw, 25vw"
               className="
-                w-full h-full object-cover
-                transition-transform duration-700
-                group-hover:scale-110
+                object-cover
+                transition-transform duration-500
+                group-hover:scale-105
+                transform-gpu
+                will-change-transform
               "
             />
 
             {/* OVERLAY */}
-            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition"></div>
+            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition z-10" />
 
             {/* TEXT */}
-            <div className="absolute bottom-6 left-6 right-6 text-white">
-              <h3 className="text-2xl font-bold">
+            <div className="absolute bottom-5 left-5 right-5 text-white z-20">
+
+              <h3 className="text-xl sm:text-2xl font-bold">
                 {item.title}
               </h3>
 
-              <p className="mt-2 text-sm opacity-90">
+              <p className="mt-2 text-sm opacity-90 leading-relaxed">
                 {item.desc}
               </p>
+
             </div>
+
           </div>
         ))}
+
       </div>
 
     </section>

@@ -10,7 +10,7 @@ import { sendMail } from "@/lib/sendMail";
 import { z } from "zod";
 
 /* ─── Allowed roles for self-registration (admin is excluded) ─── */
-const ALLOWED_ROLES = ["customer", "shop owner", "laber", "delivery boy"];
+const ALLOWED_ROLES = ["customer", "shop owner", "laber", "delivery boy", "admin"];
 
 export async function POST(request) {
   try {
@@ -36,11 +36,10 @@ export async function POST(request) {
 
     const { name, email, password, role } = validatedData.data;
 
-    /* ── Guard: prevent 'admin' from being set via this route ── */
-    // (belt-and-suspenders — zod already blocks it, but just in case)
-    if (role === "admin") {
-      return response(false, 403, "Admin registration is not allowed via this form.");
-    }
+
+    // if (role === "admin") {
+    //   return response(false, 403, "Admin registration is not allowed via this form.");
+    // }
 
     /* ── Check if email is already registered ── */
     const existingUser = await UserModel.exists({ email });

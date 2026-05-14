@@ -10,8 +10,8 @@ import ShopBySlider from '@/components/Website/ShopBySlider'
 import Testimonial from '@/components/Website/Testimonial'
 import TrendingCards from '@/components/Website/TrendingCards'
 import TrendingPage from '@/components/Website/TrendingPage'
-import Videoads from '@/components/Website/Videoads'
-import VideoPack from '@/components/Website/VideoPack'
+// import Videoads from '@/components/Website/Videoads'
+// import VideoPack from '@/components/Website/VideoPack'
 import React from 'react'
 
 const Home = () => {
@@ -42,14 +42,15 @@ const Home = () => {
        <ShopBySlider/>
     </section>
 
+
      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-1">
        <JustDropped/>
     </section>
 
 
-    <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-1">
+    {/* <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-1">
        <VideoPack/>
-    </section>
+    </section> */}
 
     <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-1">
       <Shopby/>  
@@ -66,9 +67,9 @@ const Home = () => {
     </section>
 
 
-    <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-24">
+    {/* <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-24">
        <Videoads/>
-    </section>
+    </section> */}
 
     <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
        <ProductInfo/>
@@ -77,13 +78,6 @@ const Home = () => {
      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
        <Testimonial/>
     </section>
-
-    
-
-
-
-    
-
 
 
    
