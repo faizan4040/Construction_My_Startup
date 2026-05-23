@@ -1,6 +1,6 @@
 'use client'
 
-import ProductSlider from '@/components/Website/ProductSlider'
+import LabourSlider from '@/components/Website/LabourSlider'
 import { IMAGES } from '@/routes/AllImages'
 import React, { useState } from 'react'
 
@@ -216,7 +216,8 @@ const GiftVouchers = () => {
 
           {/* FULL WIDTH SLIDER */}
           <div className="mt-16 w-full">
-            <ProductSlider />
+            {/* <ProductSlider /> */}
+            <LabourSlider />
           </div>
         </section>
 
