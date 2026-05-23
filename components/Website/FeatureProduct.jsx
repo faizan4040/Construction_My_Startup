@@ -14,30 +14,60 @@ const FeatureProduct = () => {
   const [loading, setLoading] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
 
+
   const fetchProducts = async () => {
-    setLoading(true)
-    try {
-      const { data } = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/product/get-feature-product`
-      )
-      // Reverse products so newest comes first
-      const productArray = Array.isArray(data?.data)
+  setLoading(true)
+  try {
+    const { data } = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/product/get-feature-product`
+    )
+
+    console.log("API response:", data) // 👈 Add this temporarily
+
+    const productArray = Array.isArray(data?.data)
       ? data.data
       : Array.isArray(data?.data?.products)
       ? data.data.products
+      : Array.isArray(data?.products)   // 👈 extra fallback
+      ? data.products
       : []
+
+    console.log("Parsed productArray:", productArray) // 👈 And this
 
     const reversedProducts = productArray.slice().reverse()
     setProducts(reversedProducts)
-    
-      setProducts(reversedProducts)
-    } catch (err) {
-      console.error("Failed to fetch products:", err)
-      setProducts([])
-    } finally {
-      setLoading(false)
-    }
+  } catch (err) {
+    console.error("Failed to fetch products:", err)
+    setProducts([])
+  } finally {
+    setLoading(false)
   }
+}
+
+  // const fetchProducts = async () => {
+  //   setLoading(true)
+  //   try {
+  //     const { data } = await axios.get(
+  //       `${process.env.NEXT_PUBLIC_API_BASE_URL}/product/get-feature-product`
+  //     )
+  //     // Reverse products so newest comes first
+  //     const productArray = Array.isArray(data?.data)
+  //     ? data.data
+  //     : Array.isArray(data?.data?.products)
+  //     ? data.data.products
+  //     : []
+
+  //   const reversedProducts = productArray.slice().reverse()
+  //   setProducts(reversedProducts)
+    
+  //     setProducts(reversedProducts)
+  //   } catch (err) {
+  //     console.error("Failed to fetch products:", err)
+  //     setProducts([])
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
 
   useEffect(() => {
     fetchProducts()
