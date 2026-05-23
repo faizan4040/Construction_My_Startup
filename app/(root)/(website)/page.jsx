@@ -31,7 +31,7 @@ const Home = () => {
 
      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10">
        <LabourSlider/>
-    </section>
+     </section>
 
      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10">
        <FeatureProduct/>

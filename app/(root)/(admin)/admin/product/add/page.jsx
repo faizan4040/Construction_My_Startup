@@ -87,12 +87,12 @@ const breadcrumbData = [
        form.setValue('discountPercentage', Math.round(discountPercentage))
        }
     
-  },[form.watch('mrp'), form.watch('sellingPrice')])
+      },[form.watch('mrp'), form.watch('sellingPrice')])
 
-   const editor = (event, editor) =>{
-   const data = editor.getData()
-   form.setValue('description', data)
-  }
+      const editor = (event, editor) =>{
+      const data = editor.getData()
+      form.setValue('description', data)
+      }
 
    
   const onSubmit = async (values) => {
