@@ -64,7 +64,7 @@ const LaborSlider = () => {
       {loading ? (
         <div className="flex gap-5">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="min-w-[260px] bg-gray-100 rounded-2xl h-80 animate-pulse flex-shrink-0" />
+            <div key={i} className="min-w-65 bg-gray-100 rounded-2xl h-80 animate-pulse shrink-0" />
           ))}
         </div>
       ) : workers.length === 0 ? (
@@ -88,8 +88,8 @@ const LaborSlider = () => {
               return (
                 <Link key={worker._id}
                   href={`/labour/profile/${worker.slug || worker._id}`}
-                  className="min-w-[260px] max-w-[260px] bg-white rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group flex-shrink-0 border border-gray-100 hover:border-orange-200">
-                  <div className="relative bg-gradient-to-br from-orange-50 to-gray-50 h-44 flex items-center justify-center overflow-hidden">
+                  className="min-w-65 max-w-65 bg-white rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group shrink-0 border border-gray-100 hover:border-orange-200">
+                  <div className="relative bg-linear-to-br from-orange-50 to-gray-50 h-44 flex items-center justify-center overflow-hidden">
                     {worker.profileImageUrl ? (
                       <img src={worker.profileImageUrl} alt={`${worker.firstName} ${worker.lastName}`}
                         className="h-32 w-32 object-cover rounded-2xl shadow-md group-hover:scale-105 transition-transform duration-300" />
@@ -140,7 +140,7 @@ const LaborSlider = () => {
 
             {/* See All card */}
             <Link href="/labour"
-              className="min-w-[180px] bg-gradient-to-br from-orange-500 to-amber-500 rounded-3xl flex flex-col items-center justify-center gap-3 flex-shrink-0 text-white hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg group">
+              className="min-w-45 bg-linear-to-br from-orange-500 to-amber-500 rounded-3xl flex flex-col items-center justify-center gap-3 shrink-0 text-white hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg group">
               <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                 <RiArrowRightLine className="text-2xl" />
               </div>
