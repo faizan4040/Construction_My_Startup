@@ -24,12 +24,13 @@ import OTPVerification from "@/components/Application/OTPVerification";
 import { useDispatch } from "react-redux";
 import { login } from "@/store/reducer/authReducer";
 import { ADMIN_DASHBOARD } from "@/routes/AdminPanelRoute";
+import {SHOP_OWNER_DASHBOARD} from "@/routes/ShopOwnerPanelRoute";
 
 /* ─── Role → dashboard map (keep in sync with middleware) ─── */
 const ROLE_DASHBOARDS = {
   admin:          ADMIN_DASHBOARD,
   customer:       "/my-account/dashboard",
-  "shop owner":   "/shop/dashboard",
+  "shop owner":   SHOP_OWNER_DASHBOARD,
   laber:          "/labour/dashboard",
   "delivery boy": "/delivery/dashboard",
 };
@@ -135,7 +136,7 @@ const LoginPage = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-indigo-50/40 to-purple-50/30 px-4 py-10"
+      className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 via-indigo-50/40 to-purple-50/30 px-4 py-10"
       style={{ fontFamily: "'DM Sans', 'Nunito', sans-serif" }}
     >
       <div
@@ -145,7 +146,7 @@ const LoginPage = () => {
         style={{ boxShadow: "0 24px 80px rgba(99,102,241,0.13), 0 2px 12px rgba(0,0,0,0.07)" }}
       >
         {/* ── LEFT PANEL ── */}
-        <div className="hidden lg:flex flex-col justify-between w-5/12 bg-gradient-to-b from-indigo-600 via-violet-600 to-purple-700 px-10 py-12 relative overflow-hidden">
+        <div className="hidden lg:flex flex-col justify-between w-5/12 bg-linear-to-b from-indigo-600 via-violet-600 to-purple-700 px-10 py-12 relative overflow-hidden">
           <div className="absolute -top-16 -left-16 w-56 h-56 rounded-full bg-white/10" />
           <div className="absolute bottom-10 -right-10 w-40 h-40 rounded-full bg-white/10" />
 
@@ -255,7 +256,7 @@ const LoginPage = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 rounded-2xl font-bold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-200 transition-all duration-200 text-sm tracking-wide disabled:opacity-60 disabled:cursor-not-allowed mt-1"
+                    className="w-full py-3 rounded-2xl font-bold text-white bg-linear-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-200 transition-all duration-200 text-sm tracking-wide disabled:opacity-60 disabled:cursor-not-allowed mt-1"
                   >
                     {loading ? (
                       <span className="flex items-center justify-center gap-2">
@@ -301,7 +302,7 @@ const LoginPage = () => {
 
               {/* Email badge */}
               <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-100 rounded-2xl px-4 py-3">
-                <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
                   <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                   </svg>

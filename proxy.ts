@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify, JWTPayload } from "jose";
 import { WEBSITE_LOGIN, USER_DASHBOARD } from "./routes/WebsiteRoute";
 import { ADMIN_DASHBOARD } from "./routes/AdminPanelRoute";
+import { SHOP_OWNER_DASHBOARD } from "./routes/ShopOwnerPanelRoute";
 
 /* ─── Types ─────────────────────────────────────────────────────── */
 type Role = "admin" | "customer" | "shop owner" | "laber" | "delivery boy";
@@ -15,10 +16,11 @@ interface AuthPayload extends JWTPayload {
 const ROLE_DASHBOARDS: Record<Role, string> = {
   admin:          ADMIN_DASHBOARD,
   customer:       USER_DASHBOARD,
-  "shop owner":   "/shop/dashboard",
+  "shop owner":   SHOP_OWNER_DASHBOARD,
   laber:          "/labour/dashboard",
   "delivery boy": "/delivery/dashboard",
 };
+
 
 /* ─── Role → protected path prefix ─────────────────────────────── */
 const ROLE_PREFIXES: Record<Role, string> = {
@@ -28,6 +30,7 @@ const ROLE_PREFIXES: Record<Role, string> = {
   laber:          "/labour/dashboard",
   "delivery boy": "/delivery",
 };
+
 
 /* ─── Public paths anyone can visit (no auth needed) ────────────── */
 const PUBLIC_PATHS = [
