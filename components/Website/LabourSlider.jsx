@@ -42,7 +42,7 @@ const LaborSlider = () => {
         <div>
           <p className="text-orange-500 text-xs font-bold uppercase tracking-widest mb-2">Skilled Workforce</p>
           <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight text-gray-900">
-            Featured <span className="text-orange-500">Professionals</span>
+            Available <span className="text-orange-500">Workers</span>
           </h2>
         </div>
         <div className="flex items-center gap-3">

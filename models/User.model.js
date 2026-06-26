@@ -42,6 +42,11 @@ const UserSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    shop: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Shop",
+      default: null,
+    },
     deletedAt: {
       type: Date,
       default: null,

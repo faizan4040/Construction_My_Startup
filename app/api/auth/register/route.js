@@ -61,7 +61,7 @@ export async function POST(request) {
 
     /* ── Send verification email ── */
     await sendMail(
-      "Email verification request from BrandName",
+      "Email verification request from ConstructEzy",
       email,
       emailVerificationLink(
         `${process.env.NEXT_PUBLIC_BASE_URL}/auth/verify-email/${token}`
@@ -149,7 +149,7 @@ export async function POST(request) {
 //          .sign(secret);
 
 //             await sendMail(
-//             "Email verification request from BrandName",
+//             "Email verification request from ConstructEzy",
 //             email, emailVerificationLink(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/verify-email/${token}`));
 
 //          return response(true, 200, 'Registration success, please verify your email address.');

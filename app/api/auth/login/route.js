@@ -49,7 +49,7 @@ export async function POST(request) {
         .sign(secret);
 
       await sendMail(
-        "Email verification request from BrandName",
+        "Email verification request from ConstructEzy",
         email,
         emailVerificationLink(
           `${process.env.NEXT_PUBLIC_BASE_URL}/auth/verify-email/${token}`
@@ -78,7 +78,7 @@ export async function POST(request) {
 
     /* ── Send OTP email ── */
     const emailStatus = await sendMail(
-      "Your login verification code — BrandName",
+      "Your login verification code — ConstructEzy",
       email,
       otpEmail(otp)
     );
