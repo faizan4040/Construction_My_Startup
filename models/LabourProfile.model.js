@@ -8,10 +8,12 @@ const LabourProfileSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    slug: {
-      type: String,
-      unique: true,
-    },
+    // slug: {
+    //   type: String,
+    //   unique: true,
+    // },
+
+    slug: { type: String, unique: true, sparse: true },
     // Step 1 - Personal Info
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },

@@ -33,6 +33,13 @@ const BookingSchema = new mongoose.Schema(
     description: { type: String, required: true },
     address: { type: String, default: "" },
 
+    // Location for live tracking
+    clientLat:  { type: Number, default: null },
+    clientLng:  { type: Number, default: null },
+    labourLat:  { type: Number, default: null },
+    labourLng:  { type: Number, default: null },
+    acceptedAt: { type: Date, default: null },  // for 30 min ETA
+
     status: {
       type: String,
       enum: ["pending", "accepted", "rejected", "completed", "cancelled"],
