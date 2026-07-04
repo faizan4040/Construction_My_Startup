@@ -44,30 +44,6 @@ const FeatureProduct = () => {
   }
 }
 
-  // const fetchProducts = async () => {
-  //   setLoading(true)
-  //   try {
-  //     const { data } = await axios.get(
-  //       `${process.env.NEXT_PUBLIC_API_BASE_URL}/product/get-feature-product`
-  //     )
-  //     // Reverse products so newest comes first
-  //     const productArray = Array.isArray(data?.data)
-  //     ? data.data
-  //     : Array.isArray(data?.data?.products)
-  //     ? data.data.products
-  //     : []
-
-  //   const reversedProducts = productArray.slice().reverse()
-  //   setProducts(reversedProducts)
-    
-  //     setProducts(reversedProducts)
-  //   } catch (err) {
-  //     console.error("Failed to fetch products:", err)
-  //     setProducts([])
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }
 
   useEffect(() => {
     fetchProducts()
