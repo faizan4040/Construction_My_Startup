@@ -3,7 +3,7 @@ import CuponBanner from '@/components/Website/CuponBanner'
 import FeatureProduct from '@/components/Website/FeatureProduct'
 import InventoryCategories from '@/components/Website/InventoryCategories'
 import JustDropped from '@/components/Website/JustDropped'
-import ProductInfo from '@/components/Website/ProductInfo'
+// import ProductInfo from '@/components/Website/ProductInfo'
 import LabourSlider from '@/components/Website/LabourSlider'
 import Shopby from '@/components/Website/Shopby'
 import ShopBySlider from '@/components/Website/ShopBySlider'
@@ -71,9 +71,9 @@ const Home = () => {
        <Videoads/>
     </section> */}
 
-    <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+    {/* <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
        <ProductInfo/>
-    </section>
+    </section> */}
 
      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
        <Testimonial/>
