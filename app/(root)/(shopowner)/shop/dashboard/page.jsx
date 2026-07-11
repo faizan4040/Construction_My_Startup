@@ -1,7 +1,7 @@
-import ShopDashboard from '@/components/Application/ShopOwner/Dashboard/ShopDashboard'
+import ShopOwnerDashboard from '@/components/Application/ShopOwner/Dashboard/ShopOwnerDashboard'
 
-const page = () => {
-  return <ShopDashboard />
+export default function Page() {
+  return <ShopOwnerDashboard />
 }
 
-export default page
+
