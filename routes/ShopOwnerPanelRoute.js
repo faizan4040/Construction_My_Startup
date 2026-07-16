@@ -16,7 +16,13 @@ export const SHOP_OWNER_VARIANT_SHOW = '/shop/product-variant'
 export const SHOP_OWNER_EARNINGS_SHOW = '/shop/earnings'
 
 
+export const SHOP_OWNER_ORDER_DETAILS = (order_id) => `/shop/orders/${order_id}`
+export const SHOP_OWNER_REVIEW_SHOW = '/shop/reviews'
 
+
+export const SHOP_OWNER_MANUAL_ORDER_SHOW = '/shop/manual-order'
+export const SHOP_OWNER_MANUAL_ORDER_ADD = '/shop/manual-order/add'
+export const SHOP_OWNER_MANUAL_ORDER_DETAILS = (order_id) => `/shop/manual-order/${order_id}`
 
 
 

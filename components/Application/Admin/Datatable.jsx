@@ -188,7 +188,7 @@ const Datatable = ({
               <MRT_ToggleFullScreenButton table={table}/>
               <MRT_ToggleDensePaddingButton table={table}/>
 
-               {deleteType !== 'PD'
+               {deleteType !== 'PD' && trashView
                 && 
                   <Tooltip title='Recycle Bin'>
                     <Link href={trashView}>

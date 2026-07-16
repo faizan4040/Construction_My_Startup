@@ -50,6 +50,11 @@ const manualOrderSchema = new mongoose.Schema(
     payment_id: { type: String, default: '' },
     orderType: { type: String, default: 'MANUAL' },
 
+
+    // NEW — ownership. null = admin ka manual order, ObjectId = shopowner ka
+    shop: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop', default: null },
+
+
     // FIX: deletedAt was MISSING from schema — soft delete was silently failing
     deletedAt: { type: Date, default: null },
   },

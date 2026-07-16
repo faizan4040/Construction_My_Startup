@@ -14,33 +14,23 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { DT_MANUAL_ORDER_COLUM } from '@/lib/column'
 import { columnConfig } from '@/lib/helperfunction'
 import {
-  ADMIN_DASHBOARD,
-  ADMIN_MANUAL_ORDER_DETAILS,
-  ADMIN_MANUAL_ORDERS_ADD,
-  ADMIN_TRASH,
-} from '@/routes/AdminPanelRoute'
+  SHOP_OWNER_DASHBOARD,
+  SHOP_OWNER_MANUAL_ORDER_ADD,
+  SHOP_OWNER_MANUAL_ORDER_DETAILS,
+} from '@/routes/ShopOwnerPanelRoute'
 
 const breadcrumbData = [
-  { href: ADMIN_DASHBOARD, label: 'Home' },
+  { href: SHOP_OWNER_DASHBOARD, label: 'Home' },
   { href: '', label: 'Manual Orders' },
 ]
 
-const ShowManualOrders = () => {
+const ShopOwnerShowManualOrders = () => {
   const columns = useMemo(() => columnConfig(DT_MANUAL_ORDER_COLUM), [])
 
   const action = useCallback(
     (row, deleteType, handleDelete) => [
-      <ViewAction
-        key="view"
-        // Uses order_id string (e.g. "MANUAL-1234") — matches [order_id] route
-        href={ADMIN_MANUAL_ORDER_DETAILS(row.original.order_id)}
-      />,
-      <DeleteAction
-        key="delete"
-        handleDelete={handleDelete}
-        row={row}
-        deleteType={deleteType}
-      />,
+      <ViewAction key="view" href={SHOP_OWNER_MANUAL_ORDER_DETAILS(row.original.order_id)} />,
+      <DeleteAction key="delete" handleDelete={handleDelete} row={row} deleteType={deleteType} />,
     ],
     []
   )
@@ -52,10 +42,9 @@ const ShowManualOrders = () => {
       <div className="py-4 max-w-300">
         <Card className="rounded-3xl shadow-sm">
           <CardHeader className="flex justify-between items-center border-b">
-            <h4 className="text-xl font-semibold">Manual Orders</h4>
-
-            <Link href={ADMIN_MANUAL_ORDERS_ADD}>
-              <Button className="bg-orange-500 text-white gap-2">
+            <h4 className="text-xl font-semibold">Your Manual Orders</h4>
+            <Link href={SHOP_OWNER_MANUAL_ORDER_ADD}>
+              <Button className="bg-orange-500 text-white gap-2 hover:bg-orange-600">
                 <FilePlus size={18} />
                 Add Manual Order
               </Button>
@@ -64,14 +53,12 @@ const ShowManualOrders = () => {
 
           <CardContent className="px-0">
             <DatatableWrapper
-              querykey="manual-orders"
-              fetchUrl="/api/manual-order"
-              deleteEndpoint="/api/manual-order/delete"
+              querykey="shopowner-manual-orders"
+              fetchUrl="/api/shopowner/manual-order"
+              deleteEndpoint="/api/shopowner/manual-order/delete"
               deleteType="SD"
               columnsConfig={columns}
               createAction={action}
-              // FIX: Trash key must match TRASH_CONFIG key — changed to 'manual-orders'
-              trashView={`${ADMIN_TRASH}?trashof=manual-order`}
             />
           </CardContent>
         </Card>
@@ -80,5 +67,4 @@ const ShowManualOrders = () => {
   )
 }
 
-export default ShowManualOrders
-
+export default ShopOwnerShowManualOrders
