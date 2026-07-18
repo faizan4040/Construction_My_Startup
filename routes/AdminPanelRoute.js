@@ -50,6 +50,10 @@ export const ADMIN_MANUAL_ORDERS_DETAILS = '/admin/manual-order/show-manual-orde
 export const ADMIN_MANUAL_ORDER_DETAILS = (id) => `/admin/manual-order/details/${id}`
 
 
+export const ADMIN_SHOPOWNER_TRACKER_SHOW = '/admin/shopowner-tracker'
+export const ADMIN_SHOPOWNER_TRACKER_DETAILS = (id) => `/admin/shopowner-tracker/${id}`
+
+
 // Chat show
 export const ADMIN_CHAT_SHOW = '/admin/chat'
 

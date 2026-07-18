@@ -1,15 +1,15 @@
 import BuyerSupplierSection from '@/components/Website/BuyerSupplierSection'
 import CuponBanner from '@/components/Website/CuponBanner'
 import FeatureProduct from '@/components/Website/FeatureProduct'
-import InventoryCategories from '@/components/Website/InventoryCategories'
 import JustDropped from '@/components/Website/JustDropped'
-// import ProductInfo from '@/components/Website/ProductInfo'
 import LabourSlider from '@/components/Website/LabourSlider'
-import Shopby from '@/components/Website/Shopby'
 import ShopBySlider from '@/components/Website/ShopBySlider'
-import Testimonial from '@/components/Website/Testimonial'
-import TrendingCards from '@/components/Website/TrendingCards'
 import TrendingPage from '@/components/Website/TrendingPage'
+// import InventoryCategories from '@/components/Website/InventoryCategories'
+// import ProductInfo from '@/components/Website/ProductInfo'
+// import Shopby from '@/components/Website/Shopby'
+// import Testimonial from '@/components/Website/Testimonial'
+// import TrendingCards from '@/components/Website/TrendingCards'
 // import Videoads from '@/components/Website/Videoads'
 // import VideoPack from '@/components/Website/VideoPack'
 import React from 'react'
@@ -25,9 +25,9 @@ const Home = () => {
        <TrendingPage/>
      </section>
 
-     <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10">
+     {/* <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10">
        <InventoryCategories/>
-    </section>
+    </section> */}
 
      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10">
        <LabourSlider/>
@@ -52,9 +52,9 @@ const Home = () => {
        <VideoPack/>
     </section> */}
 
-    <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-1">
+    {/* <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-1">
       <Shopby/>  
-    </section>
+    </section> */}
 
 
     <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-1">
@@ -62,9 +62,9 @@ const Home = () => {
     </section>
 
 
-    <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-1">
+    {/* <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-1">
        <TrendingCards/>  
-    </section>
+    </section> */}
 
 
     {/* <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-24">
@@ -75,9 +75,9 @@ const Home = () => {
        <ProductInfo/>
     </section> */}
 
-     <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+     {/* <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
        <Testimonial/>
-    </section>
+    </section> */}
 
 
    

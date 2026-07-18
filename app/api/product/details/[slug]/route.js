@@ -37,6 +37,15 @@ export async function GET(request, {params}) {
             return response(false, 404, 'Product not fount.')
         }
 
+        
+        // NEW: hide products belonging to a blocked shop, same as if they didn't exist
+        if (getProduct.shop) {
+            const owner = await (await import('@/models/User.model')).default.findOne({ shop: getProduct.shop, role: 'shop owner' }).select('isBlocked')
+            if (owner?.isBlocked) {
+                return response(false, 404, 'Product not fount.')
+            }
+        }
+
 
         //get product variant
         const variantFilter = {

@@ -81,7 +81,7 @@ const FeatureProduct = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl sm:text-3xl font-bold">
-          Shop Construction Materials  <span className="text-red-500 text-sm">(Coming soon..)</span>
+          Construction Materials  
         </h2>
         <Link
           href="/products"

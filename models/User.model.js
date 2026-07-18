@@ -47,6 +47,25 @@ const UserSchema = new mongoose.Schema(
       ref: "Shop",
       default: null,
     },
+
+    shop: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Shop",
+      default: null,
+    },
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+    blockedAt: {
+      type: Date,
+      default: null,
+    },
+    blockReason: {
+      type: String,
+      default: '',
+    },
+    
     deletedAt: {
       type: Date,
       default: null,
