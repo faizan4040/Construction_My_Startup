@@ -53,6 +53,10 @@ export const ADMIN_MANUAL_ORDER_DETAILS = (id) => `/admin/manual-order/details/$
 export const ADMIN_SHOPOWNER_TRACKER_SHOW = '/admin/shopowner-tracker'
 export const ADMIN_SHOPOWNER_TRACKER_DETAILS = (id) => `/admin/shopowner-tracker/${id}`
 
+export const ADMIN_LABOUR_VERIFY_SHOW = "/admin/labour-dashboard";
+
+
+
 
 // Chat show
 export const ADMIN_CHAT_SHOW = '/admin/chat'

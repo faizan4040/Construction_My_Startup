@@ -17,7 +17,7 @@ const ROLE_DASHBOARDS: Record<Role, string> = {
   admin:          ADMIN_DASHBOARD,
   customer:       USER_DASHBOARD,
   "shop owner":   SHOP_OWNER_DASHBOARD,
-  laber:          "/labour/dashboard",
+  laber:          "/partner/onboarding/labour",
   "delivery boy": "/delivery/dashboard",
 };
 
@@ -27,7 +27,7 @@ const ROLE_PREFIXES: Record<Role, string> = {
   admin:          "/admin",
   customer:       "/my-account",
   "shop owner":   "/shop",
-  laber:          "/labour/dashboard",
+  laber:          "/partner/onboarding/labour",
   "delivery boy": "/delivery",
 };
 

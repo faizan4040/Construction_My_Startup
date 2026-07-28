@@ -1,62 +1,150 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
-const MessageSchema = new mongoose.Schema(
+const bookingSchema = new mongoose.Schema(
   {
-    sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    senderRole: { type: String, enum: ["client", "labour"] },
-    text: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now },
-  },
-  { _id: false }
-)
-
-const BookingSchema = new mongoose.Schema(
-  {
-    labour: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "LabourProfile",
-      required: true,
-    },
-    labourUser: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    client: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    clientName: { type: String, required: true },
-    clientPhone: { type: String, required: true },
-    workDate: { type: Date, required: true },
-    description: { type: String, required: true },
-    address: { type: String, default: "" },
-
-    // Location for live tracking
-    clientLat:  { type: Number, default: null },
-    clientLng:  { type: Number, default: null },
-    labourLat:  { type: Number, default: null },
-    labourLng:  { type: Number, default: null },
-    acceptedAt: { type: Date, default: null },  // for 30 min ETA
-
-    status: {
+    // Distinguishes a vehicle ride booking from a labour hire booking
+    bookingType: {
       type: String,
-      enum: ["pending", "accepted", "rejected", "completed", "cancelled"],
+      enum: ["vehicle", "labour"],
+      required: true,
+      default: "vehicle",
+    },
+
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    // For vehicle bookings: the driver. For labour bookings: the labour
+    // partner. Kept as one field so earning/stat queries can stay simple.
+    driver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    // Only required for bookingType "vehicle"
+    vehicle: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Vehicle",
+      required: function () {
+        return this.bookingType === "vehicle";
+      },
+    },
+
+    // Only relevant for bookingType "labour" — snapshot of category at
+    // booking time (helpers, masons, electricians, etc.)
+    category: {
+      type: String,
+      required: function () {
+        return this.bookingType === "labour";
+      },
+    },
+
+    pickUpAddress: {
+      type: String,
+      required: true,
+    },
+    dropAddress: {
+      type: String,
+      required: function () {
+        return this.bookingType === "vehicle";
+      },
+    },
+
+    pickUpLocation: {
+      type: {
+        type: String,
+        enum: ["Point"],
+      },
+      coordinates: [Number],
+    },
+    dropLocation: {
+      type: {
+        type: String,
+        enum: ["Point"],
+      },
+      coordinates: [Number],
+    },
+
+    fare: {
+      type: Number,
+      required: true,
+    },
+    pricingType: {
+      type: String,
+      enum: ["hourly", "daily"],
+    },
+    duration: {
+      type: Number,
+    },
+    ratePerUnit: {
+      type: Number,
+    },
+
+    userMobileNumber: {
+      type: String,
+      required: true,
+    },
+    driverMobileNumber: {
+      type: String,
+      required: true,
+    },
+
+    bookingStatus: {
+      type: String,
+      enum: [
+        "idle",
+        "requested",
+        "awaiting_payment",
+        "confirmed",
+        "started",
+        "completed",
+        "cancelled",
+        "rejected",
+        "expired",
+      ],
+      default: "idle",
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "cash", "failed"],
       default: "pending",
     },
+    paymentDeadline: {
+      type: Date,
+    },
+    adminCommission: {
+      type: Number,
+      default: 0,
+    },
+    partnerAmount: {
+      type: Number,
+      default: 0,
+    },
 
-    // Chat messages between client and labour
-    messages: [MessageSchema],
+    pickUpOtp: {
+      type: String,
+    },
+    dropOtp: {
+      type: String,
+    },
+    pickUpOtpExpires: {
+      type: Date,
+    },
+    dropOtpExpires: {
+      type: Date,
+    },
 
-    // Notification read status for labour
-    labourRead: { type: Boolean, default: false },
-    clientRead: { type: Boolean, default: false },
+    cancellationReason: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
-)
+);
 
 const Booking =
-  mongoose.models.Booking || mongoose.model("Booking", BookingSchema)
-
-export default Booking
+  mongoose.models.Booking || mongoose.model("Booking", bookingSchema);
+export default Booking;

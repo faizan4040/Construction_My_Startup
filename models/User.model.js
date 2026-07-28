@@ -27,7 +27,7 @@ const UserSchema = new mongoose.Schema(
       select: false,
     },
     avatar: {
-      url:       { type: String, trim: true },
+      url: { type: String, trim: true },
       public_id: { type: String, trim: true },
     },
     isEmailVerified: {
@@ -47,12 +47,6 @@ const UserSchema = new mongoose.Schema(
       ref: "Shop",
       default: null,
     },
-
-    shop: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Shop",
-      default: null,
-    },
     isBlocked: {
       type: Boolean,
       default: false,
@@ -63,9 +57,41 @@ const UserSchema = new mongoose.Schema(
     },
     blockReason: {
       type: String,
-      default: '',
+      default: "",
     },
-    
+
+    // ── Partner onboarding (labour ) ──
+    partnerOnBoardingSteps: {
+      type: Number,
+      min: 0,
+      max: 8,
+      default: 0,
+    },
+    partnerStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    rejectionReason: {
+      type: String,
+      default: "",
+    },
+ 
+    // ── Video KYC ──
+    videoKycStatus: {
+      type: String,
+      enum: ["not_required", "pending", "in_progress", "approved", "rejected"],
+      default: "not_required"
+    },
+    videoKycRoomId: {
+      type: String,
+      default: null,
+    },
+    videoKycRejectionReason: {
+      type: String,
+      default: "",
+    },
+
     deletedAt: {
       type: Date,
       default: null,
@@ -96,102 +122,95 @@ export default UserModel;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // import mongoose from "mongoose";
 // import bcrypt from "bcryptjs";
 
-// const UserSchema = new mongoose.Schema({
-//   role:{
-//     type: String,
-//     required: true,
-//     enum: ['user', 'admin'],
-//     //  enum: ["user", "admin", "shop owner", "laber", "delivery boy"],
-//     default: 'user'
-//   },
-//   name: {
-//     type: String,
-//     required: true,
-//     trim: true, 
-//   },
-//   email: {
-//     type: String,
-//     required: true,
-//     unique: true,
-//     trim: true,
-//   },
-//   password: {
-//     type: String,
-//     required: true,
-//     trim: true,
-//     select: false,
-//   },
-  
-//   avatar: {
-//     url: {
-//         type: String,
-//         trim: true,
+// const UserSchema = new mongoose.Schema(
+//   {
+//     role: {
+//       type: String,
+//       required: true,
+//       enum: ["admin", "customer", "shop owner", "laber", "delivery boy"],
+//       default: "customer",
 //     },
-//     public_id: {
-//         type: String,
-//         trim: true,
+//     name: {
+//       type: String,
+//       required: true,
+//       trim: true,
+//     },
+//     email: {
+//       type: String,
+//       required: true,
+//       unique: true,
+//       trim: true,
+//     },
+//     password: {
+//       type: String,
+//       required: true,
+//       trim: true,
+//       select: false,
+//     },
+//     avatar: {
+//       url:       { type: String, trim: true },
+//       public_id: { type: String, trim: true },
+//     },
+//     isEmailVerified: {
+//       type: Boolean,
+//       default: false,
+//     },
+//     phone: {
+//       type: String,
+//       trim: true,
+//     },
+//     address: {
+//       type: String,
+//       trim: true,
+//     },
+//     shop: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "Shop",
+//       default: null,
 //     },
 
+//     shop: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "Shop",
+//       default: null,
+//     },
+//     isBlocked: {
+//       type: Boolean,
+//       default: false,
+//     },
+//     blockedAt: {
+//       type: Date,
+//       default: null,
+//     },
+//     blockReason: {
+//       type: String,
+//       default: '',
+//     },
+    
+//     deletedAt: {
+//       type: Date,
+//       default: null,
+//       index: true,
+//     },
 //   },
-//   isEmailVerified: {
-//     type: Boolean,
-//     default: false,
-//   },
-//   phone: {
-//     type: String,
-//     trim: true,
-//   },
+//   { timestamps: true }
+// );
 
-//   address:{
-//     type: String,
-//     trim: true,
-//   },
-//   deletedAt:{
-//     type: Date,
-//     default: null,
-//     index: true,
-//   },
-
-// }, { timestamps: true })
-
-
-// // UserSchema.pre("save", async function (next) {
-// //   if (!this.isModified("password")) return next();
-// //   this.password = await bcrypt.hash(this.password, 10);
-// //   next();
-// // });
 // UserSchema.pre("save", async function () {
 //   if (!this.isModified("password")) return;
 //   this.password = await bcrypt.hash(this.password, 10);
 // });
 
-
-
 // UserSchema.methods.comparePassword = async function (enteredPassword) {
 //   return await bcrypt.compare(enteredPassword, this.password);
 // };
 
+// const UserModel =
+//   mongoose.models.User || mongoose.model("User", UserSchema, "users");
 
-
-// const UserModel = mongoose.models.User || mongoose.model('User', UserSchema, 'users');
 // export default UserModel;
 
 

@@ -31,7 +31,7 @@ const ROLE_DASHBOARDS = {
   admin:          ADMIN_DASHBOARD,
   customer:       "/my-account/dashboard",
   "shop owner":   SHOP_OWNER_DASHBOARD,
-  laber:          "/labour/dashboard",
+  laber:          "/partner/onboarding/labour",
   "delivery boy": "/delivery/dashboard",
 };
 
