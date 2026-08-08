@@ -54,21 +54,20 @@ const ConstructionHero = () => {
             Trusted construction services with modern design and expert craftsmanship.
           </p>
 
-          <div className="mt-6 flex gap-4">
-            <button
-              onClick={() => router.push("/services")}
-              className="px-6 cursor-pointer py-3 bg-yellow-500 text-black rounded-full font-semibold hover:bg-yellow-400"
-            >
-              Our Services
-            </button>
-
-            <button
-              onClick={() => router.push("/contact")}
-              className="px-6 py-3 cursor-pointer border border-white rounded-full hover:bg-white hover:text-black"
-            >
-              Contact Us
-            </button>
-          </div>
+         <div className="mt-6 flex gap-4">
+          <a
+            href="#services"
+            className="px-6 cursor-pointer py-3 bg-yellow-500 text-black rounded-full font-semibold hover:bg-yellow-400"
+          >
+            Our Services
+          </a>
+          <a
+            href="#shop"
+            className="px-6 py-3 cursor-pointer border border-white rounded-full hover:bg-white hover:text-black"
+          >
+            Shop Now
+          </a>
+        </div>
         </div>
       </div>
     </section>

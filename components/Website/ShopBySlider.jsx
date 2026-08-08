@@ -37,7 +37,7 @@ const ShopBySlider = () => {
   }
 
   return (
-    <section className="w-full px-4 sm:px-8 lg:px-16 py-10">
+    <section id="services" className="w-full px-4 sm:px-8 lg:px-16 py-10">
       {/* HEADER */}
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-2xl sm:text-3xl font-bold text-black">

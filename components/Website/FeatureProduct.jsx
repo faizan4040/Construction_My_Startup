@@ -74,7 +74,8 @@ const FeatureProduct = () => {
   }
 
   return (
-    <section
+    <section 
+      id="shop"
       ref={sectionRef}
       className="w-full px-4 sm:px-8 lg:px-16 -py-4"
     >

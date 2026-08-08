@@ -76,7 +76,25 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
- 
+
+    // ── Socket.io ──
+    socketId: {
+      type: String,
+      default: null,
+    },
+    location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+      },
+      coordinates: [Number],
+    },
+    isOnline: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
     // ── Video KYC ──
     videoKycStatus: {
       type: String,
@@ -101,6 +119,8 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+UserSchema.index({ location: "2dsphere" });
+
 UserSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 10);
@@ -114,7 +134,6 @@ const UserModel =
   mongoose.models.User || mongoose.model("User", UserSchema, "users");
 
 export default UserModel;
-
 
 
 
@@ -151,7 +170,7 @@ export default UserModel;
 //       select: false,
 //     },
 //     avatar: {
-//       url:       { type: String, trim: true },
+//       url: { type: String, trim: true },
 //       public_id: { type: String, trim: true },
 //     },
 //     isEmailVerified: {
@@ -171,12 +190,6 @@ export default UserModel;
 //       ref: "Shop",
 //       default: null,
 //     },
-
-//     shop: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: "Shop",
-//       default: null,
-//     },
 //     isBlocked: {
 //       type: Boolean,
 //       default: false,
@@ -187,9 +200,60 @@ export default UserModel;
 //     },
 //     blockReason: {
 //       type: String,
-//       default: '',
+//       default: "",
 //     },
-    
+
+//     // ── Partner onboarding (labour ) ──
+//     partnerOnBoardingSteps: {
+//       type: Number,
+//       min: 0,
+//       max: 8,
+//       default: 0,
+//     },
+//     partnerStatus: {
+//       type: String,
+//       enum: ["pending", "approved", "rejected"],
+//       default: "pending",
+//     },
+//     rejectionReason: {
+//       type: String,
+//       default: "",
+//     },
+
+//     // socket io
+//    socketId:{
+//     type:String,
+//     default:null
+// },
+// location:{
+//     type:{
+//         type:String,
+//         enum:["Point"]
+//     },
+//     coordinates:[Number]
+// }
+// ,
+// isOnline:{
+//     type:Boolean,
+//     default:false,
+//     index:true
+// }
+ 
+//     // ── Video KYC ──
+//     videoKycStatus: {
+//       type: String,
+//       enum: ["not_required", "pending", "in_progress", "approved", "rejected"],
+//       default: "not_required"
+//     },
+//     videoKycRoomId: {
+//       type: String,
+//       default: null,
+//     },
+//     videoKycRejectionReason: {
+//       type: String,
+//       default: "",
+//     },
+
 //     deletedAt: {
 //       type: Date,
 //       default: null,
@@ -198,6 +262,8 @@ export default UserModel;
 //   },
 //   { timestamps: true }
 // );
+
+// userSchema.index({location:"2dsphere"})
 
 // UserSchema.pre("save", async function () {
 //   if (!this.isModified("password")) return;
@@ -212,6 +278,10 @@ export default UserModel;
 //   mongoose.models.User || mongoose.model("User", UserSchema, "users");
 
 // export default UserModel;
+
+
+
+
 
 
 
