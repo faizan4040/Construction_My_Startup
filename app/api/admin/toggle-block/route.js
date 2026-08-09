@@ -1,7 +1,7 @@
 import { isAuthenticated } from "@/lib/authentication"
 import connectDB from "@/lib/databaseConnection"
 import { catchError, response } from "@/lib/helperfunction"
-import { sendShopStatusEmail } from "@/lib/email/shopStatusEmail"
+import { sendShopStatusEmail } from "@/lib/shopStatusEmail"
 import UserModel from "@/models/User.model"
 
 export async function PUT(request) {

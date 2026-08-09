@@ -1,4 +1,5 @@
-import { auth } from "@/auth";
+// import { auth } from "@/auth";
+import { isAuthenticated } from "@/lib/authentication";
 import connectDb from "@/lib/databaseConnection";
 import Booking from "@/models/Booking.model";
 import User from "@/models/User.model";

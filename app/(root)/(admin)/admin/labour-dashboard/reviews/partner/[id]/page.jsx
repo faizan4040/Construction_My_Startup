@@ -1,6 +1,6 @@
 'use client'
-import AnimatedCard from '@/components/Application/labour/AnimatedCard'
-import DocPreview from '@/components/Application/labour/DocPreview'
+import AnimatedCard from '@/components/Application/Labour/AnimatedCard'
+import DocPreview from '@/components/Application/Labour/DocPreview'
 import axios from 'axios'
 import { ArrowLeft, Briefcase, CheckCircle, CircleDashed, Clock, FileText, Landmark, ShieldCheck, XCircle } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
