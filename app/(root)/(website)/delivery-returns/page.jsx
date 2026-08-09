@@ -7,9 +7,32 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { Truck, CornerUpLeft } from "lucide-react";
+import { Truck, CornerUpLeft, Phone, MessageCircle, Clock } from "lucide-react"
 
+/* ── Blueprint grid overlay ── */
+const BlueprintGrid = ({ opacity = 0.08 }) => (
+  <div
+    className="pointer-events-none absolute inset-0"
+    style={{
+      opacity,
+      backgroundImage:
+        'linear-gradient(#4A7A96 1px, transparent 1px), linear-gradient(90deg, #4A7A96 1px, transparent 1px)',
+      backgroundSize: '36px 36px',
+    }}
+  />
+)
 
+/* ── Corner-bracket frame ── */
+const CornerBrackets = ({ color = '#F97316' }) => (
+  <>
+    <span className="absolute -top-px -left-px h-5 w-5 border-t-2 border-l-2" style={{ borderColor: color }} />
+    <span className="absolute -top-px -right-px h-5 w-5 border-t-2 border-r-2" style={{ borderColor: color }} />
+    <span className="absolute -bottom-px -left-px h-5 w-5 border-b-2 border-l-2" style={{ borderColor: color }} />
+    <span className="absolute -bottom-px -right-px h-5 w-5 border-b-2 border-r-2" style={{ borderColor: color }} />
+  </>
+)
+
+const contactIcons = [Clock, Phone, Clock, MessageCircle, Clock]
 
 const DeliveryReturns = () => {
   const [activeTab, setActiveTab] = useState('delivery')
@@ -45,56 +68,78 @@ const DeliveryReturns = () => {
   ]
 
   return (
-    <div className="flex justify-center">
-      <main className="w-full max-w-7xl py-16 px-4 sm:px-6 lg:px-8">
-        {/* Top Heading */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl lg:text-6xl font-extrabold text-gray-900">
-            Delivery & Returns
+    <div className="w-full bg-[#F5F3EF] text-[#14161A]">
+
+      {/* ---------- HEADER ---------- */}
+      <section className="relative bg-[#14161A] text-white py-20 overflow-hidden text-center">
+        <BlueprintGrid />
+        <div
+          className="absolute bottom-0 left-0 right-0 h-1.5"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(135deg, #F97316 0 14px, transparent 14px 28px)',
+          }}
+        />
+        <div className="relative max-w-3xl mx-auto px-6">
+          <div className="inline-flex items-center gap-2 text-[#F97316] text-xs font-mono uppercase tracking-[0.3em] mb-5">
+            <Truck size={16} strokeWidth={2.5} />
+            Shipping & Returns
+          </div>
+          <h1 className="text-4xl lg:text-5xl font-black uppercase tracking-tight leading-[1.05]">
+            Delivery &amp; Returns
           </h1>
-          <p className="text-gray-600 text-lg lg:text-xl mt-2">
-            See below information about the delivery & returns options in your country
+          <p className="text-[#C9CCD1] text-lg mt-4">
+            See below information about the delivery &amp; returns options in your country
           </p>
         </div>
+      </section>
 
-        {/* Buttons */}
-        <div className="flex justify-center gap-4 mb-12">
-        <button
-          onClick={() => setActiveTab('delivery')}
-          className={`px-6 py-2 rounded-lg font-semibold transition flex items-center gap-2 ${
-            activeTab === 'delivery'
-              ? 'bg-orange-500 text-white'
-              : 'bg-white border border-gray-300 text-gray-800 hover:bg-gray-100 cursor-pointer'
-          }`}
-        >
-          <Truck size={16} /> {/* Delivery icon */}
-          Delivery
-        </button>
+      <main className="w-full max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
 
-        <button
-          onClick={() => setActiveTab('returns')}
-          className={`px-6 py-2 rounded-lg font-semibold transition flex items-center gap-2 ${
-            activeTab === 'returns'
-              ? 'bg-black text-white'
-              : 'bg-white border border-gray-300 text-gray-800 hover:bg-gray-100 cursor-pointer'
-          }`}
-        >
-          <CornerUpLeft size={16} /> {/* Returns icon */}
-          Returns
-        </button>
-      </div>
+        {/* Tabs */}
+        <div className="flex justify-center gap-3 mb-14">
+          <button
+            onClick={() => setActiveTab('delivery')}
+            className={`px-6 py-3 font-bold uppercase tracking-wide text-sm transition-colors flex items-center gap-2 ${
+              activeTab === 'delivery'
+                ? 'bg-[#F97316] text-[#14161A]'
+                : 'bg-white border border-black/10 text-[#3A3D42] hover:border-[#F97316] cursor-pointer'
+            }`}
+          >
+            <Truck size={16} />
+            Delivery
+          </button>
+
+          <button
+            onClick={() => setActiveTab('returns')}
+            className={`px-6 py-3 font-bold uppercase tracking-wide text-sm transition-colors flex items-center gap-2 ${
+              activeTab === 'returns'
+                ? 'bg-[#14161A] text-white'
+                : 'bg-white border border-black/10 text-[#3A3D42] hover:border-[#14161A] cursor-pointer'
+            }`}
+          >
+            <CornerUpLeft size={16} />
+            Returns
+          </button>
+        </div>
 
         {/* Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
           {/* Left Accordion */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 relative bg-white border border-black/5 p-6 lg:p-10">
+            <CornerBrackets />
+            <span className="block text-[11px] font-mono uppercase tracking-[0.3em] text-[#F97316] mb-6">
+              {activeTab === 'delivery' ? 'Delivery / Topics' : 'Returns / Topics'}
+            </span>
+
             <Accordion type="single" collapsible>
               {data[activeTab].map((item, index) => (
-                <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className="text-2xl lg:text-3xl font-bold">
+                <AccordionItem key={index} value={`item-${index}`} className="border-black/10">
+                  <AccordionTrigger className="text-xl lg:text-2xl font-extrabold tracking-tight text-[#14161A] hover:text-[#F97316] hover:no-underline">
                     {item.title}
                   </AccordionTrigger>
-                  <AccordionContent className="text-gray-700 text-lg mt-2">
+                  <AccordionContent className="text-[#3A3D42] text-lg mt-2 leading-relaxed">
                     {item.content}
                   </AccordionContent>
                 </AccordionItem>
@@ -103,13 +148,27 @@ const DeliveryReturns = () => {
           </div>
 
           {/* Right Contact */}
-          <div className="bg-white rounded-xl shadow p-6 space-y-4">
-            <h3 className="text-xl font-semibold text-gray-900">Contact Us</h3>
-            {contactInfo.map((line, index) => (
-              <p key={index} className={`text-gray-700 ${index % 2 === 1 ? 'font-medium' : ''}`}>
-                {line}
-              </p>
-            ))}
+          <div className="relative bg-[#14161A] text-white p-8 h-fit lg:sticky lg:top-8 overflow-hidden">
+            <BlueprintGrid opacity={0.06} />
+            <div className="relative">
+              <span className="text-[11px] font-mono uppercase tracking-[0.3em] text-[#F97316]">Site Contact</span>
+              <h3 className="text-xl font-extrabold tracking-tight mt-2 mb-6">Contact Us</h3>
+
+              <div className="space-y-5">
+                {contactInfo.map((line, index) => {
+                  const Icon = contactIcons[index]
+                  const isEmphasis = index % 2 === 1
+                  return (
+                    <div key={index} className="flex items-start gap-3">
+                      <Icon size={16} className="text-[#F97316] mt-1 shrink-0" />
+                      <p className={`text-[#C9CCD1] leading-relaxed ${isEmphasis ? 'font-semibold text-white' : ''}`}>
+                        {line}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </main>
