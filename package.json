@@ -6,7 +6,7 @@
     "dev": "node server.js",
     "devz": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "node server.js"
   },
   "dependencies": {
     "@amcharts/amcharts4": "^4.10.40",
