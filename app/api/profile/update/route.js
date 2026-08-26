@@ -8,7 +8,7 @@ export async function PUT(request) {
   try {
     await connectDB();
 
-    const auth = await isAuthenticated("user");
+    const auth = await isAuthenticated("customer");
     if (!auth.isAuth) {
       return response(false, 401, "Unauthorized");
     }

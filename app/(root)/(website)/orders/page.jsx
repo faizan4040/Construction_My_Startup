@@ -49,6 +49,7 @@ const Orders = () => {
                   <thead className="bg-gray-50 text-gray-600">
                     <tr>
                       <th className="p-3 text-left">Sr.No</th>
+                      <th className="p-3 text-left">Image</th>
                       <th className="p-3 text-left">Order ID</th>
                       <th className="p-3 text-left">Total Items</th>
                       <th className="p-3 text-left">Amount</th>
@@ -57,38 +58,57 @@ const Orders = () => {
 
                   <tbody>
                     {orders.length > 0 ? (
-                      orders.map((order, index) => (
-                        <tr
-                          key={order._id}
-                          className="border-t hover:bg-gray-50 transition"
-                        >
-                          <td className="p-3">{index + 1}</td>
+                      orders.map((order, index) => {
+                        const firstProduct = order.products?.[0]
+                        const productImage =
+                          firstProduct?.variantId?.media?.[0]?.secure_url ||
+                          firstProduct?.variantId?.media?.[0]?.url
 
-                          <td className="p-3 font-medium text-primary">
-                            <Link
-                              href={`${WEBSITE_ORDER_DETAILS}/${order._id}`}
-                              className="hover:underline hover:text-orange-500"
-                            >
-                              {order._id}
-                            </Link>
-                          </td>
+                        return (
+                          <tr
+                            key={order._id}
+                            className="border-t hover:bg-gray-50 transition"
+                          >
+                            <td className="p-3">{index + 1}</td>
 
-                          <td className="p-3">
-                            {order.products?.length || 0}
-                          </td>
+                            <td className="p-3">
+                              {productImage ? (
+                                <img
+                                  src={productImage}
+                                  alt={firstProduct?.name || 'Product'}
+                                  className="w-12 h-12 object-cover rounded-md border"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 bg-gray-100 rounded-md border" />
+                              )}
+                            </td>
 
-                          <td className="p-3 font-semibold text-green-600">
-                            {order.totalAmount?.toLocaleString('en-IN', {
-                              style: 'currency',
-                              currency: 'INR'
-                            })}
-                          </td>
-                        </tr>
-                      ))
+                            <td className="p-3 font-medium text-primary">
+                              <Link
+                                href={WEBSITE_ORDER_DETAILS(order._id)}
+                                className="hover:underline hover:text-orange-500"
+                              >
+                                {order._id}
+                              </Link>
+                            </td>
+
+                            <td className="p-3">
+                              {order.products?.length || 0}
+                            </td>
+
+                            <td className="p-3 font-semibold text-green-600">
+                              {order.totalAmount?.toLocaleString('en-IN', {
+                                style: 'currency',
+                                currency: 'INR'
+                              })}
+                            </td>
+                          </tr>
+                        )
+                      })
                     ) : (
                       <tr>
                         <td
-                          colSpan={4}
+                          colSpan={5}
                           className="p-6 text-center text-gray-500"
                         >
                           No recent orders found 🛒

@@ -13,7 +13,7 @@ export async function POST(request) {
     try{
        
     await connectDB()
-    const auth = await isAuthenticated('user')
+    const auth = await isAuthenticated('customer')
     const payload = await request.json()
 
     const productSchema = z.object({

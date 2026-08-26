@@ -9,7 +9,7 @@ import ProductVariantModel from "@/models/ProductVariant.model";
 export async function GET() {
     try{
       await connectDB()
-      const auth = await isAuthenticated('user')
+      const auth = await isAuthenticated('customer')
       if(!auth.isAuth){
         return response(false, 401,'unauthorized')
       }
