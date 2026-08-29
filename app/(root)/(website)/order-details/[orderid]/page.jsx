@@ -6,6 +6,14 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 
+const STATUS_STYLES = {
+  pending:    'bg-yellow-100 text-yellow-700',
+  processing: 'bg-blue-100 text-blue-700',
+  shipped:    'bg-indigo-100 text-indigo-700',
+  delivered:  'bg-green-100 text-green-700',
+  cancelled:  'bg-red-100 text-red-700',
+}
+
 const OrderDetails = async ({ params }) => {
   const { orderid } = await params
 
@@ -49,12 +57,7 @@ const OrderDetails = async ({ params }) => {
                   <p className="text-gray-500">Status</p>
                   <span
                     className={`inline-block px-3 py-1 rounded-full text-xs font-semibold capitalize
-                    ${orderData?.data?.status === 'success'
-                        ? 'bg-green-100 text-green-700'
-                        : orderData?.data?.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}
+                    ${STATUS_STYLES[orderData?.data?.status] || 'bg-gray-100 text-gray-700'}`}
                   >
                     {orderData?.data?.status || 'unknown'}
                   </span>
@@ -210,10 +213,6 @@ const OrderDetails = async ({ params }) => {
 }
 
 export default OrderDetails
-
-
-
-
 
 
 

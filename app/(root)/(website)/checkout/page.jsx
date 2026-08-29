@@ -280,6 +280,7 @@ const placeOrder = async (formData) => {
             dispatch(clearCart())
             orderForm.reset()
             router.push(WEBSITE_ORDER_DETAILS(response.razorpay_order_id))
+            // router.push(WEBSITE_ORDER_DETAILS(data.data.orderId))
           } else {
             showToast('error', data.message)
           }

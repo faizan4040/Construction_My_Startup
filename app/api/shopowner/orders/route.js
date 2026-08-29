@@ -62,22 +62,39 @@ export async function GET(request) {
       { $skip: start },
       { $limit: size },
       {
-        $project: {
-          order_id: 1,
-          payment_id: 1,
-          name: 1,
-          email: 1,
-          phone: 1,
-          createdAt: 1,
-          products: {
-            $filter: {
-              input: "$products",
-              as: "p",
-              cond: { $in: ["$$p.productId", shopProductIds] },
+          $project: {
+            order_id: 1,
+            payment_id: 1,
+
+            // Customer
+            name: 1,
+            email: 1,
+            phone: 1,
+
+            // Address
+            country: 1,
+            state: 1,
+            city: 1,
+            pincode: 1,
+
+            // Pricing
+            discount: 1,
+            couponDiscount: 1,
+
+            createdAt: 1,
+
+            // Only products belonging to this shop
+            products: {
+              $filter: {
+                input: "$products",
+                as: "p",
+                cond: {
+                  $in: ["$$p.productId", shopProductIds],
+                },
+              },
             },
           },
         },
-      },
       {
         $addFields: {
           // this shop's slice of the order, not the buyer's full cart total
