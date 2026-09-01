@@ -85,7 +85,7 @@ const FeatureProduct = () => {
           Construction Materials  
         </h2>
         <Link
-          href="/products"
+          href="/shop"
           className="text-sm sm:text-base underline underline-offset-4 hover:text-primary"
         >
           View All

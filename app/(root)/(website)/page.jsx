@@ -10,7 +10,6 @@ import FeatureProduct from "@/components/Website/FeatureProduct";
 import JustDropped from "@/components/Website/JustDropped";
 import LabourSlider from "@/components/Website/LabourSlider";
 import ShopBySlider from "@/components/Website/ShopBySlider";
-import TrendingPage from "@/components/Website/TrendingPage";
 import PartnerDashboard from "@/components/Application/Labour/PartnerDashboard";
 import BookNow from "@/components/Application/Labour/BookNow";
 import GeoUpdater from "@/components/Application/Labour/GeoUpdater";
@@ -125,9 +124,6 @@ const Home = () => {
      <Shopby/>  
     </section>  */}
 
-      {/* <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10">
-        <TrendingPage />
-      </section> */}
 
       <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10">
         <BookNow />
