@@ -6,6 +6,7 @@ import ChatWidget from '@/components/Chat/ChatWidget'
 import { ChatProvider } from '@/components/Chat/ChatProvider'
 import Footer from '@/components/Website/Footer'
 import Header from '@/components/Website/Header'
+import CategoryMiniNavbar from '@/components/Website/CategoryMiniNavbar'
 import LabourHeader from '@/components/Website/LabourHeader'
 import GeoUpdater from '@/components/Application/Labour/GeoUpdater'
 
@@ -16,6 +17,9 @@ const Layout = ({ children }) => {
   return (
     <ChatProvider>
        {isLabour ? <LabourHeader /> : <Header />}
+
+       {/* category navigation — shopping-only, not relevant to Labour accounts */}
+       {!isLabour && <CategoryMiniNavbar />}
 
        {/* keeps this labour's live GPS location flowing to the server
            on every page they visit, not just the public homepage */}
@@ -38,6 +42,16 @@ export default Layout
 
 
 
+
+
+
+
+
+
+
+
+
+
 // 'use client'
 
 // import { useSelector } from 'react-redux'
@@ -47,6 +61,7 @@ export default Layout
 // import Footer from '@/components/Website/Footer'
 // import Header from '@/components/Website/Header'
 // import LabourHeader from '@/components/Website/LabourHeader'
+// import GeoUpdater from '@/components/Application/Labour/GeoUpdater'
 
 // const Layout = ({ children }) => {
 //   const auth = useSelector(store => store.authStore.auth)
@@ -56,39 +71,9 @@ export default Layout
 //     <ChatProvider>
 //        {isLabour ? <LabourHeader /> : <Header />}
 
-//           <main>
-//            {children}
-//           </main>
-
-//        <Footer />
-
-
-//       <ChatButton />
-//       <ChatWidget />
-//     </ChatProvider>
-//   )
-// }
-
-// export default Layout
-
-
-
-
-
-
-
-// 'use client'
-
-// import ChatButton from '@/components/Chat/ChatButton'
-// import ChatWidget from '@/components/Chat/ChatWidget'
-// import { ChatProvider } from '@/components/Chat/ChatProvider'
-// import Footer from '@/components/Website/Footer'
-// import Header from '@/components/Website/Header'
-
-// const Layout = ({ children }) => {
-//   return (
-//     <ChatProvider>
-//        <Header />
+//        {/* keeps this labour's live GPS location flowing to the server
+//            on every page they visit, not just the public homepage */}
+//        {isLabour && <GeoUpdater userId={auth?._id ?? auth?.id} />}
 
 //           <main>
 //            {children}
@@ -104,6 +89,4 @@ export default Layout
 // }
 
 // export default Layout
-
-
 

@@ -11,7 +11,7 @@ export function ChatProvider({ children, userId }) {
   const [roomId, setRoomId] = useState(null);
   const [unread, setUnread] = useState(0);
 
-  // 👇 NEW state (controls chat icon visibility)
+  //  NEW state (controls chat icon visibility)
   const [showButton, setShowButton] = useState(false);
 
   // Connect socket when userId exists
