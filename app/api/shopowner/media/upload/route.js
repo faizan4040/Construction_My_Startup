@@ -43,7 +43,7 @@ export async function POST(request) {
       const base64 = `data:${file.type};base64,${Buffer.from(arrayBuffer).toString("base64")}`;
 
       const result = await cloudinary.uploader.upload(base64, {
-        folder: "shop-owner/products",
+        folder: "shopowner/products",
         resource_type: "image",
         use_filename: true,
         unique_filename: true,

@@ -22,6 +22,8 @@ export const SHOP_OWNER_MANUAL_ORDER_SHOW = '/shop/manual-order'
 export const SHOP_OWNER_MANUAL_ORDER_ADD = '/shop/manual-order/add'
 export const SHOP_OWNER_MANUAL_ORDER_DETAILS = (order_id) => `/shop/manual-order/${order_id}`
 
+export const SHOPOWNER_TRACK_EARNING = '/shopowner/track-earning'
+
 
 
 

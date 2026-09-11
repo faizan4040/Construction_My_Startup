@@ -7,51 +7,29 @@ const orderSchema = new mongoose.Schema({
         ref: 'User',
         required: false,
     },
-    name: {
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    phone: { type: String, required: true },
+    address: { type: String, required: true },
+    country: { type: String, required: true },
+    state: { type: String, required: true },
+    city: { type: String, required: true },
+    pincode: { type: String, required: true },
+    landmark: { type: String, required: true },
+    ordernote: { type: String, required: false },
+
+    // ── NEW ── distinguishes the Razorpay Route-less "manual split" (online)
+    // from cash-on-delivery, since the two need very different wallet logic
+    paymentMode: {
         type: String,
-        required: true,
-    },
-    email: {
-        type: String,
-        required: true,
-    },
-    phone: {
-        type: String,
-        required: true,
-    },
-    address: {
-        type: String,
-        required: true,
-    },
-    country: {
-        type: String,
-        required: true,
-    },
-    state: {
-        type: String,
-        required: true,
-    },
-    city: {
-        type: String,
-        required: true,
-    },
-    pincode: {
-        type: String,
-        required: true,
-    },
-    landmark: {
-        type: String,
-        required: true,
-    },
-    ordernote: {
-        type: String,
-        required: false,
+        enum: ["online", "cod"],
+        default: "online",
     },
 
     paymentStatus: {
-    type: String,
-    enum: ["Paid", "Pending", "Refunded", "Failed"],
-    default: "Pending",
+        type: String,
+        enum: ["Paid", "Pending", "Refunded", "Failed"],
+        default: "Pending",
     },
 
     products: [
@@ -69,36 +47,18 @@ const orderSchema = new mongoose.Schema({
             },
         }
     ],
-    subtotal: {
-        type: Number,
-        required: true
-    },
-    discount: {
-        type: Number,
-        required: true
-    },
-    couponDiscount: {
-    type: Number,
-    default: 0
-    },
-    totalAmount: {
-        type: Number,
-        required: true
-    },
-    payment_id:{
-        type: String,
-        required: true
-    },
-    order_id: {
-        type: String,
-        required: true
-    },
+    subtotal: { type: Number, required: true },
+    discount: { type: Number, required: true },
+    couponDiscount: { type: Number, default: 0 },
+    totalAmount: { type: Number, required: true },
+    payment_id: { type: String, required: true },
+    order_id: { type: String, required: true },
     status: {
       type: String,
       enum: orderstatus,
       default: "pending"
     },
-    deleteAt:{
+    deleteAt: {
         type: Date,
         default: null,
         index: true
@@ -108,11 +68,6 @@ const orderSchema = new mongoose.Schema({
 
 const OrderModel = mongoose.models.Order || mongoose.model('Order', orderSchema, 'orders')
 export default OrderModel
-
-
-
-
-
 
 
 
@@ -191,6 +146,11 @@ export default OrderModel
 //             qty: { type: Number, required: true },
 //             mrp: { type: Number, required: true },
 //             sellingPrice: { type: Number, required: true },
+//             status: {
+//                 type: String,
+//                 enum: orderstatus,
+//                 default: "pending",
+//             },
 //         }
 //     ],
 //     subtotal: {
@@ -232,3 +192,18 @@ export default OrderModel
 
 // const OrderModel = mongoose.models.Order || mongoose.model('Order', orderSchema, 'orders')
 // export default OrderModel
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

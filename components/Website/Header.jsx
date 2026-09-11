@@ -1,23 +1,34 @@
 'use client'
 import { useEffect, useRef, useState, useCallback } from "react"
-import { X, User, MapPin, ChevronDown, Navigation, Truck, Clock } from "lucide-react"
+import { X, User, MapPin, ChevronDown, Navigation, Truck, Clock, Shield, Store } from "lucide-react"
 import { USER_DASHBOARD, WEBSITE_HOME, WEBSITE_LOGIN, WEBSITE_REGISTER, WEBSITE_SHOP } from "@/routes/WebsiteRoute"
 import Card from '@/components/Website/Cart'
 import Link from "next/link"
 import { useSelector } from "react-redux"
-import { Avatar, AvatarImage } from "../ui/avatar"
+import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar"
 import { IMAGES } from "@/routes/AllImages"
 import { useRouter } from "next/navigation"
 import { IoSearchOutline } from "react-icons/io5"
 
+
+function getStaticRoleIcon(role) {
+  const normalized = String(role || "").trim().toLowerCase()
+  if (normalized === "admin") {
+    return { bgClass: "bg-gradient-to-br from-orange-500 to-red-500", Icon: Shield }
+  }
+  if (normalized === "shop owner") {
+    return { bgClass: "bg-gradient-to-br from-blue-500 to-indigo-600", Icon: Store }
+  }
+  return null // customer / everyone else -> normal avatar image flow, unchanged
+}
+
 export default function Header() {
+
   const [showSearch, setShowSearch] = useState(false)
   const [query, setQuery] = useState("")
   const router = useRouter()
   const [profileOpen, setProfileOpen] = useState(false)
   const auth = useSelector(store => store.authStore.auth)
-
-  if (auth?.role === "laber") return null
 
   // Mobile search
   const [showMobileSearch, setShowMobileSearch] = useState(false)
@@ -31,6 +42,9 @@ export default function Header() {
   const [nearestLabor, setNearestLabor] = useState(null)
   const [deliveryTime, setDeliveryTime] = useState("60 mins")
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
+
+  // Avatar image load-failure fallback (handles broken/missing avatar.url)
+  const [avatarFailed, setAvatarFailed] = useState(false)
 
   const profileRef = useRef(null)
   const locationModalRef = useRef(null)
@@ -46,6 +60,12 @@ export default function Header() {
     return () => document.removeEventListener("pointerdown", handler)
   }, [])
 
+  // Reset the "failed" flag whenever the avatar url actually changes
+  // (e.g. user/admin just uploaded a new picture)
+  useEffect(() => {
+    setAvatarFailed(false)
+  }, [auth?.avatar?.url])
+
   const handleSearch = () => {
     if (query.trim()) router.push(`${WEBSITE_SHOP}?q=${encodeURIComponent(query.trim())}`)
   }
@@ -60,19 +80,17 @@ export default function Header() {
   /* ── Fetch Nearest Labor ── */
   const fetchNearestLabor = useCallback(async (latitude, longitude, city) => {
     try {
-      // Replace with your actual API endpoint
       const response = await fetch("/api/labor/nearest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ latitude, longitude, city })
       })
-      
+
       if (response.ok) {
         const data = await response.json()
         setNearestLabor(data)
-        // Calculate delivery time based on distance
         if (data.distance) {
-          const time = Math.ceil(data.distance / 2) + 10 // Example: 2km per min + 10 min prep
+          const time = Math.ceil(data.distance / 2) + 10
           setDeliveryTime(`${Math.max(time, 60)} mins`)
         }
       }
@@ -88,7 +106,7 @@ export default function Header() {
     setManualInput("")
     setLocStatus({ msg: "", type: "" })
     setIsLoadingLocation(false)
-    
+
     if (latitude && longitude) {
       fetchNearestLabor(latitude, longitude, city)
     }
@@ -103,7 +121,6 @@ export default function Header() {
     setIsLoadingLocation(true)
     setLocStatus({ msg: "Detecting your location…", type: "loading" })
 
-    // Higher timeout and better position options
     navigator.geolocation.getCurrentPosition(
       async ({ coords: { latitude, longitude } }) => {
         setLocStatus({ msg: "Fetching address…", type: "loading" })
@@ -116,7 +133,7 @@ export default function Header() {
           const area = addr.suburb || addr.neighbourhood || addr.city_district || addr.city || "Your Area"
           const city = addr.city || addr.town || addr.state_district || ""
           const label = city ? `${area}, ${city}` : area
-          
+
           setLocStatus({ msg: "Location detected!", type: "success" })
           setTimeout(() => applyLocation(label, latitude, longitude, city), 800)
         } catch (error) {
@@ -135,10 +152,10 @@ export default function Header() {
         setLocStatus({ msg: msgs[err.code] || "Error detecting location. Please try again.", type: "error" })
         setIsLoadingLocation(false)
       },
-      { 
+      {
         enableHighAccuracy: true,
-        timeout: 15000, // 15 seconds
-        maximumAge: 0 // Don't use cached position
+        timeout: 15000,
+        maximumAge: 0
       }
     )
   }, [applyLocation])
@@ -157,6 +174,11 @@ export default function Header() {
       : locStatus.type === "error" ? "text-red-600"
         : "text-blue-500"
 
+  if (auth?.role === "laber") return null
+
+  const avatarSrc = !avatarFailed && auth?.avatar?.url ? auth.avatar.url : IMAGES.profile
+  const staticRoleIcon = getStaticRoleIcon(auth?.role)
+
   return (
     <div className="sticky top-0 z-50">
       <header className="relative z-50">
@@ -166,7 +188,7 @@ export default function Header() {
           <div className="flex items-center justify-between gap-4 lg:gap-8">
 
             {/* LEFT: Logo */}
-            <Link href={WEBSITE_HOME} className="font-bold tracking-wide flex-shrink-0">
+            <Link href={WEBSITE_HOME} className="font-bold tracking-wide shrink-0">
               <img src={IMAGES.logo} className="h-10 sm:h-11 lg:h-12 w-auto" alt="Logo" />
             </Link>
 
@@ -174,45 +196,43 @@ export default function Header() {
             <div className="hidden lg:flex items-center gap-6 flex-1">
 
               {/* ── Location Selector ── */}
-              <div className="relative flex-shrink-0" ref={locationModalRef}>
+              <div className="relative shrink-0" ref={locationModalRef}>
                 <button
                   type="button"
                   onClick={() => { setLocationModal(v => !v); setLocStatus({ msg: "", type: "" }) }}
                   className="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition-opacity whitespace-nowrap"
                 >
-                  <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center shrink-0">
                     <MapPin size={18} className="text-green-400" />
                   </div>
                   <div className="text-left min-w-0">
                     <p className="text-[11px] text-gray-400 leading-none mb-1">Delivery in</p>
                     <p className="text-sm font-bold text-white flex items-center gap-2">
-                      <Clock size={14} className="flex-shrink-0" />
+                      <Clock size={14} className="shrink-0" />
                       <span className="truncate">{deliveryTime}</span>
                     </p>
                     <p className="text-xs text-gray-500 mt-0.5 truncate max-w-xs">
                       {locationName || "Select location"}
                     </p>
                   </div>
-                  <ChevronDown size={14} className="text-gray-400 flex-shrink-0" />
+                  <ChevronDown size={14} className="text-gray-400 shrink-0" />
                 </button>
 
                 {/* Location Modal */}
                 {locationModal && (
                   <div className="absolute top-full left-0 mt-4 w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 text-black">
-                    {/* Header */}
                     <div className="px-6 pt-6 pb-4 border-b border-gray-100">
                       <p className="font-bold text-gray-900 text-base">Set delivery location</p>
                       <p className="text-sm text-gray-500 mt-1">We'll show products available in your area</p>
                     </div>
 
-                    {/* Auto Detect Button */}
                     <button
                       type="button"
                       onClick={detectLocation}
                       disabled={isLoadingLocation}
                       className="w-full flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors border-b border-gray-100 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <span className={`w-11 h-11 rounded-full ${isLoadingLocation ? 'bg-gray-200 animate-pulse' : 'bg-green-50'} flex items-center justify-center flex-shrink-0`}>
+                      <span className={`w-11 h-11 rounded-full ${isLoadingLocation ? 'bg-gray-200 animate-pulse' : 'bg-green-50'} flex items-center justify-center shrink-0`}>
                         {isLoadingLocation ? (
                           <div className="animate-spin">
                             <Navigation size={18} className="text-green-600" />
@@ -229,7 +249,6 @@ export default function Header() {
                       </div>
                     </button>
 
-                    {/* Manual Input Section */}
                     <div className="px-6 py-5 border-b border-gray-100">
                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Or enter manually</p>
                       <input
@@ -249,7 +268,6 @@ export default function Header() {
                       </button>
                     </div>
 
-                    {/* Status Message */}
                     {locStatus.msg && (
                       <div className={`px-6 py-4 ${locStatus.type === "error" ? "bg-red-50" : locStatus.type === "success" ? "bg-green-50" : "bg-blue-50"}`}>
                         <p className={`text-sm font-medium flex items-center gap-2 ${statusColor}`}>
@@ -263,11 +281,10 @@ export default function Header() {
                       </div>
                     )}
 
-                    {/* Nearest Labor Info */}
                     {nearestLabor && (
                       <div className="px-6 py-4 bg-blue-50 border-t border-gray-100">
                         <div className="flex items-start gap-3">
-                          <Truck size={18} className="text-blue-600 flex-shrink-0 mt-0.5" />
+                          <Truck size={18} className="text-blue-600 shrink-0 mt-0.5" />
                           <div className="text-left">
                             <p className="text-sm font-semibold text-blue-900">{nearestLabor.name}</p>
                             <p className="text-xs text-blue-700 mt-0.5">{nearestLabor.distance?.toFixed(1)} km away</p>
@@ -277,7 +294,6 @@ export default function Header() {
                       </div>
                     )}
 
-                    {/* Help Text */}
                     <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-600">
                       <p>💡 Make sure location permissions are enabled in your browser settings for auto-detection to work.</p>
                     </div>
@@ -286,21 +302,20 @@ export default function Header() {
               </div>
 
               {/* Divider */}
-              <div className="w-px h-12 bg-gray-700 flex-shrink-0" />
+              <div className="w-px h-12 bg-gray-700 shrink-0" />
 
               {/* ── Search Bar ── */}
               <div className="relative flex items-center flex-1 min-w-0">
                 <button
                   type="button"
                   onClick={() => setShowSearch(!showSearch)}
-                  className="px-5 py-2.5 bg-black text-white rounded-l-full flex items-center gap-2 z-10 cursor-pointer flex-shrink-0 hover:bg-gray-800 transition-colors"
+                  className="px-5 py-2.5 bg-black text-white rounded-l-full flex items-center gap-2 z-10 cursor-pointer shrink-0 hover:bg-gray-800 transition-colors"
                 >
                   <IoSearchOutline size={18} />
                   <span className="text-sm font-medium">Search</span>
                 </button>
-                <div className={`overflow-hidden transition-all duration-500 ease-in-out ${showSearch ? 'w-80 lg:w-[420px]' : 'w-0'}`}>
+                <div className={`overflow-hidden transition-all duration-500 ease-in-out ${showSearch ? 'w-80 lg:w-105' : 'w-0'}`}>
                   <div className="relative">
-                    <IoSearchOutline size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       value={query}
@@ -315,7 +330,7 @@ export default function Header() {
             </div>
 
             {/* RIGHT: Icons */}
-            <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 flex-shrink-0">
+            <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 shrink-0">
 
               {/* Mobile Search Icon */}
               <button
@@ -336,16 +351,29 @@ export default function Header() {
               </button>
 
               {/* Profile / Auth */}
-              <div className="relative flex-shrink-0" ref={profileRef}>
+              <div className="relative shrink-0" ref={profileRef}>
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
                   className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
                   aria-label="Profile"
                 >
                   {auth ? (
-                    <Avatar className="w-9 h-9 sm:w-10 sm:h-10">
-                      <AvatarImage src={auth?.avatar?.url || IMAGES.profile} />
-                    </Avatar>
+                    staticRoleIcon ? (
+                      // Admin / shopowner: fixed colorful icon, no image attempt
+                      <span className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 ${staticRoleIcon.bgClass}`}>
+                        <staticRoleIcon.Icon size={18} className="text-white" />
+                      </span>
+                    ) : (
+                      <Avatar className="w-9 h-9 sm:w-10 sm:h-10">
+                        <AvatarImage
+                          src={avatarSrc}
+                          onError={() => setAvatarFailed(true)}
+                        />
+                        <AvatarFallback>
+                          <User size={18} />
+                        </AvatarFallback>
+                      </Avatar>
+                    )
                   ) : (
                     <span className="bg-gray-700 rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center cursor-pointer hover:bg-gray-600 transition-colors">
                       <User size={20} />
@@ -370,12 +398,26 @@ export default function Header() {
                       </>
                     ) : (
                       <div className="flex flex-col items-center gap-4">
-                        <Link href={`/profile/${auth.id}`}>
-                          <Avatar className="w-12 h-12">
-                            <AvatarImage src={auth?.avatar?.url || IMAGES.profile} />
-                          </Avatar>
-                        </Link>
+                        {staticRoleIcon ? (
+                          // Admin / shopowner: same fixed colorful icon, bigger, not clickable-to-profile
+                          <span className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${staticRoleIcon.bgClass}`}>
+                            <staticRoleIcon.Icon size={22} className="text-white" />
+                          </span>
+                        ) : (
+                          <Link href={`/profile/${auth.id || auth._id}`}>
+                            <Avatar className="w-12 h-12">
+                              <AvatarImage
+                                src={avatarSrc}
+                                onError={() => setAvatarFailed(true)}
+                              />
+                              <AvatarFallback>
+                                <User size={22} />
+                              </AvatarFallback>
+                            </Avatar>
+                          </Link>
+                        )}
                         <span className="font-semibold text-gray-900 text-center">{auth.name}</span>
+
                         <Link href={USER_DASHBOARD} className="w-full">
                           <button className="w-full border-2 py-3 px-4 rounded-xl cursor-pointer border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-all duration-300 font-medium">
                             Dashboard
@@ -388,7 +430,7 @@ export default function Header() {
               </div>
 
               {/* Cart */}
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <Card className="cursor-pointer" />
               </div>
             </div>
@@ -430,11 +472,5 @@ export default function Header() {
     </div>
   )
 }
-
-
-
-
-
-
 
 

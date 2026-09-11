@@ -13,7 +13,7 @@ import { decode } from "entities"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { Plus } from "lucide-react"
+import { Plus, Truck, Clock, Wallet, ShieldCheck } from "lucide-react"
 import { BiMinus } from "react-icons/bi"
 import { IoStar } from "react-icons/io5"
 import ButtonLoading from "@/components/Application/ButtonLoading"
@@ -22,7 +22,8 @@ import { addIntoCart } from "@/store/reducer/cartReducer"
 import { showToast } from "@/lib/showToast"
 import { Button } from "@/components/ui/button"
 import ProdcutReview from "@/components/Website/ProdcutReview"
-
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 // attributeGroups shape: { "Weight": ["100g","200g","500g"], "Color": ["Red","White"] }
 const ProductDetails = ({ product, variant, attributeGroups = {}, reviewCount }) => {
@@ -38,7 +39,6 @@ const ProductDetails = ({ product, variant, attributeGroups = {}, reviewCount })
   const [qty, setQty] = useState(1)
   const [isAddedIntoCart, setIsAddedIntoCart] = useState(false)
   const [isProductLoading, setIsProductLoading] = useState(false)
-
 
   useEffect(() => {
     if (variant?.media?.length) {
@@ -105,6 +105,8 @@ const ProductDetails = ({ product, variant, attributeGroups = {}, reviewCount })
     return `${WEBSITE_PRODUCT_DETAILS(product.slug)}?${params.toString()}`
   }
 
+  const descriptionText = decode(product?.description || "")
+
   return (
     <div className="px-4 sm:px-6 lg:px-20 xl:px-32 py-6 sm:py-10">
 
@@ -143,7 +145,7 @@ const ProductDetails = ({ product, variant, attributeGroups = {}, reviewCount })
       {/* Main Layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
         {/* Image Section */}
-        <div className="flex flex-col-reverse md:flex-row gap-4 md:sticky md:top-24">
+        <div className="flex flex-col-reverse md:flex-row gap-4 md:sticky md:top-24 md:self-start">
           {/* Thumbnails */}
           <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-visible">
             {variant?.media?.map((img) => (
@@ -178,12 +180,12 @@ const ProductDetails = ({ product, variant, attributeGroups = {}, reviewCount })
 
         {/* Product Info */}
         <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold mb-3">
+          <h1 className="text-2xl sm:text-3xl font-semibold mb-3 text-gray-900">
             {product?.name}
           </h1>
 
           {/* Rating */}
-          <div className="flex items-center gap-1 mb-4">
+          <div className="flex items-center gap-1 mb-5">
             {Array.from({ length: 5 }).map((_, i) => (
               <IoStar key={i} className="text-yellow-400 text-sm sm:text-base" />
             ))}
@@ -192,9 +194,27 @@ const ProductDetails = ({ product, variant, attributeGroups = {}, reviewCount })
             </span>
           </div>
 
+          {/* Delivery & Payment Info */}
+          <div className="flex flex-wrap gap-3 mb-5">
+            <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50">
+              <Truck className="w-4 h-4 text-primary shrink-0" />
+              <span className="text-gray-700">
+                <span className="font-medium text-gray-900">Free Delivery</span>{" "}
+                <span className="text-gray-500">on orders above ₹500</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50">
+              <Clock className="w-4 h-4 text-primary shrink-0" />
+              <span className="text-gray-700">
+                <span className="font-medium text-gray-900">60 Mins</span>{" "}
+                <span className="text-gray-500">Pay on Delivery</span>
+              </span>
+            </div>
+          </div>
+
           {/* Price */}
-          <div className="flex flex-wrap items-center gap-3 mb-5">
-            <span className="text-xl sm:text-2xl font-bold">
+          <div className="flex flex-wrap items-center gap-3 mb-3">
+            <span className="text-2xl sm:text-3xl font-bold text-gray-900">
               {variant?.sellingPrice?.toLocaleString("en-IN", {
                 style: "currency",
                 currency: "INR",
@@ -208,26 +228,38 @@ const ProductDetails = ({ product, variant, attributeGroups = {}, reviewCount })
               })}
             </span>
 
-            <span className="bg-red-500 text-white text-xs px-3 py-1 rounded-full">
-              -{variant?.discountPercentage}%
+            {variant?.discountPercentage ? (
+              <span className="bg-red-500 text-white text-xs px-3 py-1 rounded-full font-medium">
+                -{variant.discountPercentage}%
+              </span>
+            ) : null}
+          </div>
+
+          {/* Cashback Info */}
+          <div className="flex items-center gap-2 mb-6 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2 w-fit">
+            <Wallet className="w-4 h-4 shrink-0" />
+            <span>
+              <span className="font-medium">Assured 2% Cashback</span>{" "}
+              <span className="text-green-600">On purchases above ₹50,000</span>
             </span>
           </div>
 
-          {/* Short description (rendered as-is HTML, decoded) */}
-          <div
-            className="text-gray-700 text-sm sm:text-base leading-relaxed mb-6"
-            dangerouslySetInnerHTML={{
-              __html: decode(product?.description || ""),
-            }}
-          />
+          {/* Short description preview */}
+          {descriptionText && (
+            <div className="text-gray-600 text-sm sm:text-base leading-relaxed mb-6 line-clamp-3 [&_p]:m-0 [&_ul]:hidden [&_ol]:hidden [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-base [&_h2]:font-semibold">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {descriptionText}
+              </ReactMarkdown>
+            </div>
+          )}
 
           {/* Dynamic Attributes — Weight / Diameter / Color / Gauge...
               whatever the product's category defines. No hardcoding here;
               driven entirely by attributeGroups passed from the parent page. */}
           {Object.entries(attributeGroups).map(([label, values]) => (
             <div className="mb-6" key={label}>
-              <p className="font-semibold mb-2">
-                {label}: {getCurrentValue(label)}
+              <p className="font-semibold mb-2 text-gray-900">
+                {label}: <span className="font-normal text-gray-600">{getCurrentValue(label)}</span>
               </p>
               <div className="flex gap-2 flex-wrap">
                 {values.map((value) => (
@@ -235,9 +267,9 @@ const ProductDetails = ({ product, variant, attributeGroups = {}, reviewCount })
                     key={value}
                     onClick={() => setIsProductLoading(true)}
                     href={buildVariantLink(label, value)}
-                    className={`border py-1 px-3 rounded-lg cursor-pointer transition
-                      hover:bg-primary hover:text-white
-                      ${value === getCurrentValue(label) ? "bg-primary text-white" : ""}`}
+                    className={`border py-1 px-3 rounded-lg cursor-pointer transition text-sm
+                      hover:bg-primary hover:text-white hover:border-primary
+                      ${value === getCurrentValue(label) ? "bg-primary text-white border-primary" : "border-gray-200 text-gray-700"}`}
                   >
                     {value}
                   </Link>
@@ -248,8 +280,8 @@ const ProductDetails = ({ product, variant, attributeGroups = {}, reviewCount })
 
           {/* Quantity */}
           <div className="mb-8">
-            <p className="font-semibold mb-2">Quantity</p>
-            <div className="flex items-center w-32 border rounded-full overflow-hidden">
+            <p className="font-semibold mb-2 text-gray-900">Quantity</p>
+            <div className="flex items-center w-32 border border-gray-200 rounded-full overflow-hidden">
               <button
                 onClick={() => handleQty("dec")}
                 className="w-10 h-10 flex items-center justify-center hover:bg-gray-100"
@@ -265,13 +297,13 @@ const ProductDetails = ({ product, variant, attributeGroups = {}, reviewCount })
                 onClick={() => handleQty("inc")}
                 className="w-10 h-10 flex items-center justify-center hover:bg-gray-100"
               >
-                <Plus />
+                <Plus className="w-4 h-4" />
               </button>
             </div>
           </div>
 
           {/* CTA */}
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 mb-2">
             {!isAddedIntoCart ? (
               <ButtonLoading
                 onClick={handleAddToCart}
@@ -282,7 +314,7 @@ const ProductDetails = ({ product, variant, attributeGroups = {}, reviewCount })
             ) : (
               <Button
                 asChild
-                className="flex-1 bg-primary text-white py-3  hover:bg-orange-500 hover:text-white cursor-pointer rounded-full font-semibold hover:opacity-90 transition"
+                className="flex-1 bg-primary text-white py-3 hover:bg-orange-500 hover:text-white cursor-pointer rounded-full font-semibold hover:opacity-90 transition"
               >
                 <Link href={WEBSITE_CART}>
                   Go to Cart
@@ -291,27 +323,45 @@ const ProductDetails = ({ product, variant, attributeGroups = {}, reviewCount })
             )}
           </div>
 
+          {/* Trust strip */}
+          <div className="flex items-center gap-2 text-xs text-gray-500 mt-3">
+            <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
+            <span>100% genuine products, sourced directly from authorised manufacturers</span>
+          </div>
+
         </div>
       </div>
 
+      {/* Full Description Section */}
       <div className="mt-16 mb-32">
-        <div className="border rounded-xl shadow-sm bg-white overflow-hidden">
+        <div className="border border-gray-200 rounded-xl shadow-sm bg-white overflow-hidden">
 
           {/* Header */}
-          <div className="px-6 py-4 bg-gray-50 border-b">
-            <h2 className="text-2xl font-semibold text-gray-900">
+          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
               Product Description
             </h2>
           </div>
 
           {/* Content */}
-          <div className="px-6 py-5">
-            <div
-              className="prose max-w-none text-gray-700 leading-relaxed"
-              dangerouslySetInnerHTML={{
-                __html: decode(product?.description || ''),
-              }}
-            />
+          <div className="px-6 py-6">
+            {descriptionText ? (
+              <div
+                className="prose prose-sm sm:prose-base max-w-none
+                  prose-headings:font-semibold prose-headings:text-gray-900 prose-headings:mb-3 prose-headings:mt-6 first:prose-headings:mt-0
+                  prose-h1:text-xl prose-h2:text-lg prose-h3:text-base
+                  prose-p:text-gray-700 prose-p:leading-relaxed
+                  prose-li:text-gray-700 prose-li:leading-relaxed
+                  prose-strong:text-gray-900 prose-strong:font-semibold
+                  prose-ul:my-3 prose-ol:my-3"
+              >
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {descriptionText}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm">No description available for this product.</p>
+            )}
           </div>
 
         </div>
@@ -326,389 +376,3 @@ const ProductDetails = ({ product, variant, attributeGroups = {}, reviewCount })
 export default ProductDetails
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// 'use client'
-
-// import {
-//   Breadcrumb,
-//   BreadcrumbItem,
-//   BreadcrumbLink,
-//   BreadcrumbList,
-//   BreadcrumbSeparator,
-// } from "@/components/ui/breadcrumb"
-// import { IMAGES } from "@/routes/AllImages"
-// import { WEBSITE_CART, WEBSITE_PRODUCT_DETAILS, WEBSITE_SHOP } from "@/routes/WebsiteRoute"
-// import { decode, encode } from "entities"
-// import Image from "next/image"
-// import Link from "next/link"
-// import { useEffect, useState } from "react"
-// import { Plus } from "lucide-react"
-// import { BiMinus } from "react-icons/bi"
-// import { IoStar } from "react-icons/io5"
-// import ButtonLoading from "@/components/Application/ButtonLoading"
-// import { useDispatch, useSelector } from "react-redux"
-// import { addIntoCart } from "@/store/reducer/cartReducer"
-// import { showToast } from "@/lib/showToast"
-// import { Button } from "@/components/ui/button"
-// import ProdcutReview from "@/components/Website/ProdcutReview"
-
-
-// const ProductDetails = ({ product, variant, colors = [], sizes = [], reviewCount }) => {
-   
-//   const dispatch = useDispatch()
-//  const cartStore =
-//   useSelector((store) => store.cartStore) ?? {
-//     count: 0,
-//     products: [],
-//   }
-  
-//   const [activeThumb, setActiveThumb] = useState(IMAGES.image_placeholder)
-//   const [qty, setQty] = useState(1)
-//   const [isAddedIntoCart, setIsAddedIntoCart] = useState(false)
-//   const [isProductLoading, setIsProductLoading] = useState(false)
-
-
-//   useEffect(() => {
-//     if (variant?.media?.length) {
-//       setActiveThumb(variant.media[0].secure_url)
-//     }
-
-//     setIsProductLoading(false)
-//   }, [variant])
-
-//   useEffect(()=>{
-//      if(cartStore.count > 0) {
-//       const existingProduct = cartStore.products.findIndex((cartProduct) => 
-//       cartProduct.productId === product._id && cartProduct.variantId === variant._id)
-
-//       if(existingProduct >=0) {
-//         setIsAddedIntoCart(true)
-//       }else{
-//         setIsAddedIntoCart(false)
-//       }
-//      }
-
-//      setIsProductLoading(false)
-//   },[])
-
-//   const handleQty = (type) => {
-//     setQty((prev) => {
-//       if (type === 'inc') return prev + 1
-//       if (type === 'dec' && prev > 1) return prev - 1
-//       return prev
-//     })
-//   }
-
-//   const handleAddToCart = () => {
-//     const cartProduct = {
-//       productId: product._id,
-//       variantId: variant._id,
-//       name: product.name,
-//       url: product.slug,
-//       size: variant.size,
-//       color: variant.color,
-//       mrp: variant.mrp,
-//       sellingPrice: variant.sellingPrice,
-//       media: variant?.media[0]?.secure_url,
-//       qty: qty
-//     }
-//     dispatch(addIntoCart(cartProduct))
-//     setIsAddedIntoCart(true)
-//     showToast('success', 'product added into cart.')
-//   }
-
-//   return (
-//    <div className="px-4 sm:px-6 lg:px-20 xl:px-32 py-6 sm:py-10">
-
-//     {isProductLoading && (
-//       <div className="fixed top-30 left-1/2 z-50 -translate-x-1/2">
-//         <img
-//           src={IMAGES.loading}
-//           alt="Loading"
-//           className="w-20 h-20"  
-//         />
-//       </div>
-//     )}
-
-//     <div>
-//       <Breadcrumb className="mb-6 sm:mb-8 text-sm">
-//         <BreadcrumbList>
-//           <BreadcrumbItem>
-//             <BreadcrumbLink href="/">Home</BreadcrumbLink>
-//           </BreadcrumbItem>
-//           <BreadcrumbSeparator />
-//           <BreadcrumbItem>
-//             <BreadcrumbLink href={WEBSITE_SHOP}>Products</BreadcrumbLink>
-//           </BreadcrumbItem>
-//           <BreadcrumbSeparator />
-//           <BreadcrumbItem>
-//             <BreadcrumbLink asChild>
-//               <Link href={WEBSITE_PRODUCT_DETAILS(product?.slug)}>
-//                 {product?.name}
-//               </Link>
-//             </BreadcrumbLink>
-//           </BreadcrumbItem>
-//         </BreadcrumbList>
-//       </Breadcrumb>
-//     </div>
-
-//   {/* Main Layout */}
-//   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-//     {/* Image Section */}
-//     <div className="flex flex-col-reverse md:flex-row gap-4 md:sticky md:top-24">
-//       {/* Thumbnails */}
-//       <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-visible">
-//         {variant?.media?.map((img) => (
-//           <Image
-//             key={img._id}
-//             src={img.secure_url}
-//             alt="thumb"
-//             width={80}
-//             height={80}
-//             onClick={() => setActiveThumb(img.secure_url)}
-//             className={`min-w-20 rounded-lg cursor-pointer border transition
-//               ${
-//                 activeThumb === img.secure_url
-//                   ? "border-primary"
-//                   : "border-gray-200 hover:border-gray-400"
-//               }`}
-//           />
-//         ))}
-//       </div>
-
-//       {/* Main Image */}
-//       <div className="flex-1">
-//             <Image
-//             src={activeThumb || IMAGES.image_placeholder}
-//             alt="product"
-//             width={600}
-//             height={600}
-//             onLoadingComplete={() => setIsProductLoading(false)}
-//             className="w-full object-contain rounded-xl border"
-//           />
-//       </div>
-//     </div>
-
-//     {/* Product Info */}
-//     <div>
-//       <h1 className="text-2xl sm:text-3xl font-semibold mb-3">
-//         {product?.name}
-//       </h1>
-
-//       {/* Rating */}
-//       <div className="flex items-center gap-1 mb-4">
-//         {Array.from({ length: 5 }).map((_, i) => (
-//           <IoStar key={i} className="text-yellow-400 text-sm sm:text-base" />
-//         ))}
-//         <span className="text-xs sm:text-sm text-gray-600 ml-2">
-//           ({reviewCount} reviews)
-//         </span>
-//       </div>
-
-//       {/* Price */}
-//       <div className="flex flex-wrap items-center gap-3 mb-5">
-//         <span className="text-xl sm:text-2xl font-bold">
-//           {variant?.sellingPrice?.toLocaleString("en-IN", {
-//             style: "currency",
-//             currency: "INR",
-//           })}
-//         </span>
-
-//         <span className="line-through text-gray-400 text-sm">
-//           {variant?.mrp?.toLocaleString("en-IN", {
-//             style: "currency",
-//             currency: "INR",
-//           })}
-//         </span>
-
-//         <span className="bg-red-500 text-white text-xs px-3 py-1 rounded-full">
-//           -{variant?.discountPercentage}%
-//         </span>
-//       </div>
-
-//       {/* Description */}
-//       <div
-//         className="text-gray-700 text-sm sm:text-base leading-relaxed mb-6"
-//         dangerouslySetInnerHTML={{
-//           __html: decode(product?.description || ""),
-//         }}
-//       />
-
-   
-//       {/* <div className="mb-6">
-//         <p className="font-semibold mb-2">Color</p>
-//         <div className="flex gap-2 flex-wrap">
-//           {colors.map((color) => {
-//             return (
-//               <Link
-//               key={color}
-//               onClick={() => setIsProductLoading(true)}
-//               href={`${WEBSITE_PRODUCT_DETAILS(product.slug)}?color=${color}&size=${variant.size}`}
-//               className={`border py-1 px-3 rounded-lg cursor-pointer transition
-//                 hover:bg-primary hover:text-white
-//                 ${color === variant.color ? "bg-primary text-white" : ""}`}
-//             >
-//               {color}
-//             </Link>
-//             )
-//           })}
-//         </div>
-//       </div> */}
-
-//       {/* <div className="mb-6">
-//         <p className="font-semibold mb-2">Size: {variant?.size}</p>
-
-//         <div className="flex gap-2 flex-wrap">
-//           {sizes.map((size) => (
-//             <Link
-//               key={size}
-//               onClick={() => setIsProductLoading(true)}
-//               href={`${WEBSITE_PRODUCT_DETAILS(product.slug)}?color=${variant.color}&size=${size}`}
-//               className={`border py-1 px-3 rounded-lg cursor-pointer transition
-//                 hover:bg-primary hover:text-white
-//                 ${size === variant.size ? "bg-primary text-white" : ""}`}
-//             >
-//               {size}
-//             </Link>
-//           ))}
-//         </div>
-//       </div> */}
-
-
-//       {/* Colors */}
-//       {colors.length > 0 && (
-//         <div className="mb-6">
-//           <p className="font-semibold mb-2">Color</p>
-//           <div className="flex gap-2 flex-wrap">
-//             {colors.map((color) => (
-//               <Link
-//                 key={color}
-//                 onClick={() => setIsProductLoading(true)}
-//                 href={`${WEBSITE_PRODUCT_DETAILS(product.slug)}?color=${color}`}  // removed size
-//                 className={`border py-1 px-3 rounded-lg cursor-pointer transition
-//                   hover:bg-primary hover:text-white
-//                   ${color === variant.color ? "bg-primary text-white" : ""}`}
-//               >
-//                 {color}
-//               </Link>
-//             ))}
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Sizes */}
-//       {sizes.length > 0 && (
-//         <div className="mb-6">
-//           <p className="font-semibold mb-2">Size: {variant?.size}</p>
-//           <div className="flex gap-2 flex-wrap">
-//             {sizes.map((size) => (
-//               <Link
-//                 key={size}
-//                 onClick={() => setIsProductLoading(true)}
-//                 href={`${WEBSITE_PRODUCT_DETAILS(product.slug)}?color=${variant.color}&size=${size}`}  // keeps current color
-//                 className={`border py-1 px-3 rounded-lg cursor-pointer transition
-//                   hover:bg-primary hover:text-white
-//                   ${size === variant.size ? "bg-primary text-white" : ""}`}
-//               >
-//                 {size}
-//               </Link>
-//             ))}
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Quantity */}
-//       <div className="mb-8">
-//         <p className="font-semibold mb-2">Quantity</p>
-//         <div className="flex items-center w-32 border rounded-full overflow-hidden">
-//           <button
-//             onClick={() => handleQty("dec")}
-//             className="w-10 h-10 flex items-center justify-center hover:bg-gray-100"
-//           >
-//             <BiMinus />
-//           </button>
-//           <input
-//             value={qty}
-//             readOnly
-//             className="w-12 text-center border-none focus:outline-none text-sm"
-//           />
-//           <button
-//             onClick={() => handleQty("inc")}
-//             className="w-10 h-10 flex items-center justify-center hover:bg-gray-100"
-//           >
-//             <Plus />
-//           </button>
-//         </div>
-//       </div>
-
-//       {/* CTA */}
-//       <div className="flex flex-col sm:flex-row gap-4">
-//         {!isAddedIntoCart ? (
-//           <ButtonLoading
-//             onClick={handleAddToCart}
-//             text='Add to Cart'
-//             className="flex-1 bg-primary text-white py-3 hover:bg-orange-500 hover:text-white cursor-pointer rounded-full font-semibold hover:opacity-90 transition"
-//           >
-//           </ButtonLoading>
-//         ) : (
-//           <Button
-//             asChild
-//             className="flex-1 bg-primary text-white py-3  hover:bg-orange-500 hover:text-white cursor-pointer rounded-full font-semibold hover:opacity-90 transition"
-//           >
-//             <Link href={WEBSITE_CART}>
-//               Go to Cart
-//             </Link>
-//           </Button>
-//         )}
-//       </div>
-
-//     </div>
-//   </div>
- 
-//    <div className="mt-16 mb-32">
-//   <div className="border rounded-xl shadow-sm bg-white overflow-hidden">
-    
-//     {/* Header */}
-//     <div className="px-6 py-4 bg-gray-50 border-b">
-//       <h2 className="text-2xl font-semibold text-gray-900">
-//         Product Description
-//       </h2>
-//     </div>
-
-
-//     {/* Content */}
-//     <div className="px-6 py-5">
-//       <div
-//         className="prose max-w-none text-gray-700 leading-relaxed"
-//         dangerouslySetInnerHTML={{
-//           __html: decode(product?.description || ''),   
-//         }}
-//       />
-//     </div>
-
-//   </div>
-// </div>
-
-//    <ProdcutReview productId={product._id}/>
-
-
-// </div>
-
-//   )
-// }
-
-// export default ProductDetails
