@@ -24,8 +24,7 @@ export const SHOP_OWNER_MANUAL_ORDER_DETAILS = (order_id) => `/shop/manual-order
 
 export const SHOPOWNER_TRACK_EARNING = '/shopowner/track-earning'
 
-
-
+export const SHOP_OWNER_TODO_SHOW = '/shop/todo'
 
 
 
