@@ -18,7 +18,6 @@ import ProductBox from "@/components/Website/ProductBox";
 import { WEBSITE_SHOP, WEBSITE_HOME } from "@/routes/WebsiteRoute";
 import { X, Loader2 } from "lucide-react";
 import Link from "next/link";
-// import Shopby from '@/components/Website/Shopby'
 
 const Home = () => {
   // auth IS the user object directly — same as Navbar reads it.
@@ -115,44 +114,39 @@ const Home = () => {
 
   // ── No category selected: normal landing page ──
   return (
-    <>
-      <section>
-        <CuponBanner />
-      </section>
+     <div className="w-full min-w-0 overflow-x-hidden">
+    <section className="w-full">
+      <CuponBanner />
+    </section>
 
-      {/* <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-1">
-     <Shopby/>  
-    </section>  */}
+    <section className="w-full py-10">
+      <BookNow />
+    </section>
 
+    <section className="w-full py-10">
+      <LabourSlider />
+    </section>
 
-      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10">
-        <BookNow />
-      </section>
+    <section className="w-full py-10">
+      <FeatureProduct />
+    </section>
 
-      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10">
-        <LabourSlider />
-      </section>
+    <section className="w-full py-1">
+      <ShopBySlider />
+    </section>
 
-      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-10">
-        <FeatureProduct />
-      </section>
+    <section className="w-full py-1">
+      <JustDropped />
+    </section>
 
-      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-1">
-        <ShopBySlider />
-      </section>
+    <section className="w-full py-1">
+      <BuyerSupplierSection />
+    </section>
 
-      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-1">
-        <JustDropped />
-      </section>
-
-      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] py-1">
-        <BuyerSupplierSection />
-      </section>
-
-     <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
-      <Testimonial/>
-    </section> 
-    </>
+    <section className="w-full">
+      <Testimonial />
+    </section>
+  </div>
   );
 };
 
