@@ -1,9 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
+html {
+  scroll-behavior: smooth;
+}
 
+/* Custom slim scrollbar for the resource table on small screens */
+.thin-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: #cfead0;
+  border-radius: 999px;
+}
 
 @theme inline {
   --color-background: var(--background);
@@ -46,6 +58,24 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+}
+
+/* ── Home Construction Cost Calculator theme tokens ──
+   These auto-generate utilities like bg-cream, text-forest-600,
+   bg-gold, font-display, etc. used inside CostCalculator.jsx */
+@theme {
+  --color-cream: #F6EFDD;
+  --color-cream-dark: #EFE4C8;
+  --color-forest: #1F4020;
+  --color-forest-50: #EAF3E7;
+  --color-forest-600: #2C5E2A;
+  --color-forest-700: #234A22;
+  --color-forest-800: #1F4020;
+  --color-forest-900: #132913;
+  --color-gold: #F2B705;
+  --color-gold-600: #E0A700;
+  --color-ink: #1C1C1A;
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
 }
 
 :root {
@@ -124,10 +154,6 @@
   body {
     @apply bg-background text-foreground;
   }
-}
-
-html {
-  scroll-behavior: smooth;
 }
 
 .hide-scrollbar {
