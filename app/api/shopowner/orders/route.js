@@ -23,6 +23,7 @@ export async function GET(request) {
     const size = parseInt(searchParams.get("size") || "10", 10)
     const globalFilter = searchParams.get("globalFilter") || ""
     const deleteType = searchParams.get("deleteType")
+    const statusFilter = searchParams.get("status") || null   // ✅ NEW — tabs ke liye
 
     let filters = []
     let sorting = []
@@ -34,6 +35,19 @@ export async function GET(request) {
     const matchQuery = {
       deleteAt: deleteType === "PD" ? { $ne: null } : null,
       "products.productId": { $in: shopProductIds },
+    }
+
+    // ✅ NEW — sirf is shop ke product-level status ke hisaab se filter
+    // Note: matchQuery yahan poore order-document pe filter karta hai
+    // (aggregation se pehle), isliye ye check karta hai ki order ke
+    // "products" array me is shop ka koi item us status me hai ya nahi.
+    if (statusFilter) {
+      matchQuery["products"] = {
+        $elemMatch: {
+          productId: { $in: shopProductIds },
+          status: statusFilter,
+        },
+      }
     }
 
     if (globalFilter) {
@@ -61,40 +75,32 @@ export async function GET(request) {
       { $sort: sortQuery },
       { $skip: start },
       { $limit: size },
-      {
-          $project: {
-            order_id: 1,
-            payment_id: 1,
-
-            // Customer
-            name: 1,
-            email: 1,
-            phone: 1,
-
-            // Address
-            country: 1,
-            state: 1,
-            city: 1,
-            pincode: 1,
-
-            // Pricing
-            discount: 1,
-            couponDiscount: 1,
-
-            createdAt: 1,
-
-            // Only products belonging to this shop
-            products: {
-              $filter: {
-                input: "$products",
-                as: "p",
-                cond: {
-                  $in: ["$$p.productId", shopProductIds],
-                },
-              },
-            },
-          },
-        },
+    {
+  $project: {
+    order_id: 1,
+    payment_id: 1,
+    name: 1,
+    email: 1,
+    phone: 1,
+    address: 1,       // ✅ ADD
+    landmark: 1,       // ✅ ADD
+    paymentStatus: 1,  // ✅ ADD
+    country: 1,
+    state: 1,
+    city: 1,
+    pincode: 1,
+    discount: 1,
+    couponDiscount: 1,
+    createdAt: 1,
+    products: {
+      $filter: {
+        input: "$products",
+        as: "p",
+        cond: { $in: ["$$p.productId", shopProductIds] },
+      },
+    },
+  },
+},
       {
         $addFields: {
           // this shop's slice of the order, not the buyer's full cart total
@@ -102,7 +108,7 @@ export async function GET(request) {
             $sum: { $map: { input: "$products", as: "p", in: { $multiply: ["$$p.qty", "$$p.sellingPrice"] } } },
           },
           // display status = this shop's own item status (never the whole order's status)
-          status: { $ifNull: [{ $arrayElemAt: ["$products.status", 0] }, "pending"] },
+          status: { $ifNull: [{ $arrayElemAt: ["$products.status", 0] }, "on_hold"] },  // ✅ CHANGED: "pending" → "on_hold" (naya default)
         },
       },
     ])

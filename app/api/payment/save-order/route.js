@@ -6,7 +6,6 @@ import { sendMail } from "@/lib/sendMail";
 import { zSchema } from "@/lib/zodSchema";
 import OrderModel from "@/models/Order.model";
 import { validatePaymentVerification } from "razorpay/dist/utils/razorpay-utils";
-import ProductVariantModel from "@/models/ProductVariant.model";
 import z from "zod";
 
 export async function POST(request) {
@@ -59,8 +58,18 @@ export async function POST(request) {
         paymentVerification = true
     }
 
+    // Order-level status: "on_hold" (naya flow default) agar payment verify
+    // hua, warna "unverified"
+    const initialStatus = paymentVerification ? 'on_hold' : 'unverified'
+
+    // Products array me har item ka status explicitly set — order-level
+    // status ke sath sync rehne ke liye, schema default pe depend nahi karna
+    const productsWithStatus = validateData.products.map((item) => ({
+        ...item,
+        status: initialStatus,
+    }))
+
     const newOrder = await OrderModel.create({
-    // user: validateData.userId || null, 
     user: auth.isAuth ? auth.userId : null,                      
     name: validateData.name,
     email: validateData.email,
@@ -72,24 +81,16 @@ export async function POST(request) {
     pincode: validateData.pincode,
     landmark: validateData.landmark,
     ordernote: validateData.ordernote,
-    products: validateData.products,
+    products: productsWithStatus,
     subtotal: validateData.subtotal,
     discount: validateData.discount,
     couponDiscount: validateData.couponDiscount || 0,  
     totalAmount: validateData.totalAmount,
     payment_id: validateData.razorpay_payment_id,
     order_id: validateData.razorpay_order_id,               
-    status: paymentVerification ? 'pending' : 'unverified'
+    status: initialStatus,
+    paymentStatus: paymentVerification ? 'Paid' : 'Failed'   // ✅ FIX: ye field pehle set hi nahi ho rahi thi
     });
-
-        if (paymentVerification) {
-        for (const item of validateData.products) {
-            await ProductVariantModel.findOneAndUpdate(
-            { _id: item.variantId, stock: { $gte: item.qty } },
-            { $inc: { stock: -item.qty } }
-            )
-        }
-        }
 
 
     try{
@@ -110,3 +111,5 @@ export async function POST(request) {
        return catchError(error)
     }
 }
+
+

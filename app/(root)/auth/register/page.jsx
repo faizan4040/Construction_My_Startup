@@ -705,7 +705,7 @@ export default RegisterPage;
 //               Everything you need,<br />in one place.
 //             </h2>
 //             <p className="text-indigo-200 text-sm leading-relaxed">
-//               Join thousands of customers, shop owners, labourers &amp; delivery partners on our platform.
+//               Join thousands of customers, shop owners, labourers &amp; delivery boys on our platform.
 //             </p>
 //             {/* Dots */}
 //             <div className="flex gap-2 mt-5">

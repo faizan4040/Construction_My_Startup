@@ -5,6 +5,7 @@ import axios from 'axios'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
+import CancelOrderButton from '@/components/Website/CancelOrderButton'
 
 const STATUS_STYLES = {
   pending:    'bg-yellow-100 text-yellow-700',
@@ -17,7 +18,8 @@ const STATUS_STYLES = {
 const OrderDetails = async ({ params }) => {
   const { orderid } = await params
 
-  const { data: orderData } = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/get/${orderid}`
+  const { data: orderData } = await axios.get(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/get/${orderid}`
   )
 
   const breadcrumb = {
@@ -29,47 +31,53 @@ const OrderDetails = async ({ params }) => {
     <div>
       <WebsiteBreadcrumb props={breadcrumb} />
 
-      <div className='lg:px-32 px-5 my-20'>
-        {orderData && !orderData.success ?
-          <div className='flex justify-center items-center py-32'>
-            <h4 className='text-red-600 text-xl font-semibold'>Order Not Found</h4>
+      <div className="lg:px-32 px-5 my-20">
+        {orderData && !orderData.success ? (
+          <div className="flex justify-center items-center py-32">
+            <h4 className="text-red-600 text-xl font-semibold">Order Not Found</h4>
           </div>
-          :
+        ) : (
           <div>
+            {/* Top Info Card */}
             <div className="mb-6 border rounded-lg p-4 bg-gray-50">
-              <div className="grid sm:grid-cols-3 grid-cols-1 gap-3 text-sm">
-
+              <div className="grid sm:grid-cols-3 grid-cols-1 gap-5 text-sm">
                 <div>
                   <p className="text-gray-500">Order ID</p>
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-semibold text-gray-900 break-all">
                     {orderData?.data?.order_id || '—'}
                   </p>
                 </div>
 
                 <div>
                   <p className="text-gray-500">Transaction ID</p>
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-semibold text-gray-900 break-all">
                     {orderData?.data?.payment_id || '—'}
                   </p>
                 </div>
 
-                <div>
-                  <p className="text-gray-500">Status</p>
+               <div>
+                <p className="text-gray-500 mb-1.5">Status</p>
+                <div className="flex items-start justify-between gap-3 flex-wrap">
                   <span
-                    className={`inline-block px-3 py-1 rounded-full text-xs font-semibold capitalize
+                    className={`inline-block w-fit px-3 py-1 rounded-full text-xs font-semibold capitalize
                     ${STATUS_STYLES[orderData?.data?.status] || 'bg-gray-100 text-gray-700'}`}
                   >
                     {orderData?.data?.status || 'unknown'}
                   </span>
-                </div>
 
+                  <CancelOrderButton
+                    orderId={orderData?.data?.order_id}
+                    status={orderData?.data?.status}
+                  />
+                </div>
+              </div>
               </div>
             </div>
 
-            <div className="overflow-x-auto ">
-              <table className="w-full border-collapse border border-gray-200 ">
-                {/* Table Head */}
-                <thead className="bg-gray-100 ">
+            {/* Products Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-200">
+                <thead className="bg-gray-100">
                   <tr>
                     <th className="text-start p-3 text-gray-700 font-semibold">Product</th>
                     <th className="text-center p-3 text-gray-700 font-semibold">Price</th>
@@ -78,14 +86,12 @@ const OrderDetails = async ({ params }) => {
                   </tr>
                 </thead>
 
-                {/* Table Body */}
                 <tbody>
                   {orderData?.data?.products?.map((product) => (
                     <tr
                       key={product.variantId._id}
                       className="border-b hover:bg-gray-50 transition-colors"
                     >
-                      {/* Product Info */}
                       <td className="p-3 flex items-center gap-4">
                         <Image
                           src={product?.variantId?.media[0]?.secure_url || IMAGES.image_placeholder}
@@ -106,22 +112,19 @@ const OrderDetails = async ({ params }) => {
                         </div>
                       </td>
 
-                      {/* Price */}
                       <td className="text-center p-3 text-gray-700 font-medium">
-                        {product.sellingPrice.toLocaleString("en-IN", {
-                          style: "currency",
-                          currency: "INR",
+                        {product.sellingPrice.toLocaleString('en-IN', {
+                          style: 'currency',
+                          currency: 'INR',
                         })}
                       </td>
 
-                      {/* Quantity */}
                       <td className="text-center p-3 text-gray-700 font-medium">{product.qty}</td>
 
-                      {/* Total */}
                       <td className="text-center p-3 text-gray-900 font-semibold">
-                        {(product.qty * product.sellingPrice).toLocaleString("en-IN", {
-                          style: "currency",
-                          currency: "INR",
+                        {(product.qty * product.sellingPrice).toLocaleString('en-IN', {
+                          style: 'currency',
+                          currency: 'INR',
                         })}
                       </td>
                     </tr>
@@ -130,9 +133,8 @@ const OrderDetails = async ({ params }) => {
               </table>
             </div>
 
-
+            {/* Shipping + Summary */}
             <div className="grid md:grid-cols-2 grid-cols-1 gap-6 mt-10">
-              {/* Shipping Address */}
               <div className="p-6 bg-white shadow rounded-lg border border-gray-200">
                 <h4 className="text-xl font-semibold mb-4 border-b pb-2">Shipping Address</h4>
                 <div className="space-y-2 text-gray-700">
@@ -179,7 +181,6 @@ const OrderDetails = async ({ params }) => {
                 </div>
               </div>
 
-              {/* Order Summary */}
               <div className="p-6 bg-white shadow rounded-lg border border-gray-200">
                 <h4 className="text-xl font-semibold mb-4 border-b pb-2">Order Summary</h4>
                 <div className="space-y-2 text-gray-700">
@@ -202,17 +203,11 @@ const OrderDetails = async ({ params }) => {
                 </div>
               </div>
             </div>
-
           </div>
-
-        }
-
+        )}
       </div>
     </div>
   )
 }
 
 export default OrderDetails
-
-
-

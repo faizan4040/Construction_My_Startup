@@ -5,7 +5,7 @@ import ProductModel from "@/models/Product.model"
 import UserModel from "@/models/User.model"
 import { NextResponse } from "next/server"
 
-const EMPTY = { PaymentRefund: 0, OrderCancel: 0, OrderShipped: 0, OrderDelivering: 0, PendingReview: 0, PendingPayment: 0, Delivered: 0, InProgress: 0 }
+const EMPTY = { on_hold: 0, pending: 0, ready_to_ship: 0, shipped: 0, delivered: 0, cancelled: 0 }
 
 export async function GET() {
   try {
@@ -23,21 +23,25 @@ export async function GET() {
       { $match: { deleteAt: null, "products.productId": { $in: shopProductIds } } },
       { $unwind: "$products" },
       { $match: { "products.productId": { $in: shopProductIds } } },
-      { $group: { _id: { $ifNull: ["$products.status", "pending"] }, count: { $sum: 1 } } },
+      { $group: { _id: { $ifNull: ["$products.status", "on_hold"] }, count: { $sum: 1 } } },
     ])
 
     const map = {}
     counts.forEach((c) => { map[c._id] = c.count })
 
     return NextResponse.json({
-      ...EMPTY,
-      OrderCancel: map["cancelled"] || 0,
-      OrderShipped: map["shipped"] || 0,
-      Delivered: map["delivered"] || 0,
-      InProgress: map["processing"] || 0,
+      on_hold: map["on_hold"] || 0,
+      pending: map["pending"] || 0,
+      ready_to_ship: map["ready_to_ship"] || 0,
+      shipped: map["shipped"] || 0,
+      delivered: map["delivered"] || 0,
+      cancelled: map["cancelled"] || 0,
     })
   } catch (error) {
     console.error("SHOP STATUS API ERROR:", error)
     return NextResponse.json(EMPTY, { status: 500 })
   }
 }
+
+
+

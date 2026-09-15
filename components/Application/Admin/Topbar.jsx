@@ -8,6 +8,7 @@ import { useSidebar } from '@/components/ui/sidebar'
 import { BsBlockquoteLeft } from "react-icons/bs"
 import AdminSearch from './AdminSearch'
 import OrderNotificationBell from "@/components/Application/shopOwner/Dashboard/OrderNotificationBell"
+import NotificationBell from "@/components/Application/NotificationBell"   // ✅ NEW — general in-app notifications
 
 const Topbar = ({ role = "shopowner" }) => {
   const { toggleSidebar } = useSidebar()
@@ -43,6 +44,7 @@ const Topbar = ({ role = "shopowner" }) => {
       {/* Right actions */}
       <div className="flex items-center gap-2">
         <OrderNotificationBell {...bellConfig} />
+        <NotificationBell />   {/* ✅ NEW — general notifications (order status updates, etc.) */}
         <ThemeSwitch />
         <UserDropdown />
         <Button
@@ -59,8 +61,6 @@ const Topbar = ({ role = "shopowner" }) => {
 }
 
 export default Topbar
-
-
 
 // 'use client'
 
