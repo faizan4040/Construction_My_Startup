@@ -43,7 +43,12 @@ export async function POST(request, { params }) {
       }
     }
 
-    const product = await ProductModel.findById(productId).select("shop")
+      const product = await ProductModel.findById(productId).select("shop")
+    if (!product) return response(false, 404, "Product no longer exists.")   // ✅ ADD
+
+    const wrongDefectiveKeywords = ["wrong", "defect", "damage", "broken", "different", "not as described"]
+    const reasonLower = reason.trim().toLowerCase()
+    const reasonCategory = wrongDefectiveKeywords.some((k) => reasonLower.includes(k)) ? "wrong_defective" : "other"
 
     await ReturnModel.create({
       order: order._id,
@@ -58,8 +63,9 @@ export async function POST(request, { params }) {
       customerPhone: order.phone,
       shop: product.shop,
       reason: reason.trim(),
+      reasonCategory,
     })
-
+    
     item.returnRequested = true
     await order.save()
 
