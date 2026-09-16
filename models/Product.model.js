@@ -22,6 +22,11 @@ const productSchema = new mongoose.Schema({
        required: true
     },
 
+    isReturnable: {
+    type: Boolean,
+    default: true,
+    },
+
     mrp: {
         type: Number,
         required: true,

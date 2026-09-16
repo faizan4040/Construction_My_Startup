@@ -6,13 +6,15 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 import CancelOrderButton from '@/components/Website/CancelOrderButton'
+import ReturnOrderButton from '@/components/Website/ReturnOrderButton'
 
 const STATUS_STYLES = {
-  pending:    'bg-yellow-100 text-yellow-700',
-  processing: 'bg-blue-100 text-blue-700',
-  shipped:    'bg-indigo-100 text-indigo-700',
-  delivered:  'bg-green-100 text-green-700',
-  cancelled:  'bg-red-100 text-red-700',
+  on_hold:       'bg-gray-100 text-gray-700',
+  pending:       'bg-yellow-100 text-yellow-700',
+  ready_to_ship: 'bg-blue-100 text-blue-700',
+  shipped:       'bg-indigo-100 text-indigo-700',
+  delivered:     'bg-green-100 text-green-700',
+  cancelled:     'bg-red-100 text-red-700',
 }
 
 const OrderDetails = async ({ params }) => {
@@ -62,7 +64,7 @@ const OrderDetails = async ({ params }) => {
                     className={`inline-block w-fit px-3 py-1 rounded-full text-xs font-semibold capitalize
                     ${STATUS_STYLES[orderData?.data?.status] || 'bg-gray-100 text-gray-700'}`}
                   >
-                    {orderData?.data?.status || 'unknown'}
+                    {orderData?.data?.status?.replace(/_/g, ' ') || 'unknown'}
                   </span>
 
                   <CancelOrderButton
@@ -83,6 +85,7 @@ const OrderDetails = async ({ params }) => {
                     <th className="text-center p-3 text-gray-700 font-semibold">Price</th>
                     <th className="text-center p-3 text-gray-700 font-semibold">Quantity</th>
                     <th className="text-center p-3 text-gray-700 font-semibold">Total</th>
+                    <th className="text-center p-3 text-gray-700 font-semibold">Action</th>
                   </tr>
                 </thead>
 
@@ -126,6 +129,18 @@ const OrderDetails = async ({ params }) => {
                           style: 'currency',
                           currency: 'INR',
                         })}
+                      </td>
+
+                      <td className="p-3">
+                        <div className="flex justify-center">
+                          <ReturnOrderButton
+                            orderId={orderData?.data?.order_id}
+                            productId={product.productId?._id || product.productId}
+                            status={product.status}
+                            isReturnable={product.isReturnable}
+                            returnRequested={product.returnRequested}
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}

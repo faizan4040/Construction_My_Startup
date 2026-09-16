@@ -1,9 +1,6 @@
 import { orderstatus } from "@/lib/utils";
 import mongoose from "mongoose";
 
-// One entry per status change — this is what makes automation auditable.
-// Every API route that changes status MUST push here instead of just
-// setting `status` directly.
 const statusHistorySchema = new mongoose.Schema({
   status: { type: String, enum: orderstatus, required: true },
   changedBy: { type: String, enum: ["system", "delivery_partner", "shopowner", "courier", "customer"], required: true },
@@ -45,6 +42,9 @@ const orderSchema = new mongoose.Schema({
             shippedAt: { type: Date, default: null },
             deliveredAt: { type: Date, default: null },
             deliveryOtp: { type: String, default: null }, // set when courier starts delivery attempt
+           
+            isReturnable: { type: Boolean, default: true },
+            returnRequested: { type: Boolean, default: false },
         }
     ],
 

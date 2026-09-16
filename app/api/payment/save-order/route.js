@@ -58,15 +58,17 @@ export async function POST(request) {
         paymentVerification = true
     }
 
-    // Order-level status: "on_hold" (naya flow default) agar payment verify
-    // hua, warna "unverified"
     const initialStatus = paymentVerification ? 'on_hold' : 'unverified'
 
-    // Products array me har item ka status explicitly set — order-level
-    // status ke sath sync rehne ke liye, schema default pe depend nahi karna
+    const productIds = validateData.products.map((p) => p.productId)
+    const productsInfo = await ProductModel.find({ _id: { $in: productIds } }).select("isReturnable")
+    const returnableMap = {}
+    productsInfo.forEach((p) => { returnableMap[p._id.toString()] = p.isReturnable !== false })
+
     const productsWithStatus = validateData.products.map((item) => ({
         ...item,
         status: initialStatus,
+        isReturnable: returnableMap[item.productId] ?? true,
     }))
 
     const newOrder = await OrderModel.create({

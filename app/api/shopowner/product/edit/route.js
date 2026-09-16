@@ -29,6 +29,7 @@ export async function PUT(request) {
       discountPercentage: true,
       media: true,
       description: true,
+      isReturnable: true,   // ✅ ADD
     });
 
     const validatedData = validationSchema.safeParse(rest);
@@ -36,7 +37,6 @@ export async function PUT(request) {
       return response(false, 401, "Invalid or missing input field.", validatedData.error);
     }
 
-    // ownership guard — can only edit products belonging to THIS shop
     const product = await ProductModel.findOne({ _id, shop: user.shop, deletedAt: null });
     if (!product) return response(false, 404, "Product not found or not owned by you.");
 

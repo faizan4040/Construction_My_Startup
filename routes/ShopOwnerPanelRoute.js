@@ -27,4 +27,5 @@ export const SHOPOWNER_TRACK_EARNING = '/shopowner/track-earning'
 export const SHOP_OWNER_TODO_SHOW = '/shop/todo'
 
 
+export const SHOP_OWNER_RETURN_SHOW = '/shop/returns'
 
