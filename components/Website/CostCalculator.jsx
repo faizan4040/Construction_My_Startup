@@ -103,7 +103,7 @@ export default function CostCalculator() {
   }
 
   function handleBuyNow(row) {
-    pushToast(`Added ${row.name} to your HomeRun cart`);
+    pushToast(`Added ${row.name} to your ConstructEzy cart`);
   }
 
   async function handleDownloadPdf() {
@@ -246,7 +246,7 @@ export default function CostCalculator() {
               </h2>
               <p className="text-ink/60 mb-7 leading-relaxed">
                 Three quick details and we'll break down every material your home needs, with
-                quantities, costs, and a tap to order the ones HomeRun delivers in 60 minutes.
+                quantities, costs, and a tap to order the ones ConstructEzy delivers in 60 minutes.
               </p>
               <ol className="space-y-5">
                 <Step n={1} title="Pick your city">
@@ -269,7 +269,7 @@ export default function CostCalculator() {
                 13 materials, one bill
               </h3>
               <p className="text-ink/60 mb-6 leading-relaxed">
-                From foundation to finish, with the HomeRun-deliverable items called out for
+                From foundation to finish, with the ConstructEzy-deliverable items called out for
                 one-click ordering.
               </p>
               <div className="flex flex-wrap gap-2">

@@ -5,6 +5,7 @@ import { catchError, response } from "@/lib/helperfunction";
 import { sendMail } from "@/lib/sendMail";
 import { zSchema } from "@/lib/zodSchema";
 import OrderModel from "@/models/Order.model";
+import ProductModel from "@/models/Product.model";
 import { validatePaymentVerification } from "razorpay/dist/utils/razorpay-utils";
 import z from "zod";
 

@@ -9,7 +9,7 @@ import { formatINR, formatNumber } from "@/lib/calculate";
 
 const FILTERS = [
   { value: "all", label: "All" },
-  { value: "delivers", label: "HomeRun delivers" },
+  { value: "delivers", label: "ConstructEzy delivers" },
 ];
 
 export default function ResourceTable({ rows, onRowTierChange, onBuyNow, areaSqFt }) {
