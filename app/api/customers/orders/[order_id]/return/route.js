@@ -4,6 +4,7 @@ import { catchError, response } from "@/lib/helperfunction"
 import OrderModel from "@/models/Order.model"
 import ProductModel from "@/models/Product.model"
 import ReturnModel from "@/models/Return.model"
+import WalletTransactionModel from "@/models/WalletTransaction.model"
 
 export async function POST(request, { params }) {
   try {
@@ -68,6 +69,11 @@ export async function POST(request, { params }) {
     
     item.returnRequested = true
     await order.save()
+
+    await WalletTransactionModel.updateOne(
+  { order: order._id, productId: item.productId, status: "on_hold" },
+  { $set: { status: "cancelled", failureReason: "Return requested by customer" } }
+)
 
     return response(true, 200, "Return request submitted successfully.")
   } catch (error) {

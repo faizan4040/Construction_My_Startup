@@ -29,3 +29,6 @@ export const SHOP_OWNER_TODO_SHOW = '/shop/todo'
 
 export const SHOP_OWNER_RETURN_SHOW = '/shop/returns'
 
+export const SHOP_OWNER_PAYMENT_SHOW = '/shop/payments'
+export const SHOP_OWNER_PAYMENT_DETAILS = '/shop/payments/details'
+export const SHOP_OWNER_BANK_ACCOUNT = '/shop/payments/bank-account'

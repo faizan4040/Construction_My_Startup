@@ -25,6 +25,13 @@ const orderSchema = new mongoose.Schema({
     paymentMode: { type: String, enum: ["online", "cod"], default: "online" },
     paymentStatus: { type: String, enum: ["Paid", "Pending", "Refunded", "Failed"], default: "Pending" },
 
+    // top-level order fields me:
+    customerLocation: {
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null },
+    },
+    paymentQRId: { type: String, default: null },
+
     products: [
         {
             productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },

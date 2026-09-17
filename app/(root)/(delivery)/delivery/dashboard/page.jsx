@@ -13,12 +13,14 @@ const STATUS_LABELS = {
   delivered: { label: 'Delivered', color: 'bg-green-50 text-green-700 border-green-200' },
 }
 
+
 const DeliveryDashboardPage = () => {
   const [available, setAvailable] = useState([])
   const [myOrders, setMyOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [busyId, setBusyId] = useState(null)
+
 
   const fetchAll = useCallback(async (silent = false) => {
     if (silent) setRefreshing(true)
@@ -168,7 +170,7 @@ const DeliveryDashboardPage = () => {
         )}
       </section>
 
-      {/* ── My accepted orders ── */}
+      {/* ── My accepted orders — now clickable, opens order detail with map + payment + OTP ── */}
       <section>
         <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
           My Orders
@@ -186,24 +188,23 @@ const DeliveryDashboardPage = () => {
             {myOrders.map((order) => {
               const status = STATUS_LABELS[order.status] || STATUS_LABELS.pending
               return (
-                <div
-                  key={order._id}
-                  className="bg-white border rounded-2xl p-4 flex items-center justify-between gap-4 shadow-sm"
-                >
-                  <div className="min-w-0 space-y-1.5">
-                    <p className="font-semibold text-sm text-gray-900 truncate">
-                      #{order.order_id}
-                    </p>
-                    <p className="text-xs text-gray-500 flex items-center gap-1.5">
-                      <MapPin size={13} className="shrink-0" />
-                      {order.city}, {order.state}
-                    </p>
-                  </div>
+                <Link key={order._id} href={`/delivery/order/${order.order_id}`}>
+                  <div className="bg-white border rounded-2xl p-4 flex items-center justify-between gap-4 shadow-sm hover:shadow-md transition cursor-pointer">
+                    <div className="min-w-0 space-y-1.5">
+                      <p className="font-semibold text-sm text-gray-900 truncate">
+                        #{order.order_id}
+                      </p>
+                      <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                        <MapPin size={13} className="shrink-0" />
+                        {order.city}, {order.state}
+                      </p>
+                    </div>
 
-                  <span className={`shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border whitespace-nowrap ${status.color}`}>
-                    {status.label}
-                  </span>
-                </div>
+                    <span className={`shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border whitespace-nowrap ${status.color}`}>
+                      {status.label}
+                    </span>
+                  </div>
+                </Link>
               )
             })}
           </div>

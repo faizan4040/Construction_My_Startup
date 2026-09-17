@@ -15,7 +15,7 @@ export async function GET() {
       deleteAt: null,
       status: { $ne: "cancelled" },
     })
-      .select("order_id name city state pincode totalAmount status products")
+      .select("order_id name phone city state pincode address landmark totalAmount status paymentMode paymentStatus products")
       .sort({ createdAt: -1 })
       .limit(50)
 

@@ -6,6 +6,9 @@ import { sendMail } from "@/lib/sendMail"
 import { isAuthenticated } from "@/lib/authentication"
 import { generateOTP } from "@/lib/helperfunction"
 import OrderModel from "@/models/Order.model"
+import ShopModel from "@/models/Shop.model"
+import ProductModel from "@/models/Product.model"
+import WalletTransactionModel from "@/models/WalletTransaction.model"
 
 // Step 1: courier requests OTP be sent to customer before handover
 export async function PUT(request) {
@@ -50,6 +53,35 @@ export async function POST(request) {
     }
 
     await order.save()
+
+    const product = await ProductModel.findById(item.productId).select("shop")
+const shop = product ? await ShopModel.findById(product.shop).select("commissionPercent") : null
+
+if (product && shop) {
+  const grossAmount = item.sellingPrice * item.qty
+  const commissionPercent = shop.commissionPercent ?? 5
+  const platformRecovery = Math.round((grossAmount * commissionPercent) / 100)
+  const netAmount = grossAmount - platformRecovery
+
+  const deliveredAt = new Date()
+  const eligibleAt = new Date(deliveredAt)
+  eligibleAt.setDate(eligibleAt.getDate() + 7) // ✅ 7-day hold
+
+  await WalletTransactionModel.create({
+    shop: product.shop,
+    order: order._id,
+    orderId: order.order_id,
+    productId: item.productId,
+    productName: item.name,
+    qty: item.qty,
+    grossAmount,
+    commissionPercent,
+    platformRecovery,
+    netAmount,
+    deliveredAt,
+    eligibleAt,
+  })
+}
 
     const html = getOrderStatusEmail("delivered", order)
     if (html) await sendMail(order.email, "Order Delivered - ConstructEzy", html)
