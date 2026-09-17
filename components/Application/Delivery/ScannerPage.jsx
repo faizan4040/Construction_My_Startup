@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useRef, useState } from "react"
-import { Html5Qrcode } from "html5-qrcode"
+import { useRouter } from "next/navigation"
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode"
 import { showToast } from "@/lib/showToast"
 import { Loader2, CameraOff } from "lucide-react"
 
 const ScannerPage = () => {
+  const router = useRouter()
   const scannerRef = useRef(null)
   const isRunningRef = useRef(false) // tracks actual running state, not just intent
   const [scanning, setScanning] = useState(false)
@@ -15,8 +17,13 @@ const ScannerPage = () => {
 
   useEffect(() => {
     let cancelled = false
-    const scanner = new Html5Qrcode("scanner-box")
-    scannerRef.current = scanner
+    const scanner = new Html5Qrcode("scanner-box", {
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.CODE_128,
+      ],
+      verbose: false,
+    })
 
     scanner
       .start(
@@ -35,6 +42,13 @@ const ScannerPage = () => {
             const data = await res.json()
             setLastResult(data)
             showToast(data.success ? "success" : "error", data.message)
+
+            // ✅ scan successful hote hi order-detail page pe auto-navigate
+            if (data.success && data.data?.orderId) {
+              setTimeout(() => {
+                router.push(`/delivery/order/${data.data.orderId}`)
+              }, 1000) // 1 sec — taaki success-message dikh jaye pehle
+            }
           } catch {
             showToast("error", "Scan failed. Try again.")
           } finally {

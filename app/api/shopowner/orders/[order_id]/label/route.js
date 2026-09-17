@@ -26,7 +26,7 @@ export async function GET(request, { params }) {
 
     const [barcodeBuffer, qrBuffer] = await Promise.all([
       Promise.resolve(generateBarcodePNG(item.labelCode)),
-      generateQRCodePNG(trackingUrl),
+      generateQRCodePNG(item.labelCode),
     ])
 
     const html = buildLabelHTML({
