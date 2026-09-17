@@ -1,5 +1,4 @@
 'use client'
-// 📁 Suggested path: app/shopowner/profile/edit/page.jsx
 
 import { useEffect, useState } from "react"
 import ProfileEditForm from "@/components/Profile/ProfileEditForm"

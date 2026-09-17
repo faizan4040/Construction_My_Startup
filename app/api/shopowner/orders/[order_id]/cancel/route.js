@@ -2,7 +2,7 @@ import { isAuthenticated } from "@/lib/authentication"
 import connectDB from "@/lib/databaseConnection"
 import { catchError, response } from "@/lib/helperfunction"
 import { applyTransition } from "@/lib/orderStateMachine"
-import { getOrderStatusEmail } from "@/lib/mail/orderStatusMail"
+import { getOrderStatusEmail } from "@/lib/email/orderStatusMail"
 import { sendMail } from "@/lib/sendMail"
 import OrderModel from "@/models/Order.model"
 

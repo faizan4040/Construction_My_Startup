@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button'
 import { useSidebar } from '@/components/ui/sidebar'
 import { BsBlockquoteLeft } from "react-icons/bs"
 import AdminSearch from './AdminSearch'
-import OrderNotificationBell from "@/components/Application/shopOwner/Dashboard/OrderNotificationBell"
-import NotificationBell from "@/components/Application/NotificationBell"   // ✅ NEW — general in-app notifications
+import OrderNotificationBell from "@/components/Application/ShopOwner/Dashboard/OrderNotificationBell"
+import NotificationBell from "@/components/Application/NotificationBell"   
+
 
 const Topbar = ({ role = "shopowner" }) => {
   const { toggleSidebar } = useSidebar()
