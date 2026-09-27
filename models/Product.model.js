@@ -73,6 +73,13 @@ const productSchema = new mongoose.Schema({
         index: true
     },
 
+    masterProductId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+        default: null,
+        index: true,
+    },
+
 }, {timestamps: true})
 
 

@@ -9,6 +9,7 @@ import {
   Wallet, CheckCircle2, ArrowLeft, Send,
 } from 'lucide-react'
 import { showToast } from '@/lib/showToast'
+import { calculateDistanceKm, estimateEtaMinutes, formatDistance } from '@/lib/distance'
 
 // ── Leaflet needs `window` — must be client-only, no SSR ──
 const DeliveryMap = dynamic(() => import('@/components/Application/Delivery/DeliveryMap'), {
@@ -30,6 +31,9 @@ const DeliveryOrderDetailPage = () => {
   const [otpSent, setOtpSent] = useState(false)
   const [otp, setOtp] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  const [calling, setCalling] = useState(false)
+  const [myLocation, setMyLocation] = useState(null)
 
   const fetchOrder = useCallback(async () => {
     try {
@@ -54,9 +58,52 @@ const DeliveryOrderDetailPage = () => {
     fetchLocation()
   }, [fetchOrder, fetchLocation])
 
+  // ✅ Live location tracking — har 15 sec me apni position backend ko bhejo,
+  // aur locally bhi rakho taaki distance/ETA turant calculate ho sake
+  useEffect(() => {
+    if (!navigator.geolocation) return
+
+    const pushLocation = (lat, lng) => {
+      setMyLocation({ lat, lng })
+      axios.post('/api/delivery/location', { lat, lng }).catch(() => {})
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => pushLocation(pos.coords.latitude, pos.coords.longitude),
+      () => {}
+    )
+
+    const interval = setInterval(() => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => pushLocation(pos.coords.latitude, pos.coords.longitude),
+        () => {}
+      )
+    }, 15000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  const distanceKm = myLocation && customerLocation
+    ? calculateDistanceKm(myLocation.lat, myLocation.lng, customerLocation.lat, customerLocation.lng)
+    : null
+  const etaMinutes = estimateEtaMinutes(distanceKm)
+
   const item = order?.products?.[0]
   const isCod = order?.paymentMode === 'cod'
   const isPaid = order?.paymentStatus === 'Paid'
+
+  // ── Masked call ──
+  const handleCallCustomer = async () => {
+    setCalling(true)
+    try {
+      const { data } = await axios.post('/api/delivery/call', { type: 'order', id: order_id })
+      showToast(data.success ? 'success' : 'error', data.message)
+    } catch (err) {
+      showToast('error', err?.response?.data?.message || 'Call failed.')
+    } finally {
+      setCalling(false)
+    }
+  }
 
   // ── Payment: generate QR ──
   const handleGenerateQR = async () => {
@@ -88,7 +135,6 @@ const DeliveryOrderDetailPage = () => {
       } catch {}
     }, 3000)
 
-    // stop polling after 5 minutes regardless
     setTimeout(() => { clearInterval(interval); setCheckingPayment(false) }, 5 * 60 * 1000)
   }
 
@@ -171,13 +217,38 @@ const DeliveryOrderDetailPage = () => {
         </div>
       </div>
 
+      {/* Distance + ETA — Zomato-style badge */}
+      <div className="bg-white border rounded-2xl p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-gray-400 mb-0.5">Distance to customer</p>
+            <p className="text-lg font-semibold text-gray-900">
+              {distanceKm != null ? formatDistance(distanceKm) : 'Locating...'}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-gray-400 mb-0.5">Estimated time</p>
+            <p className="text-lg font-semibold text-blue-600">
+              {etaMinutes != null ? `${etaMinutes} min` : '—'}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Customer info */}
       <div className="bg-white border rounded-2xl p-4">
         <h3 className="text-sm font-semibold text-gray-700 mb-2">Customer</h3>
         <p className="font-medium text-gray-900">{order.name}</p>
-        <a href={`tel:${order.phone}`} className="flex items-center gap-1.5 text-sm text-blue-600 mt-1">
-          <Phone size={13} /> {order.phone}
-        </a>
+
+        {/* ✅ Masked call — phone number frontend pe kabhi nahi aata */}
+        <button
+          onClick={handleCallCustomer}
+          disabled={calling}
+          className="flex items-center gap-1.5 text-sm text-blue-600 mt-1 disabled:opacity-50"
+        >
+          <Phone size={13} /> {calling ? 'Calling...' : 'Call Customer'}
+        </button>
+
         <p className="flex items-start gap-1.5 text-sm text-gray-600 mt-2">
           <MapPin size={13} className="mt-0.5 shrink-0" />
           {order.address}, {order.landmark && `${order.landmark}, `}{order.city}, {order.state} - {order.pincode}

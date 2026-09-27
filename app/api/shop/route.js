@@ -13,7 +13,7 @@ export async function GET(request) {
      const searchParams = request.nextUrl.searchParams
 
      const brand = searchParams.get('brand')
-     const inStock = searchParams.get('inStock') // 'true' when checkbox is checked
+     const inStock = searchParams.get('inStock')
      const minPrice = parseInt(searchParams.get('minPrice')) || 0
      const maxPrice = parseInt(searchParams.get('maxPrice')) || 100000
      const categorySlug = searchParams.get('category')
@@ -31,15 +31,21 @@ export async function GET(request) {
      if (sortOption === 'price_low_high') sortquery = { sellingPrice: 1 }
      if (sortOption === 'price_high_low') sortquery = { sellingPrice: -1 }
 
+     // ===== NEW: parent select ho to uski sub-categories ke products bhi aayenge =====
      let categoryId = []
      if(categorySlug){
          const slugs = categorySlug.split(',')
-         const categoryData = await CategoryModel.find({ deletedAt: null, slug: { $in: slugs } }).select('_id').lean()
-         categoryId = categoryData.map(category => category._id)
+
+         const selected = await CategoryModel.find({ deletedAt: null, slug: { $in: slugs } })
+           .select('_id').lean()
+         const selectedIds = selected.map(category => category._id)
+
+         const children = await CategoryModel.find({ deletedAt: null, parent: { $in: selectedIds } })
+           .select('_id').lean()
+
+         categoryId = [...selectedIds, ...children.map(category => category._id)]
      }
 
-     // matchStage only has fields that exist on Product model
-     // Brand/stock are on variants — do NOT put them here
      let matchStage = {}
      if(categoryId.length > 0) matchStage.category = { $in: categoryId }
      if(search) matchStage.name = { $regex: search, $options: 'i' }
@@ -60,7 +66,6 @@ export async function GET(request) {
            }
          },
 
-         // brand / in-stock / price filter applied here on variants (where it actually lives)
          {
            $addFields: {
              variants: {
@@ -80,7 +85,6 @@ export async function GET(request) {
            },
          },
 
-         
          {
            $match: {
              $expr: { $gt: [{ $size: "$variants" }, 0] }
@@ -132,8 +136,6 @@ export async function GET(request) {
         return catchError(error)
     }
 }
-
-
 
 
 

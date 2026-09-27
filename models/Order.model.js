@@ -9,6 +9,16 @@ const statusHistorySchema = new mongoose.Schema({
   at: { type: Date, default: Date.now },
 }, { _id: false })
 
+//  NEW — per-item shop-assignment tracking (nearest-shop notification ke liye)
+const itemAssignmentSchema = new mongoose.Schema({
+  status: { type: String, enum: ["unassigned", "pending", "accepted", "escalated"], default: "unassigned" },
+  currentShop: { type: mongoose.Schema.Types.ObjectId, ref: "Shop", default: null },
+  currentRadiusKm: { type: Number, default: 3 },
+  notifiedAt: { type: Date, default: null },
+  expiresAt: { type: Date, default: null },
+  attemptedShops: [{ type: mongoose.Schema.Types.ObjectId, ref: "Shop" }],
+}, { _id: false })
+
 const orderSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
     name: { type: String, required: true },
@@ -25,11 +35,18 @@ const orderSchema = new mongoose.Schema({
     paymentMode: { type: String, enum: ["online", "cod"], default: "online" },
     paymentStatus: { type: String, enum: ["Paid", "Pending", "Refunded", "Failed"], default: "Pending" },
 
-    // top-level order fields me:
     customerLocation: {
-    lat: { type: Number, default: null },
-    lng: { type: Number, default: null },
+        lat: { type: Number, default: null },
+        lng: { type: Number, default: null },
     },
+
+    // NEW — GeoJSON Point, geospatial $nearSphere query ke liye (customerLocation
+    // plain {lat,lng} hai jo geo-query me kaam nahi karta, isliye ye alag field hai)
+    deliveryLocation: {
+        type: { type: String, enum: ["Point"], default: "Point" },
+        coordinates: { type: [Number], default: [0, 0] },
+    },
+
     paymentQRId: { type: String, default: null },
 
     products: [
@@ -43,19 +60,20 @@ const orderSchema = new mongoose.Schema({
             status: { type: String, enum: orderstatus, default: "on_hold" },
             statusHistory: [statusHistorySchema],
 
-            // ── NEW: label & tracking ──
-            labelCode: { type: String, default: null, index: true }, // unique barcode value, one per line item
+            labelCode: { type: String, default: null, index: true },
             labelGeneratedAt: { type: Date, default: null },
             shippedAt: { type: Date, default: null },
             deliveredAt: { type: Date, default: null },
-            deliveryOtp: { type: String, default: null }, // set when courier starts delivery attempt
-           
+            deliveryOtp: { type: String, default: null },
+
             isReturnable: { type: Boolean, default: true },
             returnRequested: { type: Boolean, default: false },
+
+            // NEW — is item ko kis shop ko notify kiya gaya, radius, timeout, etc.
+            itemAssignment: { type: itemAssignmentSchema, default: () => ({}) },
         }
     ],
 
-    // ── NEW: which delivery boy accepted the pickup job for this order ──
     deliveryPartner: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
 
     subtotal: { type: Number, required: true },
@@ -70,6 +88,8 @@ const orderSchema = new mongoose.Schema({
     deleteAt: { type: Date, default: null, index: true }
 }, { timestamps: true })
 
+//  NEW — 2dsphere index, deliveryLocation pe $nearSphere geo-query ke liye zaroori
+orderSchema.index({ deliveryLocation: "2dsphere" })
+
 const OrderModel = mongoose.models.Order || mongoose.model('Order', orderSchema, 'orders')
 export default OrderModel
-

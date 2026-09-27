@@ -74,6 +74,9 @@ const CheckOut = () => {
   const [placingOrder, setPlacingOrder] = useState(false)
   const [savingOrder, setSavingOrder] = useState(false)
 
+  /* ---------------- PAYMENT METHOD ---------------- */
+  const [paymentMethod, setPaymentMethod] = useState('online')
+
   /* ---------------- VERIFY CART ---------------- */
   const { data: verifiedResponse } = useFetch(
     '/api/cart-verification',
@@ -94,19 +97,16 @@ const CheckOut = () => {
 const { subtotal, discount, totalAmount } = useMemo(() => {
   const products = cart.products || []
 
-  // Selling price already discounted
   const sub = products.reduce(
     (sum, p) => sum + p.sellingPrice * p.qty,
     0
   )
 
-  // Informational (You Saved)
   const disc = products.reduce(
     (sum, p) => sum + (p.mrp - p.sellingPrice) * p.qty,
     0
   )
 
-  // ONLY coupon discount is subtracted
   const total = Math.max(sub - couponDiscount, 0)
 
   return {
@@ -165,9 +165,6 @@ const { subtotal, discount, totalAmount } = useMemo(() => {
     setIsCouponApplied(false)
     showToast('success', 'Coupon removed')
   }
-
-  /* ---------------- EMPTY CART ---------------- */
-
 
   // place order
 const orderFormSchema = zSchema
@@ -228,12 +225,51 @@ const getOrderId = async (amount) => {
    }
 }
 
-// razorpay setup
+// place order — online (Razorpay) ya COD, dono handle karta hai
 const placeOrder = async (formData) => {
-
- 
   setPlacingOrder(true)
 
+  const products = cart.products.map((cartItem) => ({
+    productId: cartItem.productId,
+    variantId: cartItem.variantId,
+    name: cartItem.name,
+    qty: cartItem.qty,
+    mrp: cartItem.mrp,
+    sellingPrice: cartItem.sellingPrice,
+  }))
+
+  // ── COD flow: koi Razorpay nahi, seedha order create ──
+  if (paymentMethod === 'cod') {
+    try {
+      setSavingOrder(true)
+      const { data } = await axios.post('/api/payment/save-cod-order', {
+        ...formData,
+        userId: authStore?._id,
+        products,
+        subtotal,
+        discount,
+        couponDiscount,
+        totalAmount,
+      })
+
+      if (data.success) {
+        showToast('success', data.message)
+        dispatch(clearCart())
+        orderForm.reset()
+        router.push(WEBSITE_ORDER_DETAILS(data.data.order_id))
+      } else {
+        showToast('error', data.message)
+      }
+    } catch (err) {
+      showToast('error', err?.response?.data?.message || 'Failed to place order.')
+    } finally {
+      setSavingOrder(false)
+      setPlacingOrder(false)
+    }
+    return
+  }
+
+  // ── Online flow — waisa hi jaisa pehले tha ──
   try {
     const generateOrderId = await getOrderId(totalAmount)
     if (!generateOrderId.success) {
@@ -255,14 +291,6 @@ const placeOrder = async (formData) => {
       handler: async function (response) {
         try {
           setSavingOrder(true)
-          const products = cart.products.map((cartItem) => ({
-            productId: cartItem.productId,
-            variantId: cartItem.variantId,
-            name: cartItem.name,
-            qty: cartItem.qty,
-            mrp: cartItem.mrp,
-            sellingPrice: cartItem.sellingPrice,
-          }))
 
           const { data } = await axios.post('/api/payment/save-order', {
             ...formData,
@@ -280,7 +308,6 @@ const placeOrder = async (formData) => {
             dispatch(clearCart())
             orderForm.reset()
             router.push(WEBSITE_ORDER_DETAILS(response.razorpay_order_id))
-            // router.push(WEBSITE_ORDER_DETAILS(data.data.orderId))
           } else {
             showToast('error', data.message)
           }
@@ -314,7 +341,6 @@ const placeOrder = async (formData) => {
   } finally {
     setPlacingOrder(false)
   }
-  
 }
 
 
@@ -337,19 +363,16 @@ const placeOrder = async (formData) => {
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
         <div className="flex flex-col items-center gap-4 rounded-2xl bg-white px-8 py-6 shadow-2xl transition-all">
 
-          {/* Image with smooth animation */}
           <img
             src={IMAGES.confirmorder}
             alt="Confirm Order"
             className="h-24 w-24 animate-[float_2s_ease-in-out_infinite]"
           />
 
-          {/* Main text */}
           <h4 className="text-lg font-semibold text-gray-900">
             Confirming your order
           </h4>
 
-          {/* Sub text */}
           <p className="text-sm text-gray-500 animate-pulse text-center">
             Please wait, we’re almost done 🚚
           </p>
@@ -535,10 +558,42 @@ const placeOrder = async (formData) => {
           )}
         />
 
+        {/* PAYMENT METHOD */}
+        <div>
+          <FormLabel className="mb-2 block">Payment Method</FormLabel>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setPaymentMethod('online')}
+              className={`p-4 rounded-xl border text-sm font-medium transition text-left ${
+                paymentMethod === 'online'
+                  ? 'border-orange-500 bg-orange-50 text-orange-700'
+                  : 'border-gray-200 text-gray-600 hover:border-gray-300'
+              }`}
+            >
+              Pay Online
+              <p className="text-xs font-normal text-gray-400 mt-0.5">UPI, Card, Netbanking</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPaymentMethod('cod')}
+              className={`p-4 rounded-xl border text-sm font-medium transition text-left ${
+                paymentMethod === 'cod'
+                  ? 'border-orange-500 bg-orange-50 text-orange-700'
+                  : 'border-gray-200 text-gray-600 hover:border-gray-300'
+              }`}
+            >
+              Cash on Delivery
+              <p className="text-xs font-normal text-gray-400 mt-0.5">Pay when it arrives</p>
+            </button>
+          </div>
+        </div>
+
         {/* SUBMIT */}
         <ButtonLoading
           type="submit"
-          text="Place Order"
+          text={paymentMethod === 'cod' ? 'Place Order (COD)' : 'Place Order'}
           loading={placingOrder}
           className="w-full mt-6 bg-black text-white rounded-full hover:bg-orange-500 hover:text-white transition-all duration-300"
         />
@@ -668,5 +723,3 @@ const placeOrder = async (formData) => {
 
     
 export default CheckOut
-
-

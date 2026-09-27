@@ -92,9 +92,31 @@ export async function POST(request) {
     payment_id: validateData.razorpay_payment_id,
     order_id: validateData.razorpay_order_id,               
     status: initialStatus,
-    paymentStatus: paymentVerification ? 'Paid' : 'Failed'   // ✅ FIX: ye field pehle set hi nahi ho rahi thi
+    paymentStatus: paymentVerification ? 'Paid' : 'Failed'
     });
 
+    // ✅ NEW — nearest-shop assignment (sirf payment-verified orders ke liye)
+    if (paymentVerification) {
+        try {
+            const { geocodeAddress } = await import("@/lib/geocode")
+            const { assignAllItems } = await import("@/lib/itemAssignment")
+
+            const fullAddress = `${validateData.address}, ${validateData.city}, ${validateData.state} ${validateData.pincode}, India`
+            const coords = await geocodeAddress(fullAddress)
+
+            if (coords) {
+                newOrder.customerLocation = coords
+                newOrder.deliveryLocation = { type: "Point", coordinates: [coords.lng, coords.lat] }
+                await newOrder.save()
+                await assignAllItems(newOrder._id)
+            }
+            // geocode fail ho jaaye to bhi order ban chuka hai — sirf shop-assignment
+            // skip hogi, admin baad me manually assign kar sakta hai
+        } catch (assignError) {
+            console.error("Shop assignment failed:", assignError)
+            // checkout fail nahi hona chahiye isliye — order already ban chuka hai
+        }
+    }
 
     try{
         const mailData = {
@@ -114,5 +136,3 @@ export async function POST(request) {
        return catchError(error)
     }
 }
-
-

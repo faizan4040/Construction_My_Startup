@@ -15,8 +15,8 @@ const DatatableWrapper = ({
     deleteType,
     trashView,
     createAction,
-    renderDetailPanel,        // ✅ ADD — isके bina detail panel kabhi nahi khulega
-    defaultHiddenColumns,     // ✅ ADD — isके bina column-hide kaam nahi karega
+    renderDetailPanel,        //  ADD — isके bina detail panel kabhi nahi khulega
+    defaultHiddenColumns,     //  ADD — isके bina column-hide kaam nahi karega
 }) => {
 
   const {resolvedTheme} = useTheme()

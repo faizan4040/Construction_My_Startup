@@ -16,8 +16,6 @@ export async function POST(request) {
 
     if (!rawScanned) return response(false, 400, "No label data received.")
 
-    // Safety-net: agar purana URL-wala QR scan ho gaya, uska last segment nikaal lo
-    // (naye labels ab plain labelCode hi encode karte hain)
     const labelCode = rawScanned.includes("/")
       ? rawScanned.split("/").filter(Boolean).pop()
       : rawScanned
@@ -43,7 +41,8 @@ export async function POST(request) {
     const html = getOrderStatusEmail("shipped", order)
     if (html) await sendMail(order.email, "Order Shipped - ConstructEzy", html)
 
-    return response(true, 200, `Scanned: ${item.name}`, { item })
+    // ✅ orderId add kiya — frontend ka redirect isी field ko dhoondh raha tha, pehle missing tha
+    return response(true, 200, `Scanned: ${item.name}`, { item, orderId: order.order_id })
   } catch (error) {
     return catchError(error, "Scan failed.")
   }

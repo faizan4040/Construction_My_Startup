@@ -2,6 +2,7 @@ import { isAuthenticated } from "@/lib/authentication"
 import connectDB from "@/lib/databaseConnection"
 import { catchError, response } from "@/lib/helperfunction"
 import UserModel from "@/models/User.model"
+import ShopModel from "@/models/Shop.model"
 import ProductModel from "@/models/Product.model"
 import OrderModel from "@/models/Order.model"
 

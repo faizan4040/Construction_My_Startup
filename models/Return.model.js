@@ -39,10 +39,21 @@ const returnSchema = new mongoose.Schema({
   },
   trackingHistory: [trackingHistorySchema],
 
+
   courierPartner: { type: mongoose.Schema.Types.ObjectId, ref: "CourierPartner", default: null },
+
+// ── NEW: hybrid pickup — shopowner decide karta hai per-return ──
+pickupMethod: {
+  type: String,
+  enum: ["courier_partner", "delivery_boy", null],
+  default: null,
+},
+deliveryPartner: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }, // agar delivery_boy method
 
   deletedAt: { type: Date, default: null },
 }, { timestamps: true })
+
+
 
 const ReturnModel = mongoose.models.Return || mongoose.model("Return", returnSchema, "returns")
 export default ReturnModel

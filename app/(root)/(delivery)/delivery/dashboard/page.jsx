@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import axios from 'axios'
 import Link from 'next/link'
-import { Loader2, Package, MapPin, ScanLine, Inbox, Truck, IndianRupee, RefreshCw } from 'lucide-react'
+import { Loader2, Package, MapPin, ScanLine, Inbox, Truck, IndianRupee, RefreshCw, RotateCcw } from 'lucide-react'
 import { showToast } from '@/lib/showToast'
 
 const STATUS_LABELS = {
@@ -17,6 +17,7 @@ const STATUS_LABELS = {
 const DeliveryDashboardPage = () => {
   const [available, setAvailable] = useState([])
   const [myOrders, setMyOrders] = useState([])
+  const [myReturns, setMyReturns] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [busyId, setBusyId] = useState(null)
@@ -25,12 +26,14 @@ const DeliveryDashboardPage = () => {
   const fetchAll = useCallback(async (silent = false) => {
     if (silent) setRefreshing(true)
     try {
-      const [availRes, myRes] = await Promise.all([
+      const [availRes, myRes, returnsRes] = await Promise.all([
         axios.get('/api/delivery/orders/available'),
         axios.get('/api/delivery/orders/my'),
+        axios.get('/api/delivery/returns'),
       ])
       setAvailable(availRes.data.data)
       setMyOrders(myRes.data.data)
+      setMyReturns(returnsRes.data.data || [])
     } catch {
       showToast('error', 'Failed to load orders.')
     } finally {
@@ -83,17 +86,27 @@ const DeliveryDashboardPage = () => {
           </p>
         </div>
 
-        <Link
-          href="/delivery/scan"
-          className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 transition text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm"
-        >
-          <ScanLine size={16} />
-          Scan Label
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/delivery/returns"
+            className="flex items-center gap-2 bg-white border hover:bg-gray-50 transition text-gray-700 text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm"
+          >
+            <RotateCcw size={16} />
+            Returns
+          </Link>
+
+          <Link
+            href="/delivery/scan"
+            className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 transition text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm"
+          >
+            <ScanLine size={16} />
+            Scan Label
+          </Link>
+        </div>
       </div>
 
       {/* ── Stats strip ── */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <div className="bg-white border rounded-2xl p-4 flex items-center gap-3 shadow-sm">
           <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
             <Inbox className="w-5 h-5 text-orange-500" />
@@ -111,6 +124,16 @@ const DeliveryDashboardPage = () => {
           <div>
             <p className="text-xl font-bold text-gray-900 leading-none">{myOrders.length}</p>
             <p className="text-xs text-gray-500 mt-1">My Active Orders</p>
+          </div>
+        </div>
+
+        <div className="bg-white border rounded-2xl p-4 flex items-center gap-3 shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+            <RotateCcw className="w-5 h-5 text-red-500" />
+          </div>
+          <div>
+            <p className="text-xl font-bold text-gray-900 leading-none">{myReturns.length}</p>
+            <p className="text-xs text-gray-500 mt-1">Return Pickups</p>
           </div>
         </div>
       </div>
