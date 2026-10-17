@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { WEBSITE_ABOUT, WEBSITE_CAREERS, WEBSITE_CONSTRUCTION_CLUB, WEBSITE_CONTACT_US, 
+import { useEffect, useRef, useState } from "react"
+import { WEBSITE_ABOUT, WEBSITE_CAREERS, WEBSITE_CONSTRUCTION_CLUB, WEBSITE_CONTACT_US,
          WEBSITE_COOKIE_POLICY, WEBSITE_DELIVERY_RETURNS, WEBSITE_DISCOUNT_CODES,
         WEBSITE_GIFT_VOUCHERS, WEBSITE_HOME_DISCOUNT, WEBSITE_ORDER_TRACKING, WEBSITE_PRICE_BEAT_PROMISE,
         WEBSITE_PRIVACY_POLICY, WEBSITE_TERMS_CONDITIONS, } from "@/routes/WebsiteRoute"
@@ -18,11 +18,29 @@ import {
   CheckCircle2,
   ArrowUpRight,
   HardHat,
+  Phone,
+  ChevronUp,
+  Check,
+  X,
 } from "lucide-react"
 import Link from "next/link"
 import { BsWhatsapp } from "react-icons/bs"
 import { useChat } from "../Chat/ChatProvider"
 import axios from "axios"
+import {
+  LANGUAGES,
+  getCurrentLanguage,
+  loadGoogleTranslate,
+  setLanguage,
+} from "@/lib/googleTranslate"
+
+// ── Contact details ─────────────────────────────────
+const PHONE_DIGITS = "918504061727"            // country code + number
+const PHONE_DISPLAY = "+91 85040 61727"
+const WHATSAPP_LINK = `https://wa.me/${PHONE_DIGITS}?text=${encodeURIComponent(
+  "Hello QuickMason, I need help with my order."
+)}`
+const CALL_LINK = `tel:+${PHONE_DIGITS}`
 
 const Footer = () => {
 
@@ -33,6 +51,40 @@ const Footer = () => {
   const [loading, setLoading]   = useState(false)
   const [success, setSuccess]   = useState(false)
   const [error, setError]       = useState("")
+
+  // ── Language state ────────────────────────────────
+  const [langOpen, setLangOpen] = useState(false)
+  const [currentLang, setCurrentLang] = useState("en")
+  const langRef = useRef(null)
+
+  useEffect(() => {
+    setCurrentLang(getCurrentLanguage())
+    loadGoogleTranslate()
+  }, [])
+
+  // close language panel on outside click / Escape
+  useEffect(() => {
+    const onPointer = (e) => {
+      if (langRef.current && e.target instanceof Node && !langRef.current.contains(e.target)) {
+        setLangOpen(false)
+      }
+    }
+    const onKey = (e) => e.key === "Escape" && setLangOpen(false)
+    document.addEventListener("pointerdown", onPointer)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("pointerdown", onPointer)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [])
+
+  const activeLang = LANGUAGES.find((l) => l.code === currentLang) || LANGUAGES[0]
+
+  const handleLanguageSelect = (code) => {
+    setLangOpen(false)
+    setCurrentLang(code)
+    setLanguage(code)
+  }
 
   const handleSubscribe = async (e) => {
     e.preventDefault()
@@ -98,6 +150,26 @@ const Footer = () => {
               New arrivals, trade pricing, and early access to offers — dispatched
               straight to your inbox.
             </p>
+
+            {/* quick contact buttons */}
+            <div className="mt-7 flex flex-wrap gap-3">
+              <a
+                href={WHATSAPP_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-2.5 h-11 px-5 border border-[#25D366]/50 text-[#25D366] font-bold uppercase tracking-wide text-xs hover:bg-[#25D366] hover:text-[#14161A] transition-colors"
+              >
+                <BsWhatsapp size={16} />
+                WhatsApp Us
+              </a>
+              <a
+                href={CALL_LINK}
+                className="group inline-flex items-center gap-2.5 h-11 px-5 border border-[#F97316]/60 text-[#F97316] font-bold uppercase tracking-wide text-xs hover:bg-[#F97316] hover:text-[#14161A] transition-colors"
+              >
+                <Phone size={16} />
+                Call Now
+              </a>
+            </div>
           </div>
 
           {/* RIGHT */}
@@ -179,7 +251,7 @@ const Footer = () => {
       {/* ================= LINKS ================= */}
       <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 py-16 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-10 text-sm">
 
-        <ul className="space-y-6">
+        <ul className="space-y-5">
           <li
             onClick={openChat}
             className="flex items-center gap-3 cursor-pointer group"
@@ -190,17 +262,37 @@ const Footer = () => {
             <span className="text-base font-semibold text-white group-hover:text-[#F97316] transition-colors">Chat</span>
           </li>
 
-          <li className="flex items-center gap-3 group">
-            <a href="https://wa.me/911234567890" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
+          <li>
+            <a
+              href={WHATSAPP_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 group"
+            >
               <span className="flex items-center justify-center h-9 w-9 border border-white/15 group-hover:border-[#25D366] group-hover:text-[#25D366] transition-colors">
                 <BsWhatsapp size={16} />
               </span>
-              <span className="text-base font-semibold text-white group-hover:text-[#25D366] transition-colors">WhatsApp</span>
+              <span>
+                <span className="block text-base font-semibold text-white group-hover:text-[#25D366] transition-colors">WhatsApp</span>
+                <span className="block text-xs text-[#6C7278] tabular-nums">{PHONE_DISPLAY}</span>
+              </span>
             </a>
           </li>
 
-          <li className="flex items-center gap-3 group">
-            <Link href={WEBSITE_CONTACT_US} className="flex items-center gap-3">
+          <li>
+            <a href={CALL_LINK} className="flex items-center gap-3 group">
+              <span className="flex items-center justify-center h-9 w-9 border border-white/15 group-hover:border-[#F97316] group-hover:text-[#F97316] transition-colors">
+                <Phone size={17} />
+              </span>
+              <span>
+                <span className="block text-base font-semibold text-white group-hover:text-[#F97316] transition-colors">Call Us</span>
+                <span className="block text-xs text-[#6C7278] tabular-nums">{PHONE_DISPLAY}</span>
+              </span>
+            </a>
+          </li>
+
+          <li>
+            <Link href={WEBSITE_CONTACT_US} className="flex items-center gap-3 group">
               <span className="flex items-center justify-center h-9 w-9 border border-white/15 group-hover:border-[#F97316] group-hover:text-[#F97316] transition-colors">
                 <Headphones size={18} />
               </span>
@@ -279,20 +371,105 @@ const Footer = () => {
       {/* ================= BOTTOM ================= */}
       <div className="border-t border-white/10">
         <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 py-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2 text-[#9098A0]">
-            <Globe size={16} />
-            <span>English</span>
-            <button className="underline text-sm hover:text-white transition-colors">Change</button>
+
+          {/* ── Language selector ── */}
+          <div className="relative" ref={langRef}>
+            <button
+              type="button"
+              onClick={() => setLangOpen((v) => !v)}
+              aria-haspopup="listbox"
+              aria-expanded={langOpen}
+              className={`notranslate flex items-center gap-3 h-11 pl-3 pr-4 border transition-colors cursor-pointer ${
+                langOpen
+                  ? "border-[#F97316] text-[#F97316] bg-[#F97316]/5"
+                  : "border-white/15 text-[#C9CCD1] hover:border-[#F97316] hover:text-white"
+              }`}
+            >
+              <Globe size={17} className={langOpen ? "text-[#F97316]" : "text-[#9098A0]"} />
+              <span className="text-sm font-semibold">{activeLang.native}</span>
+              <span className="text-xs uppercase tracking-wider text-[#6C7278]">Change</span>
+              <ChevronUp
+                size={15}
+                className={`transition-transform duration-300 ${langOpen ? "" : "rotate-180"}`}
+              />
+            </button>
+
+            {langOpen && (
+              <div
+                translate="no"
+                className="notranslate absolute bottom-full left-0 mb-3 z-50 w-[min(360px,calc(100vw-3rem))] bg-[#1B1E23] border border-white/15 shadow-2xl shadow-black/60"
+              >
+                {/* corner brackets */}
+                <span className="absolute -top-px -left-px h-3.5 w-3.5 border-t-2 border-l-2 border-[#F97316]" />
+                <span className="absolute -top-px -right-px h-3.5 w-3.5 border-t-2 border-r-2 border-[#F97316]" />
+
+                <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center justify-center h-9 w-9 bg-[#F97316] text-[#14161A]">
+                      <Globe size={18} />
+                    </span>
+                    <div>
+                      <p className="text-sm font-bold uppercase tracking-wider text-white">Select language</p>
+                      <p className="text-xs text-[#6C7278]">Currently: {activeLang.label}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLangOpen(false)}
+                    aria-label="Close"
+                    className="h-8 w-8 flex items-center justify-center text-[#9098A0] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                <div className="p-3 max-h-72 overflow-y-auto">
+                  <div className="grid grid-cols-2 gap-2" role="listbox">
+                    {LANGUAGES.map((lang) => {
+                      const active = lang.code === currentLang
+                      return (
+                        <button
+                          key={lang.code}
+                          type="button"
+                          role="option"
+                          aria-selected={active}
+                          onClick={() => handleLanguageSelect(lang.code)}
+                          className={`flex items-center justify-between gap-2 px-3.5 py-2.5 text-left border transition-colors cursor-pointer ${
+                            active
+                              ? "border-[#F97316] bg-[#F97316]/10"
+                              : "border-white/10 hover:border-[#F97316]/60 hover:bg-white/5"
+                          }`}
+                        >
+                          <span className="min-w-0">
+                            <span className={`block text-sm font-semibold truncate ${active ? "text-[#F97316]" : "text-white"}`}>
+                              {lang.native}
+                            </span>
+                            <span className="block text-[11px] text-[#6C7278] truncate">{lang.label}</span>
+                          </span>
+                          {active && <Check size={15} className="text-[#F97316] shrink-0" strokeWidth={3} />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <p className="px-5 py-3 border-t border-white/10 text-[11px] text-[#6C7278]">
+                  Translated automatically by Google Translate.
+                </p>
+              </div>
+            )}
           </div>
+
+          {/* ── Social ── */}
           <div className="flex gap-4">
-            <a href="https://www.youtube.com/@constructezy" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center h-9 w-9 border border-white/15 hover:border-[#F97316] hover:text-[#F97316] transition-colors"><Youtube size={16} /></a>
-            <a href="https://www.instagram.com/constructezy" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center h-9 w-9 border border-white/15 hover:border-[#F97316] hover:text-[#F97316] transition-colors"><Instagram size={16} /></a>
-            <a href="https://twitter.com/constructezy" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center h-9 w-9 border border-white/15 hover:border-[#F97316] hover:text-[#F97316] transition-colors"><Twitter size={16} /></a>
-            <a href="https://www.facebook.com/constructezy" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center h-9 w-9 border border-white/15 hover:border-[#F97316] hover:text-[#F97316] transition-colors"><Facebook size={16} /></a>
+            <a href="https://www.youtube.com/@constructezy" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="flex items-center justify-center h-9 w-9 border border-white/15 hover:border-[#F97316] hover:text-[#F97316] transition-colors"><Youtube size={16} /></a>
+            <a href="https://www.instagram.com/constructezy" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="flex items-center justify-center h-9 w-9 border border-white/15 hover:border-[#F97316] hover:text-[#F97316] transition-colors"><Instagram size={16} /></a>
+            <a href="https://twitter.com/constructezy" target="_blank" rel="noopener noreferrer" aria-label="X" className="flex items-center justify-center h-9 w-9 border border-white/15 hover:border-[#F97316] hover:text-[#F97316] transition-colors"><Twitter size={16} /></a>
+            <a href="https://www.facebook.com/constructezy" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="flex items-center justify-center h-9 w-9 border border-white/15 hover:border-[#F97316] hover:text-[#F97316] transition-colors"><Facebook size={16} /></a>
           </div>
         </div>
         <div className="bg-[#0F1114] text-center py-4 text-xs uppercase tracking-widest text-[#6C7278]">
-          © 2026 Constructezy Limited — All Rights Reserved.
+          © 2026 QuickMason — All Rights Reserved.
         </div>
       </div>
     </footer>
@@ -300,24 +477,3 @@ const Footer = () => {
 }
 
 export default Footer
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

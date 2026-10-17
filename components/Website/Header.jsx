@@ -1,6 +1,10 @@
 'use client'
 import { useEffect, useRef, useState, useCallback } from "react"
-import { X, User, MapPin, ChevronDown, Navigation, Truck, Clock, Shield, Store } from "lucide-react"
+import {
+  X, User, MapPin, ChevronDown, Navigation, Truck, Clock, Shield, Store,
+  Search, CheckCircle2, AlertCircle, Loader2, Star, Info, LayoutDashboard,
+  LogIn, UserPlus, ArrowRight, Zap, Bookmark, ChevronRight,
+} from "lucide-react"
 import { USER_DASHBOARD, WEBSITE_HOME, WEBSITE_LOGIN, WEBSITE_REGISTER, WEBSITE_SHOP } from "@/routes/WebsiteRoute"
 import Card from '@/components/Website/Cart'
 import Link from "next/link"
@@ -8,8 +12,10 @@ import { useSelector } from "react-redux"
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar"
 import { IMAGES } from "@/routes/AllImages"
 import { useRouter } from "next/navigation"
-import { IoSearchOutline } from "react-icons/io5"
+import LanguageSwitcher from "@/components/Website/LanguageSwitcher"
+import { useSavedProducts } from "@/hooks/useSavedProducts"
 
+const WEBSITE_SAVED = "/saved-products"
 
 function getStaticRoleIcon(role) {
   const normalized = String(role || "").trim().toLowerCase()
@@ -19,20 +25,19 @@ function getStaticRoleIcon(role) {
   if (normalized === "shop owner") {
     return { bgClass: "bg-gradient-to-br from-blue-500 to-indigo-600", Icon: Store }
   }
-  return null // customer / everyone else -> normal avatar image flow, unchanged
+  return null // customer / everyone else -> normal avatar image flow
 }
 
 export default function Header() {
-
-  const [showSearch, setShowSearch] = useState(false)
-  const [query, setQuery] = useState("")
   const router = useRouter()
-  const [profileOpen, setProfileOpen] = useState(false)
   const auth = useSelector(store => store.authStore.auth)
+  const { count: savedCount, ready: savedReady } = useSavedProducts()
 
-  // Mobile search
-  const [showMobileSearch, setShowMobileSearch] = useState(false)
-  const [mobileQuery, setMobileQuery] = useState("")
+  // Search (always open)
+  const [query, setQuery] = useState("")
+
+  // Profile
+  const [profileOpen, setProfileOpen] = useState(false)
 
   // Location state
   const [locationModal, setLocationModal] = useState(false)
@@ -43,7 +48,7 @@ export default function Header() {
   const [deliveryTime, setDeliveryTime] = useState("60 mins")
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
 
-  // Avatar image load-failure fallback (handles broken/missing avatar.url)
+  // Avatar image load-failure fallback
   const [avatarFailed, setAvatarFailed] = useState(false)
 
   const profileRef = useRef(null)
@@ -60,21 +65,12 @@ export default function Header() {
     return () => document.removeEventListener("pointerdown", handler)
   }, [])
 
-  // Reset the "failed" flag whenever the avatar url actually changes
-  // (e.g. user/admin just uploaded a new picture)
   useEffect(() => {
     setAvatarFailed(false)
   }, [auth?.avatar?.url])
 
   const handleSearch = () => {
     if (query.trim()) router.push(`${WEBSITE_SHOP}?q=${encodeURIComponent(query.trim())}`)
-  }
-
-  const handleMobileSearch = () => {
-    if (mobileQuery.trim()) {
-      router.push(`${WEBSITE_SHOP}?q=${encodeURIComponent(mobileQuery.trim())}`)
-      setShowMobileSearch(false)
-    }
   }
 
   /* ── Fetch Nearest Labor ── */
@@ -119,11 +115,11 @@ export default function Header() {
     }
 
     setIsLoadingLocation(true)
-    setLocStatus({ msg: "Detecting your location…", type: "loading" })
+    setLocStatus({ msg: "Detecting your location...", type: "loading" })
 
     navigator.geolocation.getCurrentPosition(
       async ({ coords: { latitude, longitude } }) => {
-        setLocStatus({ msg: "Fetching address…", type: "loading" })
+        setLocStatus({ msg: "Fetching address...", type: "loading" })
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
@@ -168,309 +164,407 @@ export default function Header() {
     applyLocation(manualInput.trim(), null, null, null)
   }, [manualInput, applyLocation])
 
-  /* ── Status text color ── */
-  const statusColor =
-    locStatus.type === "success" ? "text-green-600"
-      : locStatus.type === "error" ? "text-red-600"
-        : "text-blue-500"
-
   if (auth?.role === "laber") return null
 
   const avatarSrc = !avatarFailed && auth?.avatar?.url ? auth.avatar.url : IMAGES.profile
   const staticRoleIcon = getStaticRoleIcon(auth?.role)
 
+  /* Saved products link (used inside the profile dropdown) */
+  const savedLink = (spacing = "") => (
+    <Link
+      href={WEBSITE_SAVED}
+      onClick={() => setProfileOpen(false)}
+      className={`group/saved flex items-center gap-3 w-full p-3 rounded-xl border-2 border-orange-100 bg-orange-50/70
+      hover:border-orange-500 hover:bg-orange-50 transition-all duration-300 ${spacing}`}
+    >
+      <span className="w-9 h-9 rounded-lg bg-linear-to-br from-orange-500 to-amber-500 flex items-center justify-center shrink-0 shadow-md shadow-orange-500/25">
+        <Bookmark size={17} className="text-white" />
+      </span>
+      <span className="flex-1 text-left min-w-0">
+        <span className="block text-sm font-semibold text-gray-900">Saved Products</span>
+        <span className="block text-[11px] text-gray-500">Buy later list</span>
+      </span>
+      {savedReady && savedCount > 0 && (
+        <span className="min-w-6 h-6 px-1.5 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center">
+          {savedCount}
+        </span>
+      )}
+      <ChevronRight size={17} className="text-gray-400 shrink-0 transition-transform group-hover/saved:translate-x-0.5" />
+    </Link>
+  )
+
+  const statusStyles =
+    locStatus.type === "success"
+      ? { wrap: "bg-green-50 border-green-100", text: "text-green-700", Icon: CheckCircle2 }
+      : locStatus.type === "error"
+        ? { wrap: "bg-red-50 border-red-100", text: "text-red-700", Icon: AlertCircle }
+        : { wrap: "bg-blue-50 border-blue-100", text: "text-blue-700", Icon: Loader2 }
+
+  /* ── Reusable search input ── */
+  const SearchBox = ({ className = "" }) => (
+    <div
+      className={`group flex items-stretch w-full h-12 rounded-2xl overflow-hidden bg-white/10 border border-white/10 backdrop-blur
+      focus-within:bg-white focus-within:border-orange-400 focus-within:ring-4 focus-within:ring-orange-500/20
+      transition-all duration-300 ${className}`}
+    >
+      <input
+        type="text"
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        onKeyDown={e => e.key === "Enter" && handleSearch()}
+        placeholder="Search for items, brands and more..."
+        className="flex-1 min-w-0 h-full bg-transparent pl-5 pr-3 text-sm text-white placeholder-gray-400
+        group-focus-within:text-gray-900 group-focus-within:placeholder-gray-400 focus:outline-none transition-colors"
+      />
+      {query && (
+        <button
+          type="button"
+          onClick={() => setQuery("")}
+          aria-label="Clear search"
+          className="self-center mr-3 w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-gray-400 bg-white/10 group-focus-within:bg-gray-100 hover:text-gray-800 hover:bg-gray-200 transition-colors cursor-pointer"
+        >
+          <X size={13} />
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={handleSearch}
+        aria-label="Search"
+        className="relative overflow-hidden h-full px-5 sm:px-7 shrink-0 flex items-center justify-center gap-2
+        bg-linear-to-br from-orange-500 via-orange-500 to-amber-500 text-white text-sm font-bold tracking-wide
+        hover:from-orange-600 hover:via-orange-500 hover:to-amber-400 active:brightness-90
+        transition-all duration-300 cursor-pointer group/btn"
+      >
+        {/* shine sweep on hover */}
+        <span className="pointer-events-none absolute inset-y-0 -left-full w-1/2 -skew-x-12 bg-white/30 blur-sm transition-all duration-700 group-hover/btn:left-[150%]" />
+        <Search size={18} strokeWidth={2.5} className="relative transition-transform duration-300 group-hover/btn:scale-110 group-hover/btn:-rotate-12" />
+        <span className="relative hidden sm:inline">Search</span>
+      </button>
+    </div>
+  )
+
   return (
     <div className="sticky top-0 z-50">
       <header className="relative z-50">
 
+        {/* Accent line */}
+        <div className="h-0.5 bg-linear-to-r from-orange-500 via-amber-400 to-orange-500" />
+
         {/* ─── MAIN NAV ─── */}
-        <div className="bg-gray-900 text-white px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <div className="flex items-center justify-between gap-4 lg:gap-8">
+        <div className="bg-linear-to-b from-gray-950 to-gray-900 text-white border-b border-white/5 shadow-xl shadow-black/20">
+          <div className="px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center gap-3 sm:gap-4 lg:gap-6">
 
-            {/* LEFT: Logo */}
-            <Link href={WEBSITE_HOME} className="font-bold tracking-wide shrink-0">
-              <img src={IMAGES.logo} className="h-10 sm:h-11 lg:h-12 w-auto" alt="Logo" />
-            </Link>
+              {/* LEFT: Logo */}
+              <Link href={WEBSITE_HOME} className="shrink-0 flex items-center">
+                <img src={IMAGES.logo} className="h-9 sm:h-11 lg:h-12 w-auto" alt="Logo" />
+              </Link>
 
-            {/* CENTER: Location + Search (Hidden on Mobile) */}
-            <div className="hidden lg:flex items-center gap-6 flex-1">
+              {/* ── Location Selector (desktop pill + mobile icon, shared panel) ── */}
+              <div className="relative shrink-0 ml-auto lg:ml-0" ref={locationModalRef}>
 
-              {/* ── Location Selector ── */}
-              <div className="relative shrink-0" ref={locationModalRef}>
+                {/* Desktop trigger */}
                 <button
                   type="button"
                   onClick={() => { setLocationModal(v => !v); setLocStatus({ msg: "", type: "" }) }}
-                  className="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition-opacity whitespace-nowrap"
+                  className="hidden lg:flex items-center gap-3 h-14 pl-2 pr-4 rounded-2xl bg-white/5 border border-white/10
+                  hover:bg-white/10 hover:border-green-400/40 transition-all duration-300 cursor-pointer group"
                 >
-                  <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center shrink-0">
-                    <MapPin size={18} className="text-green-400" />
-                  </div>
-                  <div className="text-left min-w-0">
-                    <p className="text-[11px] text-gray-400 leading-none mb-1">Delivery in</p>
-                    <p className="text-sm font-bold text-white flex items-center gap-2">
-                      <Clock size={14} className="shrink-0" />
-                      <span className="truncate">{deliveryTime}</span>
-                    </p>
-                    <p className="text-xs text-gray-500 mt-0.5 truncate max-w-xs">
-                      {locationName || "Select location"}
-                    </p>
-                  </div>
-                  <ChevronDown size={14} className="text-gray-400 shrink-0" />
+                  <span className="relative w-10 h-10 rounded-xl bg-linear-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/30 shrink-0">
+                    <MapPin size={19} className="text-white" />
+                    <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-300 border-2 border-gray-900 animate-pulse" />
+                  </span>
+
+                  <span className="text-left min-w-0">
+                    <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-green-400 leading-none">
+                      <Zap size={11} />
+                      Delivery in {deliveryTime}
+                    </span>
+                    <span className="flex items-center gap-1 mt-1.5 text-sm font-semibold text-white max-w-45">
+                      <span className="truncate">{locationName || "Select location"}</span>
+                      <ChevronDown
+                        size={15}
+                        className={`shrink-0 text-gray-400 transition-transform duration-300 ${locationModal ? "rotate-180" : ""}`}
+                      />
+                    </span>
+                  </span>
                 </button>
 
-                {/* Location Modal */}
+                {/* Mobile trigger */}
+                <button
+                  type="button"
+                  onClick={() => { setLocationModal(v => !v); setLocStatus({ msg: "", type: "" }) }}
+                  aria-label="Location"
+                  className="flex lg:hidden w-10 h-10 rounded-xl bg-white/5 border border-white/10 items-center justify-center
+                  hover:bg-white/10 transition-colors cursor-pointer relative"
+                >
+                  <MapPin size={19} className={locationName ? "text-green-400" : "text-white"} />
+                  {locationName && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border-2 border-gray-900" />
+                  )}
+                </button>
+
+                {/* Location Panel */}
                 {locationModal && (
-                  <div className="absolute top-full left-0 mt-4 w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 text-black">
-                    <div className="px-6 pt-6 pb-4 border-b border-gray-100">
-                      <p className="font-bold text-gray-900 text-base">Set delivery location</p>
-                      <p className="text-sm text-gray-500 mt-1">We'll show products available in your area</p>
+                  <div
+                    className="fixed left-3 right-3 top-19 z-50
+                    lg:absolute lg:left-0 lg:right-auto lg:top-full lg:mt-3 lg:w-100
+                    bg-white text-black rounded-3xl shadow-2xl shadow-black/40 border border-gray-100 overflow-hidden"
+                  >
+                    {/* Panel header */}
+                    <div className="relative px-6 pt-6 pb-5 bg-linear-to-br from-gray-900 to-gray-800 text-white">
+                      <div className="flex items-start gap-3">
+                        <span className="w-11 h-11 rounded-2xl bg-linear-to-br from-green-400 to-emerald-600 flex items-center justify-center shrink-0 shadow-lg shadow-green-500/30">
+                          <MapPin size={20} className="text-white" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-bold text-base">Set delivery location</p>
+                          <p className="text-sm text-gray-400 mt-0.5">We'll show products available in your area</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setLocationModal(false)}
+                        aria-label="Close"
+                        className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                      >
+                        <X size={17} />
+                      </button>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={detectLocation}
-                      disabled={isLoadingLocation}
-                      className="w-full flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors border-b border-gray-100 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <span className={`w-11 h-11 rounded-full ${isLoadingLocation ? 'bg-gray-200 animate-pulse' : 'bg-green-50'} flex items-center justify-center shrink-0`}>
-                        {isLoadingLocation ? (
-                          <div className="animate-spin">
-                            <Navigation size={18} className="text-green-600" />
-                          </div>
-                        ) : (
-                          <Navigation size={18} className="text-green-600" />
-                        )}
-                      </span>
-                      <div className="text-left">
-                        <p className="text-base font-semibold text-green-700">
-                          {isLoadingLocation ? "Detecting location..." : "Use my current location"}
-                        </p>
-                        <p className="text-sm text-gray-400 mt-0.5">Auto-detect via GPS</p>
-                      </div>
-                    </button>
+                    {/* Detect */}
+                    <div className="p-4">
+                      <button
+                        type="button"
+                        onClick={detectLocation}
+                        disabled={isLoadingLocation}
+                        className="w-full flex items-center gap-4 p-4 rounded-2xl border border-green-200 bg-green-50/60
+                        hover:bg-green-50 hover:border-green-300 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        <span className="w-11 h-11 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
+                          {isLoadingLocation ? (
+                            <Loader2 size={19} className="text-green-600 animate-spin" />
+                          ) : (
+                            <Navigation size={19} className="text-green-600" />
+                          )}
+                        </span>
+                        <div className="text-left flex-1">
+                          <p className="text-sm font-semibold text-green-800">
+                            {isLoadingLocation ? "Detecting location..." : "Use my current location"}
+                          </p>
+                          <p className="text-xs text-green-700/70 mt-0.5">Auto-detect via GPS</p>
+                        </div>
+                        <ArrowRight size={17} className="text-green-600 shrink-0" />
+                      </button>
+                    </div>
 
-                    <div className="px-6 py-5 border-b border-gray-100">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Or enter manually</p>
-                      <input
-                        type="text"
-                        value={manualInput}
-                        onChange={e => setManualInput(e.target.value)}
-                        onKeyDown={e => e.key === "Enter" && confirmManual()}
-                        placeholder="Enter area, street, pincode…"
-                        className="w-full border border-gray-300 rounded-lg px-4 py-3 text-base text-gray-800 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-400 transition"
-                      />
+                    {/* Divider */}
+                    <div className="flex items-center gap-3 px-6">
+                      <div className="h-px flex-1 bg-gray-200" />
+                      <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">or</span>
+                      <div className="h-px flex-1 bg-gray-200" />
+                    </div>
+
+                    {/* Manual */}
+                    <div className="px-4 pt-4 pb-4">
+                      <div className="flex items-center h-12 rounded-xl border border-gray-200 bg-gray-50 focus-within:bg-white focus-within:border-green-500 focus-within:ring-4 focus-within:ring-green-500/15 transition-all">
+                        <MapPin size={17} className="ml-3.5 text-gray-400 shrink-0" />
+                        <input
+                          type="text"
+                          value={manualInput}
+                          onChange={e => setManualInput(e.target.value)}
+                          onKeyDown={e => e.key === "Enter" && confirmManual()}
+                          placeholder="Enter area, street, pincode..."
+                          className="flex-1 min-w-0 h-full bg-transparent px-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
+                        />
+                      </div>
                       <button
                         type="button"
                         onClick={confirmManual}
-                        className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white text-base font-semibold py-3 rounded-lg transition-colors cursor-pointer"
+                        className="w-full mt-3 h-12 rounded-xl bg-linear-to-r from-green-600 to-emerald-600 text-white text-sm font-semibold
+                        shadow-lg shadow-green-600/25 hover:from-green-700 hover:to-emerald-700 active:scale-[0.99] transition-all cursor-pointer"
                       >
                         Confirm Location
                       </button>
                     </div>
 
+                    {/* Status */}
                     {locStatus.msg && (
-                      <div className={`px-6 py-4 ${locStatus.type === "error" ? "bg-red-50" : locStatus.type === "success" ? "bg-green-50" : "bg-blue-50"}`}>
-                        <p className={`text-sm font-medium flex items-center gap-2 ${statusColor}`}>
-                          {locStatus.type === "loading" && (
-                            <span className="inline-block animate-spin">⏳</span>
-                          )}
-                          {locStatus.type === "success" && "✅"}
-                          {locStatus.type === "error" && "⚠️"}
-                          <span>{locStatus.msg}</span>
-                        </p>
+                      <div className={`mx-4 mb-4 px-4 py-3 rounded-xl border flex items-start gap-2.5 ${statusStyles.wrap}`}>
+                        <statusStyles.Icon
+                          size={17}
+                          className={`shrink-0 mt-0.5 ${statusStyles.text} ${locStatus.type === "loading" ? "animate-spin" : ""}`}
+                        />
+                        <p className={`text-sm font-medium ${statusStyles.text}`}>{locStatus.msg}</p>
                       </div>
                     )}
 
+                    {/* Nearest labor */}
                     {nearestLabor && (
-                      <div className="px-6 py-4 bg-blue-50 border-t border-gray-100">
-                        <div className="flex items-start gap-3">
-                          <Truck size={18} className="text-blue-600 shrink-0 mt-0.5" />
-                          <div className="text-left">
-                            <p className="text-sm font-semibold text-blue-900">{nearestLabor.name}</p>
-                            <p className="text-xs text-blue-700 mt-0.5">{nearestLabor.distance?.toFixed(1)} km away</p>
-                            <p className="text-xs text-blue-600 mt-1">Rating: {nearestLabor.rating || "N/A"} ⭐</p>
-                          </div>
+                      <div className="mx-4 mb-4 p-4 rounded-2xl bg-blue-50 border border-blue-100 flex items-center gap-3">
+                        <span className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+                          <Truck size={18} className="text-blue-600" />
+                        </span>
+                        <div className="text-left min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-blue-900 truncate">{nearestLabor.name}</p>
+                          <p className="text-xs text-blue-700 mt-0.5">{nearestLabor.distance?.toFixed(1)} km away</p>
                         </div>
+                        <span className="flex items-center gap-1 text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-100 rounded-full px-2.5 py-1 shrink-0">
+                          <Star size={12} className="fill-amber-500 text-amber-500" />
+                          {nearestLabor.rating || "N/A"}
+                        </span>
                       </div>
                     )}
 
-                    <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-600">
-                      <p>💡 Make sure location permissions are enabled in your browser settings for auto-detection to work.</p>
+                    {/* Footer tip */}
+                    <div className="px-6 py-3.5 bg-gray-50 border-t border-gray-100 flex items-start gap-2.5">
+                      <Info size={15} className="text-gray-400 shrink-0 mt-0.5" />
+                      <p className="text-xs text-gray-500 leading-relaxed">
+                        Make sure location permissions are enabled in your browser settings for auto-detection to work.
+                      </p>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Divider */}
-              <div className="w-px h-12 bg-gray-700 shrink-0" />
+              {/* ── Search (desktop, always open) ── */}
+              <div className="hidden lg:flex flex-1 min-w-0 max-w-3xl mx-auto">
+                {SearchBox({})}
+              </div>
 
-              {/* ── Search Bar ── */}
-              <div className="relative flex items-center flex-1 min-w-0">
-                <button
-                  type="button"
-                  onClick={() => setShowSearch(!showSearch)}
-                  className="px-5 py-2.5 bg-black text-white rounded-l-full flex items-center gap-2 z-10 cursor-pointer shrink-0 hover:bg-gray-800 transition-colors"
-                >
-                  <IoSearchOutline size={18} />
-                  <span className="text-sm font-medium">Search</span>
-                </button>
-                <div className={`overflow-hidden transition-all duration-500 ease-in-out ${showSearch ? 'w-80 lg:w-105' : 'w-0'}`}>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={query}
-                      onChange={e => setQuery(e.target.value)}
-                      onKeyDown={e => e.key === "Enter" && handleSearch()}
-                      className="w-full pl-12 pr-5 py-2.5 rounded-r-full text-black text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black placeholder-gray-400"
-                      placeholder='Search items...'
-                    />
-                  </div>
+              {/* RIGHT: Icons */}
+              <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 shrink-0 lg:ml-0">
+
+                {/* Language (Google Translate) */}
+                <LanguageSwitcher />
+
+                {/* Profile / Auth */}
+                <div className="relative shrink-0" ref={profileRef}>
+                  <button
+                    onClick={() => setProfileOpen(!profileOpen)}
+                    className="relative flex items-center gap-2 p-1 rounded-full ring-2 ring-white/10 hover:ring-orange-400/60 transition-all cursor-pointer"
+                    aria-label="Profile"
+                  >
+                    {auth ? (
+                      staticRoleIcon ? (
+                        <span className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 ${staticRoleIcon.bgClass}`}>
+                          <staticRoleIcon.Icon size={18} className="text-white" />
+                        </span>
+                      ) : (
+                        <Avatar className="w-9 h-9 sm:w-10 sm:h-10">
+                          <AvatarImage src={avatarSrc} onError={() => setAvatarFailed(true)} />
+                          <AvatarFallback>
+                            <User size={18} />
+                          </AvatarFallback>
+                        </Avatar>
+                      )
+                    ) : (
+                      <span className="bg-white/10 rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                        <User size={19} />
+                      </span>
+                    )}
+                    {savedReady && savedCount > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 rounded-full bg-orange-500 text-white text-[10px] font-bold leading-4.5 text-center border-2 border-gray-900">
+                        {savedCount > 9 ? "9+" : savedCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {profileOpen && (
+                    <div className="absolute right-0 mt-4 w-72 sm:w-80 bg-white text-black rounded-3xl shadow-2xl shadow-black/30 border border-gray-100 overflow-hidden z-50">
+                      {!auth ? (
+                        <div className="p-5 sm:p-6">
+                          <div className="text-center mb-5">
+                            <span className="mx-auto w-14 h-14 rounded-2xl bg-linear-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                              <User size={26} className="text-white" />
+                            </span>
+                            <p className="mt-3 font-bold text-gray-900">Welcome</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Sign in to manage your orders</p>
+                          </div>
+                          <Link href={WEBSITE_REGISTER} onClick={() => setProfileOpen(false)}>
+                            <button className="w-full flex items-center justify-center gap-2 bg-linear-to-r from-orange-500 to-amber-500 text-white py-3 rounded-xl cursor-pointer mb-3 font-semibold shadow-lg shadow-orange-500/25 hover:from-orange-600 hover:to-amber-600 transition-all">
+                              <UserPlus size={17} />
+                              Create Free Account
+                            </button>
+                          </Link>
+                          <Link href={WEBSITE_LOGIN} onClick={() => setProfileOpen(false)}>
+                            <button className="w-full flex items-center justify-center gap-2 border-2 border-gray-900 text-gray-900 py-3 rounded-xl cursor-pointer font-semibold hover:bg-gray-900 hover:text-white transition-all">
+                              <LogIn size={17} />
+                              Sign In
+                            </button>
+                          </Link>
+                          {savedLink("mt-3")}
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="flex flex-col items-center gap-3 px-6 pt-7 pb-5 bg-linear-to-b from-gray-50 to-white">
+                            {staticRoleIcon ? (
+                              <span className={`w-16 h-16 rounded-full flex items-center justify-center shrink-0 shadow-lg ${staticRoleIcon.bgClass}`}>
+                                <staticRoleIcon.Icon size={26} className="text-white" />
+                              </span>
+                            ) : (
+                              <Link href={`/profile/${auth.id || auth._id}`} onClick={() => setProfileOpen(false)}>
+                                <Avatar className="w-16 h-16 ring-4 ring-orange-100">
+                                  <AvatarImage src={avatarSrc} onError={() => setAvatarFailed(true)} />
+                                  <AvatarFallback>
+                                    <User size={26} />
+                                  </AvatarFallback>
+                                </Avatar>
+                              </Link>
+                            )}
+                            <div className="text-center">
+                              <span className="block font-bold text-gray-900">{auth.name}</span>
+                              {auth.role && (
+                                <span className="inline-block mt-1 text-[11px] font-semibold uppercase tracking-wider text-orange-600 bg-orange-50 rounded-full px-2.5 py-0.5">
+                                  {auth.role}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="px-5 pb-5">
+                            {savedLink("mb-3")}
+                            <Link href={USER_DASHBOARD} className="w-full" onClick={() => setProfileOpen(false)}>
+                              <button className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl cursor-pointer bg-gray-900 text-white hover:bg-orange-500 transition-all duration-300 font-semibold">
+                                <LayoutDashboard size={17} />
+                                Dashboard
+                              </button>
+                            </Link>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Cart */}
+                <div className="shrink-0">
+                  <Card className="cursor-pointer" />
                 </div>
               </div>
             </div>
 
-            {/* RIGHT: Icons */}
-            <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 shrink-0">
-
-              {/* Mobile Search Icon */}
-              <button
-                className="flex lg:hidden items-center text-white cursor-pointer hover:text-gray-300 transition-colors"
-                onClick={() => setShowMobileSearch(!showMobileSearch)}
-                aria-label="Search"
-              >
-                <IoSearchOutline size={24} />
-              </button>
-
-              {/* Mobile Location Icon */}
-              <button
-                className="flex lg:hidden items-center text-white cursor-pointer hover:text-gray-300 transition-colors relative"
-                onClick={() => setLocationModal(v => !v)}
-                aria-label="Location"
-              >
-                <MapPin size={22} className={locationName ? "text-green-400" : "text-white"} />
-              </button>
-
-              {/* Profile / Auth */}
-              <div className="relative shrink-0" ref={profileRef}>
-                <button
-                  onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
-                  aria-label="Profile"
-                >
-                  {auth ? (
-                    staticRoleIcon ? (
-                      // Admin / shopowner: fixed colorful icon, no image attempt
-                      <span className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 ${staticRoleIcon.bgClass}`}>
-                        <staticRoleIcon.Icon size={18} className="text-white" />
-                      </span>
-                    ) : (
-                      <Avatar className="w-9 h-9 sm:w-10 sm:h-10">
-                        <AvatarImage
-                          src={avatarSrc}
-                          onError={() => setAvatarFailed(true)}
-                        />
-                        <AvatarFallback>
-                          <User size={18} />
-                        </AvatarFallback>
-                      </Avatar>
-                    )
-                  ) : (
-                    <span className="bg-gray-700 rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center cursor-pointer hover:bg-gray-600 transition-colors">
-                      <User size={20} />
-                    </span>
-                  )}
-                </button>
-
-                {profileOpen && (
-                  <div className="absolute right-0 mt-4 w-72 sm:w-80 cursor-pointer bg-white text-black rounded-2xl shadow-xl border border-gray-100 p-5 sm:p-6 z-50">
-                    {!auth ? (
-                      <>
-                        <Link href={WEBSITE_REGISTER}>
-                          <button className="w-full bg-black hover:bg-orange-500 text-white py-3 rounded-xl cursor-pointer mb-3 font-medium transition-colors">
-                            Create Free Account
-                          </button>
-                        </Link>
-                        <Link href={WEBSITE_LOGIN}>
-                          <button className="w-full bg-black text-white py-3 hover:bg-orange-500 rounded-xl cursor-pointer font-medium transition-colors">
-                            Sign In
-                          </button>
-                        </Link>
-                      </>
-                    ) : (
-                      <div className="flex flex-col items-center gap-4">
-                        {staticRoleIcon ? (
-                          // Admin / shopowner: same fixed colorful icon, bigger, not clickable-to-profile
-                          <span className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${staticRoleIcon.bgClass}`}>
-                            <staticRoleIcon.Icon size={22} className="text-white" />
-                          </span>
-                        ) : (
-                          <Link href={`/profile/${auth.id || auth._id}`}>
-                            <Avatar className="w-12 h-12">
-                              <AvatarImage
-                                src={avatarSrc}
-                                onError={() => setAvatarFailed(true)}
-                              />
-                              <AvatarFallback>
-                                <User size={22} />
-                              </AvatarFallback>
-                            </Avatar>
-                          </Link>
-                        )}
-                        <span className="font-semibold text-gray-900 text-center">{auth.name}</span>
-
-                        <Link href={USER_DASHBOARD} className="w-full">
-                          <button className="w-full border-2 py-3 px-4 rounded-xl cursor-pointer border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-all duration-300 font-medium">
-                            Dashboard
-                          </button>
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Cart */}
-              <div className="shrink-0">
-                <Card className="cursor-pointer" />
-              </div>
+            {/* ─── MOBILE SEARCH (always open) ─── */}
+            <div className="lg:hidden mt-3">
+              {SearchBox({})}
             </div>
           </div>
         </div>
 
-        {/* ─── MOBILE SEARCH BAR ─── */}
-        <div className={`lg:hidden bg-gray-800 px-4 sm:px-6 overflow-hidden transition-all duration-300 ${showMobileSearch ? "max-h-20 py-3 opacity-100" : "max-h-0 opacity-0"}`}>
-          <div className="relative flex items-center">
-            <IoSearchOutline size={18} className="absolute left-4 text-gray-400" />
-            <input
-              type="text"
-              value={mobileQuery}
-              onChange={e => setMobileQuery(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleMobileSearch()}
-              className="w-full pl-11 pr-11 py-2.5 rounded-full text-black text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 placeholder-gray-400"
-              placeholder='Search items...'
-            />
-            {mobileQuery && (
-              <button onClick={() => setMobileQuery("")} className="absolute right-4 text-gray-400 hover:text-gray-600">
-                <X size={16} />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* ─── MOBILE LOCATION SECTION ─── */}
+        {/* ─── MOBILE DELIVERY STRIP ─── */}
         {locationName && (
-          <div className="lg:hidden bg-gray-800 text-white px-4 sm:px-6 py-2.5 flex items-center justify-between text-sm border-t border-gray-700">
-            <div className="flex items-center gap-2">
-              <Clock size={16} className="text-green-400" />
-              <span className="font-medium">{deliveryTime}</span>
-            </div>
-            <span className="text-gray-400 truncate text-xs">{locationName}</span>
+          <div className="lg:hidden bg-gray-800/95 text-white px-4 sm:px-6 py-2 flex items-center justify-between gap-3 border-t border-white/5">
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-green-400 shrink-0">
+              <Clock size={14} />
+              {deliveryTime}
+            </span>
+            <span className="flex items-center gap-1.5 text-xs text-gray-300 min-w-0">
+              <MapPin size={13} className="shrink-0 text-gray-400" />
+              <span className="truncate">{locationName}</span>
+            </span>
           </div>
         )}
-
       </header>
     </div>
   )
 }
-
-
