@@ -1,31 +1,74 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { LogOut, User, Menu } from "lucide-react";
+import { Bell, LogOut, Menu, User } from "lucide-react";
 import axios from "axios";
 import { Avatar, AvatarImage } from "../ui/avatar";
 import { IMAGES } from "@/routes/AllImages";
 import { logout } from "@/store/reducer/authReducer";
-import { getSocket } from "@/lib/socket-client"; // NOTE: adjust path if your socket helper lives elsewhere
+import { getSocket } from "@/lib/socket-client";
 
 /* Adjust these routes if your actual paths are different */
 const NAV_LINKS = [
   { label: "Home", href: "/partner/dashboard" },
   { label: "Pending Requests", href: "/partner/pending-requests", badge: true },
   { label: "Bookings", href: "/partner/bookings" },
-  { label: "Active Ride", href: "/partner/active-ride" },
+  { label: "Active Job", href: "/partner/active-ride" },
 ];
 
+const PENDING_HREF = "/partner/pending-requests";
 const ACCENT = "#F5A623"; // safety-amber — construction/high-vis accent
+const COUNT_REFRESH_MS = 30000;
+
+const isActive = (pathname, href) =>
+  pathname === href || pathname.startsWith(`${href}/`);
+
+const formatCount = (n) => (n > 99 ? "99+" : n);
+
+/* Defined OUTSIDE the header so it is not re-created (remounted) on every render */
+function AvatarCircle({ auth, size = 44 }) {
+  const initial = auth?.name?.charAt(0)?.toUpperCase();
+  return (
+    <span
+      className="rounded-full bg-white text-black font-bold flex items-center justify-center overflow-hidden shrink-0 select-none"
+      style={{ width: size, height: size }}
+    >
+      {auth?.avatar?.url ? (
+        <Avatar style={{ width: size, height: size }}>
+          <AvatarImage src={auth.avatar.url} className="object-cover" />
+        </Avatar>
+      ) : initial ? (
+        <span className="text-base">{initial}</span>
+      ) : (
+        <User size={18} />
+      )}
+    </span>
+  );
+}
+
+function CountBadge({ count, className = "" }) {
+  if (!count || count <= 0) return null;
+  return (
+    <span
+      className={`px-1 rounded-full font-bold flex items-center justify-center text-black ${className}`}
+      style={{ backgroundColor: ACCENT }}
+    >
+      {formatCount(count)}
+    </span>
+  );
+}
 
 export default function LabourHeader() {
   const auth = useSelector((store) => store.authStore.auth);
   const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
+
+  const isLabour = auth?.role === "laber";
+  const profileId = auth?._id ?? auth?.id;
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false); // mobile bottom sheet
@@ -45,35 +88,81 @@ export default function LabourHeader() {
     return () => document.removeEventListener("pointerdown", handler);
   }, []);
 
-  /* ── fetch pending requests count ── */
-  const fetchPendingCount = async () => {
+  /* ── close menus on route change ── */
+  useEffect(() => {
+    setProfileOpen(false);
+    setSheetOpen(false);
+  }, [pathname]);
+
+  /* ── Escape closes menus ── */
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        setProfileOpen(false);
+        setSheetOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  /* ── lock page scroll while mobile sheet is open ── */
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [sheetOpen]);
+
+  /* ── pending requests count (server is the source of truth) ── */
+  const fetchPendingCount = useCallback(async () => {
     try {
-      // NOTE: adjust this endpoint to match your actual pending-requests-count API
       const { data } = await axios.get("/api/partner/bookings/pending-requests-count");
-      setPendingCount(data);
+      const n = Number(data);
+      setPendingCount(Number.isFinite(n) && n > 0 ? n : 0);
     } catch (error) {
       console.log(error);
     }
-  };
-
-  useEffect(() => {
-    if (auth?.role === "laber") {
-      fetchPendingCount();
-    }
-  }, [auth?.role]);
-
-  /* ── live update via socket when a new booking comes in ── */
-  useEffect(() => {
-    const socket = getSocket();
-    socket.on("new-booking", () => {
-      setPendingCount((prev) => prev + 1);
-    });
-    return () => {
-      socket.off("new-booking");
-    };
   }, []);
 
+  useEffect(() => {
+    if (isLabour) fetchPendingCount();
+  }, [isLabour, fetchPendingCount]);
+
+  /* ── live refresh: new request, cancelled request, socket reconnect ── */
+  useEffect(() => {
+    if (!isLabour) return;
+    const socket = getSocket();
+    const refresh = () => fetchPendingCount();
+
+    socket.on("new-booking", refresh);
+    socket.on("booking-cancelled", refresh);
+    socket.on("connect", refresh); // catch anything missed while offline
+    return () => {
+      socket.off("new-booking", refresh);
+      socket.off("booking-cancelled", refresh);
+      socket.off("connect", refresh);
+    };
+  }, [isLabour, fetchPendingCount]);
+
+  /* ── fallback: expired requests drop out of the count; refresh on tab focus ── */
+  useEffect(() => {
+    if (!isLabour) return;
+    const tick = () => {
+      if (document.visibilityState === "visible") fetchPendingCount();
+    };
+    const t = setInterval(tick, COUNT_REFRESH_MS);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      clearInterval(t);
+      document.removeEventListener("visibilitychange", tick);
+    };
+  }, [isLabour, fetchPendingCount]);
+
   const handleLogout = async () => {
+    if (loggingOut) return;
     try {
       setLoggingOut(true);
       await axios.get("/api/auth/logout");
@@ -87,25 +176,6 @@ export default function LabourHeader() {
       router.push("/auth/login");
     }
   };
-
-  const initial = auth?.name?.charAt(0)?.toUpperCase();
-
-  const AvatarCircle = ({ size = 44 }) => (
-    <span
-      className="rounded-full bg-white text-black font-bold flex items-center justify-center overflow-hidden shrink-0 select-none"
-      style={{ width: size, height: size }}
-    >
-      {auth?.avatar?.url ? (
-        <Avatar style={{ width: size, height: size }}>
-          <AvatarImage src={auth.avatar.url} className="object-cover" />
-        </Avatar>
-      ) : initial ? (
-        <span className="text-base">{initial}</span>
-      ) : (
-        <User size={18} />
-      )}
-    </span>
-  );
 
   return (
     <>
@@ -124,6 +194,7 @@ export default function LabourHeader() {
         >
           {/* LEFT: Logo */}
           <Link href="/partner/dashboard" className="flex items-center shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={IMAGES.logo}
               className="h-8 sm:h-9 lg:h-10 w-auto object-contain"
@@ -131,28 +202,28 @@ export default function LabourHeader() {
             />
           </Link>
 
-          {/* CENTER: Nav Links (desktop/tablet) */}
+          {/* CENTER: Nav Links (desktop) */}
           <nav className="hidden lg:flex items-center justify-center gap-8 xl:gap-10">
             {NAV_LINKS.map((link) => {
-              const active = pathname === link.href;
+              const active = isActive(pathname, link.href);
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="relative py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors whitespace-nowrap"
+                  aria-current={active ? "page" : undefined}
+                  className={`relative py-2 text-sm font-medium transition-colors whitespace-nowrap ${
+                    active ? "text-white" : "text-gray-300 hover:text-white"
+                  }`}
                 >
                   <span className="inline-flex items-center gap-2">
                     {link.label}
-                    {link.badge && pendingCount > 0 && (
-                      <span
-                        className="min-w-5 h-5 px-1 rounded-full text-[11px] font-bold flex items-center justify-center text-black"
-                        style={{ backgroundColor: ACCENT }}
-                      >
-                        {pendingCount > 99 ? "99+" : pendingCount}
-                      </span>
+                    {link.badge && (
+                      <CountBadge
+                        count={pendingCount}
+                        className="min-w-[20px] h-5 text-[11px]"
+                      />
                     )}
                   </span>
-                  {/* active indicator */}
                   <span
                     className={`absolute left-0 -bottom-0.5 h-0.5 rounded-full transition-all duration-300 ${
                       active ? "w-full" : "w-0"
@@ -164,16 +235,36 @@ export default function LabourHeader() {
             })}
           </nav>
 
-          {/* RIGHT: Profile */}
+          {/* RIGHT: Bell + Profile */}
           <div className="flex items-center justify-end gap-2 sm:gap-3">
-            {/* Desktop profile dropdown trigger */}
+            {/* Notification bell (desktop + mobile) */}
+            <Link
+              href={PENDING_HREF}
+              aria-label={
+                pendingCount > 0
+                  ? `Pending requests, ${pendingCount} new`
+                  : "Pending requests"
+              }
+              className="relative w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center shrink-0"
+            >
+              <Bell size={18} />
+              <CountBadge
+                count={pendingCount}
+                className="absolute -top-1 -right-1 min-w-[18px] h-[18px] text-[10px] animate-pulse"
+              />
+            </Link>
+
+            {/* Desktop profile dropdown */}
             <div className="hidden lg:block relative" ref={profileRef}>
               <button
+                type="button"
                 onClick={() => setProfileOpen((p) => !p)}
+                aria-haspopup="menu"
+                aria-expanded={profileOpen}
                 className="rounded-full ring-2 ring-transparent hover:ring-white/20 transition-all cursor-pointer"
                 aria-label="Open profile menu"
               >
-                <AvatarCircle size={40} />
+                <AvatarCircle auth={auth} size={40} />
               </button>
 
               <AnimatePresence>
@@ -187,7 +278,7 @@ export default function LabourHeader() {
                                rounded-2xl shadow-2xl border border-black/5 overflow-hidden origin-top-right"
                   >
                     <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-gray-100">
-                      <AvatarCircle size={44} />
+                      <AvatarCircle auth={auth} size={44} />
                       <div className="min-w-0">
                         <p className="font-semibold text-base truncate">{auth?.name}</p>
                         <p
@@ -201,7 +292,7 @@ export default function LabourHeader() {
 
                     <div className="p-2">
                       <Link
-                        href={`/profile/${auth?.id}`}
+                        href={`/profile/${profileId}`}
                         onClick={() => setProfileOpen(false)}
                         className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors"
                       >
@@ -209,6 +300,7 @@ export default function LabourHeader() {
                         <span className="text-sm font-medium">Profile</span>
                       </Link>
                       <button
+                        type="button"
                         onClick={handleLogout}
                         disabled={loggingOut}
                         className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left disabled:opacity-50"
@@ -224,21 +316,14 @@ export default function LabourHeader() {
               </AnimatePresence>
             </div>
 
-            {/* Mobile / tablet: hamburger opens bottom sheet with links + profile */}
+            {/* Mobile / tablet: opens bottom sheet */}
             <button
+              type="button"
               onClick={() => setSheetOpen(true)}
               className="lg:hidden flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-white/5 transition-colors cursor-pointer"
               aria-label="Open menu"
             >
-              {pendingCount > 0 && (
-                <span
-                  className="min-w-4.5 h-4.5 px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-black"
-                  style={{ backgroundColor: ACCENT }}
-                >
-                  {pendingCount > 99 ? "99+" : pendingCount}
-                </span>
-              )}
-              <AvatarCircle size={38} />
+              <AvatarCircle auth={auth} size={38} />
               <Menu size={18} className="text-gray-300" />
             </button>
           </div>
@@ -261,18 +346,25 @@ export default function LabourHeader() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              role="dialog"
+              aria-modal="true"
               className="fixed inset-x-0 bottom-0 z-50 lg:hidden
                          bg-white text-black rounded-t-3xl shadow-2xl
                          pb-[calc(env(safe-area-inset-bottom)+1.25rem)]"
             >
-              {/* drag handle */}
-              <div className="flex justify-center pt-3 pb-1">
+              {/* drag handle (tap to close) */}
+              <button
+                type="button"
+                onClick={() => setSheetOpen(false)}
+                aria-label="Close menu"
+                className="flex justify-center pt-3 pb-1 w-full"
+              >
                 <span className="w-10 h-1.5 rounded-full bg-gray-300" />
-              </div>
+              </button>
 
               <div className="px-6 pt-3">
                 <div className="flex items-center gap-3 pb-5 border-b border-gray-100">
-                  <AvatarCircle size={48} />
+                  <AvatarCircle auth={auth} size={48} />
                   <div className="min-w-0">
                     <p className="font-semibold text-lg truncate">{auth?.name}</p>
                     <p
@@ -286,12 +378,13 @@ export default function LabourHeader() {
 
                 <nav className="flex flex-col py-2">
                   {NAV_LINKS.map((link) => {
-                    const active = pathname === link.href;
+                    const active = isActive(pathname, link.href);
                     return (
                       <Link
                         key={link.href}
                         href={link.href}
                         onClick={() => setSheetOpen(false)}
+                        aria-current={active ? "page" : undefined}
                         className={`flex items-center justify-between px-2 py-3.5 rounded-xl transition-colors ${
                           active ? "bg-gray-50" : "hover:bg-gray-50"
                         }`}
@@ -302,13 +395,11 @@ export default function LabourHeader() {
                         >
                           {link.label}
                         </span>
-                        {link.badge && pendingCount > 0 && (
-                          <span
-                            className="min-w-5.5 h-5.5 px-1.5 rounded-full text-xs font-bold flex items-center justify-center text-black"
-                            style={{ backgroundColor: ACCENT }}
-                          >
-                            {pendingCount > 99 ? "99+" : pendingCount}
-                          </span>
+                        {link.badge && (
+                          <CountBadge
+                            count={pendingCount}
+                            className="min-w-[22px] h-[22px] px-1.5 text-xs"
+                          />
                         )}
                       </Link>
                     );
@@ -317,7 +408,7 @@ export default function LabourHeader() {
 
                 <div className="border-t border-gray-100 pt-2 pb-1">
                   <Link
-                    href={`/profile/${auth?.id}`}
+                    href={`/profile/${profileId}`}
                     onClick={() => setSheetOpen(false)}
                     className="flex items-center gap-3 px-2 py-3.5 rounded-xl hover:bg-gray-50 transition-colors"
                   >
@@ -325,6 +416,7 @@ export default function LabourHeader() {
                     <span className="text-[15px] font-medium">Profile</span>
                   </Link>
                   <button
+                    type="button"
                     onClick={handleLogout}
                     disabled={loggingOut}
                     className="w-full flex items-center gap-3 px-2 py-3.5 rounded-xl hover:bg-gray-50 transition-colors text-left disabled:opacity-50"

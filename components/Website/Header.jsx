@@ -1,9 +1,8 @@
 'use client'
 import { useEffect, useRef, useState, useCallback } from "react"
 import {
-  X, User, MapPin, ChevronDown, Navigation, Truck, Clock, Shield, Store,
-  Search, CheckCircle2, AlertCircle, Loader2, Star, Info, LayoutDashboard,
-  LogIn, UserPlus, ArrowRight, Zap, Bookmark, ChevronRight,
+  X, User, MapPin, ChevronDown, Clock, Shield, Store, Search,
+  LayoutDashboard, LogIn, UserPlus, Zap, Bookmark, ChevronRight,
 } from "lucide-react"
 import { USER_DASHBOARD, WEBSITE_HOME, WEBSITE_LOGIN, WEBSITE_REGISTER, WEBSITE_SHOP } from "@/routes/WebsiteRoute"
 import Card from '@/components/Website/Cart'
@@ -13,7 +12,11 @@ import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar"
 import { IMAGES } from "@/routes/AllImages"
 import { useRouter } from "next/navigation"
 import LanguageSwitcher from "@/components/Website/LanguageSwitcher"
+import LocationPanel from "@/components/Website/LocationPanel"
+import AddressModal from "@/components/Website/AddressModal"
 import { useSavedProducts } from "@/hooks/useSavedProducts"
+import { useDeliveryLocation } from "@/hooks/useDeliveryLocation"
+import { formatEta } from "@/lib/geo"
 
 const WEBSITE_SAVED = "/saved-products"
 
@@ -33,20 +36,18 @@ export default function Header() {
   const auth = useSelector(store => store.authStore.auth)
   const { count: savedCount, ready: savedReady } = useSavedProducts()
 
+  // Delivery location (saved addresses, nearest shop, live delivery time)
+  const { active, saved, status, shop, etaMinutes, activate, deleteAddress } = useDeliveryLocation()
+
   // Search (always open)
   const [query, setQuery] = useState("")
 
   // Profile
   const [profileOpen, setProfileOpen] = useState(false)
 
-  // Location state
+  // Location dropdown + map/address popup
   const [locationModal, setLocationModal] = useState(false)
-  const [locationName, setLocationName] = useState("")
-  const [manualInput, setManualInput] = useState("")
-  const [locStatus, setLocStatus] = useState({ msg: "", type: "" })
-  const [nearestLabor, setNearestLabor] = useState(null)
-  const [deliveryTime, setDeliveryTime] = useState("60 mins")
-  const [isLoadingLocation, setIsLoadingLocation] = useState(false)
+  const [mapModal, setMapModal] = useState({ open: false, draft: null, mode: "new", key: 0 })
 
   // Avatar image load-failure fallback
   const [avatarFailed, setAvatarFailed] = useState(false)
@@ -73,101 +74,46 @@ export default function Header() {
     if (query.trim()) router.push(`${WEBSITE_SHOP}?q=${encodeURIComponent(query.trim())}`)
   }
 
-  /* ── Fetch Nearest Labor ── */
-  const fetchNearestLabor = useCallback(async (latitude, longitude, city) => {
-    try {
-      const response = await fetch("/api/labor/nearest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ latitude, longitude, city })
-      })
+  /* ── Location handlers ── */
+  const handleSelectAddress = useCallback((addr) => {
+    activate(addr)
+    setLocationModal(false)
+  }, [activate])
 
-      if (response.ok) {
-        const data = await response.json()
-        setNearestLabor(data)
-        if (data.distance) {
-          const time = Math.ceil(data.distance / 2) + 10
-          setDeliveryTime(`${Math.max(time, 60)} mins`)
-        }
-      }
-    } catch (error) {
-      console.log("Error fetching nearest labor:", error)
-    }
+  const openMap = useCallback((draft, mode = "new") => {
+    setLocationModal(false)
+    setMapModal(m => ({ open: true, draft: draft && Object.keys(draft).length ? draft : null, mode, key: m.key + 1 }))
   }, [])
 
-  /* ── Location Handlers ── */
-  const applyLocation = useCallback((name, latitude, longitude, city) => {
-    setLocationName(name)
-    setLocationModal(false)
-    setManualInput("")
-    setLocStatus({ msg: "", type: "" })
-    setIsLoadingLocation(false)
+  const handleSaveFromMap = useCallback((addr) => {
+    activate(addr)
+    setMapModal(m => ({ ...m, open: false }))
+  }, [activate])
 
-    if (latitude && longitude) {
-      fetchNearestLabor(latitude, longitude, city)
-    }
-  }, [fetchNearestLabor])
-
-  const detectLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      setLocStatus({ msg: "Geolocation is not supported by your browser.", type: "error" })
-      return
-    }
-
-    setIsLoadingLocation(true)
-    setLocStatus({ msg: "Detecting your location...", type: "loading" })
-
-    navigator.geolocation.getCurrentPosition(
-      async ({ coords: { latitude, longitude } }) => {
-        setLocStatus({ msg: "Fetching address...", type: "loading" })
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
-          )
-          const data = await res.json()
-          const addr = data.address
-          const area = addr.suburb || addr.neighbourhood || addr.city_district || addr.city || "Your Area"
-          const city = addr.city || addr.town || addr.state_district || ""
-          const label = city ? `${area}, ${city}` : area
-
-          setLocStatus({ msg: "Location detected!", type: "success" })
-          setTimeout(() => applyLocation(label, latitude, longitude, city), 800)
-        } catch (error) {
-          console.error("Geocoding error:", error)
-          setLocStatus({ msg: "Could not fetch address. Please enter manually.", type: "error" })
-          setIsLoadingLocation(false)
-        }
-      },
-      (err) => {
-        console.error("Geolocation error code:", err.code, "Message:", err.message)
-        const msgs = {
-          1: "Location permission denied. Please enable location access in your browser settings and try again.",
-          2: "Location is unavailable. Please check your device settings and try again.",
-          3: "Location request timed out. Please try again or enter manually.",
-        }
-        setLocStatus({ msg: msgs[err.code] || "Error detecting location. Please try again.", type: "error" })
-        setIsLoadingLocation(false)
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0
-      }
-    )
-  }, [applyLocation])
-
-  const confirmManual = useCallback(() => {
-    if (!manualInput.trim()) {
-      setLocStatus({ msg: "Please enter a location first.", type: "error" })
-      return
-    }
-    applyLocation(manualInput.trim(), null, null, null)
-  }, [manualInput, applyLocation])
+  const toggleLocation = () => setLocationModal(v => !v)
 
   if (auth?.role === "laber") return null
 
   const avatarSrc = !avatarFailed && auth?.avatar?.url ? auth.avatar.url : IMAGES.profile
   const staticRoleIcon = getStaticRoleIcon(auth?.role)
+
+  /* Delivery label shown in header (dynamic, based on nearest shop distance) */
+  const etaLabel =
+    !active ? "Choose location"
+    : status === "checking" ? "Checking..."
+    : status === "unserviceable" ? "Not available here"
+    : status === "ok" && etaMinutes != null ? `Delivery in ${formatEta(etaMinutes)}`
+    : status === "error" ? "Time unavailable"
+    : "Checking..."
+
+  const etaColor =
+    status === "unserviceable" ? "text-red-400"
+    : status === "error" ? "text-amber-400"
+    : "text-green-400"
+
+  const locationText = active
+    ? `${active.label ? active.label + " - " : ""}${active.short || active.title || "Selected location"}`
+    : "Select location"
 
   /* Saved products link (used inside the profile dropdown) */
   const savedLink = (spacing = "") => (
@@ -192,13 +138,6 @@ export default function Header() {
       <ChevronRight size={17} className="text-gray-400 shrink-0 transition-transform group-hover/saved:translate-x-0.5" />
     </Link>
   )
-
-  const statusStyles =
-    locStatus.type === "success"
-      ? { wrap: "bg-green-50 border-green-100", text: "text-green-700", Icon: CheckCircle2 }
-      : locStatus.type === "error"
-        ? { wrap: "bg-red-50 border-red-100", text: "text-red-700", Icon: AlertCircle }
-        : { wrap: "bg-blue-50 border-blue-100", text: "text-blue-700", Icon: Loader2 }
 
   /* ── Reusable search input ── */
   const SearchBox = ({ className = "" }) => (
@@ -266,7 +205,7 @@ export default function Header() {
                 {/* Desktop trigger */}
                 <button
                   type="button"
-                  onClick={() => { setLocationModal(v => !v); setLocStatus({ msg: "", type: "" }) }}
+                  onClick={toggleLocation}
                   className="hidden lg:flex items-center gap-3 h-14 pl-2 pr-4 rounded-2xl bg-white/5 border border-white/10
                   hover:bg-white/10 hover:border-green-400/40 transition-all duration-300 cursor-pointer group"
                 >
@@ -276,12 +215,12 @@ export default function Header() {
                   </span>
 
                   <span className="text-left min-w-0">
-                    <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-green-400 leading-none">
+                    <span className={`flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider leading-none ${etaColor}`}>
                       <Zap size={11} />
-                      Delivery in {deliveryTime}
+                      {etaLabel}
                     </span>
-                    <span className="flex items-center gap-1 mt-1.5 text-sm font-semibold text-white max-w-45">
-                      <span className="truncate">{locationName || "Select location"}</span>
+                    <span className="flex items-center gap-1 mt-1.5 text-sm font-semibold text-white max-w-52">
+                      <span className="truncate">{locationText}</span>
                       <ChevronDown
                         size={15}
                         className={`shrink-0 text-gray-400 transition-transform duration-300 ${locationModal ? "rotate-180" : ""}`}
@@ -293,137 +232,30 @@ export default function Header() {
                 {/* Mobile trigger */}
                 <button
                   type="button"
-                  onClick={() => { setLocationModal(v => !v); setLocStatus({ msg: "", type: "" }) }}
+                  onClick={toggleLocation}
                   aria-label="Location"
                   className="flex lg:hidden w-10 h-10 rounded-xl bg-white/5 border border-white/10 items-center justify-center
                   hover:bg-white/10 transition-colors cursor-pointer relative"
                 >
-                  <MapPin size={19} className={locationName ? "text-green-400" : "text-white"} />
-                  {locationName && (
-                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border-2 border-gray-900" />
+                  <MapPin size={19} className={active ? (status === "unserviceable" ? "text-red-400" : "text-green-400") : "text-white"} />
+                  {active && (
+                    <span className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-gray-900 ${status === "unserviceable" ? "bg-red-400" : "bg-green-400"}`} />
                   )}
                 </button>
 
                 {/* Location Panel */}
                 {locationModal && (
-                  <div
-                    className="fixed left-3 right-3 top-19 z-50
-                    lg:absolute lg:left-0 lg:right-auto lg:top-full lg:mt-3 lg:w-100
-                    bg-white text-black rounded-3xl shadow-2xl shadow-black/40 border border-gray-100 overflow-hidden"
-                  >
-                    {/* Panel header */}
-                    <div className="relative px-6 pt-6 pb-5 bg-linear-to-br from-gray-900 to-gray-800 text-white">
-                      <div className="flex items-start gap-3">
-                        <span className="w-11 h-11 rounded-2xl bg-linear-to-br from-green-400 to-emerald-600 flex items-center justify-center shrink-0 shadow-lg shadow-green-500/30">
-                          <MapPin size={20} className="text-white" />
-                        </span>
-                        <div className="min-w-0">
-                          <p className="font-bold text-base">Set delivery location</p>
-                          <p className="text-sm text-gray-400 mt-0.5">We'll show products available in your area</p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setLocationModal(false)}
-                        aria-label="Close"
-                        className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                      >
-                        <X size={17} />
-                      </button>
-                    </div>
-
-                    {/* Detect */}
-                    <div className="p-4">
-                      <button
-                        type="button"
-                        onClick={detectLocation}
-                        disabled={isLoadingLocation}
-                        className="w-full flex items-center gap-4 p-4 rounded-2xl border border-green-200 bg-green-50/60
-                        hover:bg-green-50 hover:border-green-300 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-                      >
-                        <span className="w-11 h-11 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
-                          {isLoadingLocation ? (
-                            <Loader2 size={19} className="text-green-600 animate-spin" />
-                          ) : (
-                            <Navigation size={19} className="text-green-600" />
-                          )}
-                        </span>
-                        <div className="text-left flex-1">
-                          <p className="text-sm font-semibold text-green-800">
-                            {isLoadingLocation ? "Detecting location..." : "Use my current location"}
-                          </p>
-                          <p className="text-xs text-green-700/70 mt-0.5">Auto-detect via GPS</p>
-                        </div>
-                        <ArrowRight size={17} className="text-green-600 shrink-0" />
-                      </button>
-                    </div>
-
-                    {/* Divider */}
-                    <div className="flex items-center gap-3 px-6">
-                      <div className="h-px flex-1 bg-gray-200" />
-                      <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">or</span>
-                      <div className="h-px flex-1 bg-gray-200" />
-                    </div>
-
-                    {/* Manual */}
-                    <div className="px-4 pt-4 pb-4">
-                      <div className="flex items-center h-12 rounded-xl border border-gray-200 bg-gray-50 focus-within:bg-white focus-within:border-green-500 focus-within:ring-4 focus-within:ring-green-500/15 transition-all">
-                        <MapPin size={17} className="ml-3.5 text-gray-400 shrink-0" />
-                        <input
-                          type="text"
-                          value={manualInput}
-                          onChange={e => setManualInput(e.target.value)}
-                          onKeyDown={e => e.key === "Enter" && confirmManual()}
-                          placeholder="Enter area, street, pincode..."
-                          className="flex-1 min-w-0 h-full bg-transparent px-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={confirmManual}
-                        className="w-full mt-3 h-12 rounded-xl bg-linear-to-r from-green-600 to-emerald-600 text-white text-sm font-semibold
-                        shadow-lg shadow-green-600/25 hover:from-green-700 hover:to-emerald-700 active:scale-[0.99] transition-all cursor-pointer"
-                      >
-                        Confirm Location
-                      </button>
-                    </div>
-
-                    {/* Status */}
-                    {locStatus.msg && (
-                      <div className={`mx-4 mb-4 px-4 py-3 rounded-xl border flex items-start gap-2.5 ${statusStyles.wrap}`}>
-                        <statusStyles.Icon
-                          size={17}
-                          className={`shrink-0 mt-0.5 ${statusStyles.text} ${locStatus.type === "loading" ? "animate-spin" : ""}`}
-                        />
-                        <p className={`text-sm font-medium ${statusStyles.text}`}>{locStatus.msg}</p>
-                      </div>
-                    )}
-
-                    {/* Nearest labor */}
-                    {nearestLabor && (
-                      <div className="mx-4 mb-4 p-4 rounded-2xl bg-blue-50 border border-blue-100 flex items-center gap-3">
-                        <span className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
-                          <Truck size={18} className="text-blue-600" />
-                        </span>
-                        <div className="text-left min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-blue-900 truncate">{nearestLabor.name}</p>
-                          <p className="text-xs text-blue-700 mt-0.5">{nearestLabor.distance?.toFixed(1)} km away</p>
-                        </div>
-                        <span className="flex items-center gap-1 text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-100 rounded-full px-2.5 py-1 shrink-0">
-                          <Star size={12} className="fill-amber-500 text-amber-500" />
-                          {nearestLabor.rating || "N/A"}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Footer tip */}
-                    <div className="px-6 py-3.5 bg-gray-50 border-t border-gray-100 flex items-start gap-2.5">
-                      <Info size={15} className="text-gray-400 shrink-0 mt-0.5" />
-                      <p className="text-xs text-gray-500 leading-relaxed">
-                        Make sure location permissions are enabled in your browser settings for auto-detection to work.
-                      </p>
-                    </div>
-                  </div>
+                  <LocationPanel
+                    active={active}
+                    saved={saved}
+                    status={status}
+                    shop={shop}
+                    etaMinutes={etaMinutes}
+                    onClose={() => setLocationModal(false)}
+                    onSelect={handleSelectAddress}
+                    onOpenMap={openMap}
+                    onDelete={deleteAddress}
+                  />
                 )}
               </div>
 
@@ -552,19 +384,34 @@ export default function Header() {
         </div>
 
         {/* ─── MOBILE DELIVERY STRIP ─── */}
-        {locationName && (
-          <div className="lg:hidden bg-gray-800/95 text-white px-4 sm:px-6 py-2 flex items-center justify-between gap-3 border-t border-white/5">
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-green-400 shrink-0">
+        {active && (
+          <button
+            type="button"
+            onClick={toggleLocation}
+            className="lg:hidden w-full bg-gray-800/95 text-white px-4 sm:px-6 py-2 flex items-center justify-between gap-3 border-t border-white/5 cursor-pointer"
+          >
+            <span className={`flex items-center gap-1.5 text-xs font-semibold shrink-0 ${etaColor}`}>
               <Clock size={14} />
-              {deliveryTime}
+              {status === "ok" && etaMinutes != null ? formatEta(etaMinutes) : etaLabel}
             </span>
             <span className="flex items-center gap-1.5 text-xs text-gray-300 min-w-0">
               <MapPin size={13} className="shrink-0 text-gray-400" />
-              <span className="truncate">{locationName}</span>
+              <span className="truncate">{locationText}</span>
             </span>
-          </div>
+          </button>
         )}
       </header>
+
+      {/* ─── MAP + ADDRESS POPUP ─── */}
+      {mapModal.open && (
+        <AddressModal
+          key={mapModal.key}
+          initial={mapModal.draft}
+          mode={mapModal.mode}
+          onSave={handleSaveFromMap}
+          onClose={() => setMapModal(m => ({ ...m, open: false }))}
+        />
+      )}
     </div>
   )
 }

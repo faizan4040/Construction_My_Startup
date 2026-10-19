@@ -1,7 +1,10 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { motion } from "framer-motion"
-import { ArrowRight, Calendar, Clock, IndianRupee, MapPin, Star, User as UserIcon } from 'lucide-react';
+import {
+    ArrowRight, Briefcase, Calendar, Clock, IndianRupee,
+    MapPin, Star, User as UserIcon,
+} from 'lucide-react';
 
 const DURATION_CONFIG = {
     day: { label: "1 Day", days: 1, discount: 0 },
@@ -10,17 +13,27 @@ const DURATION_CONFIG = {
     year: { label: "1 Year", days: 365, discount: 0.20 },
 };
 
+const inr = (n) => Number(n).toLocaleString("en-IN");
+
 function LabourCard({ labour, distance, onBook }) {
     const [duration, setDuration] = useState("day");
 
-    const calculateEstimate = () => {
-        if (!labour.dailyRate) return 0;
-        const { days, discount } = DURATION_CONFIG[duration];
-        const rawTotal = labour.dailyRate * days;
-        return Math.round(rawTotal - rawTotal * discount);
-    };
+    const dailyRate = Number(labour?.dailyRate) > 0 ? Number(labour.dailyRate) : 0;
+    const hourlyRate = Number(labour?.hourlyRate) > 0 ? Number(labour.hourlyRate) : null;
+    const rating = Number(labour?.rating) > 0 ? Number(labour.rating) : null;
+    const experienceYears = Number(labour?.experienceYears) > 0 ? Number(labour.experienceYears) : null;
+    const hasDistance = typeof distance === "number" && Number.isFinite(distance);
 
-    const estimated = calculateEstimate();
+    const cfg = DURATION_CONFIG[duration];
+
+    // display-only estimate; the server recalculates the real fare on booking
+    const estimated = useMemo(() => {
+        if (!dailyRate) return 0;
+        const rawTotal = dailyRate * cfg.days;
+        return Math.round(rawTotal - rawTotal * cfg.discount);
+    }, [dailyRate, cfg]);
+
+    const canBook = dailyRate > 0;
 
     return (
         <motion.div
@@ -40,10 +53,11 @@ function LabourCard({ labour, distance, onBook }) {
                     }}
                 />
 
-                {labour.avatar?.url ? (
+                {labour?.avatar?.url ? (
                     <motion.img
                         src={labour.avatar.url}
-                        alt={labour.name}
+                        alt={labour.name || "Labour"}
+                        loading="lazy"
                         className="relative z-10 h-28 w-28 rounded-full object-cover border-4 border-white shadow-lg"
                         whileHover={{ scale: 1.06 }}
                         transition={{ duration: 0.35 }}
@@ -55,12 +69,15 @@ function LabourCard({ labour, distance, onBook }) {
                 )}
 
                 <div className='absolute bottom-3 right-3 z-20 flex items-center gap-1.5 bg-zinc-900 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-full'>
-                    <span className={`w-2 h-2 rounded-full ${labour.isOnline ? "bg-green-400" : "bg-zinc-400"}`} />
-                    {labour.isOnline ? "Online" : "Offline"}
+                    <span className={`w-2 h-2 rounded-full ${labour?.isOnline ? "bg-green-400" : "bg-zinc-400"}`} />
+                    {labour?.isOnline ? "Online" : "Offline"}
                 </div>
                 <div className='absolute bottom-3 left-3 z-20 flex items-center gap-1 bg-white border border-zinc-200 text-zinc-700 text-[10px] font-bold px-2.5 py-1.5 rounded-full shadow-sm'>
-                    <Star size={9} className="fill-zinc-900 text-zinc-900" />
-                    4.8
+                    <Star
+                        size={9}
+                        className={rating ? "fill-amber-400 text-amber-400" : "text-zinc-400"}
+                    />
+                    {rating ? rating.toFixed(1) : "New"}
                 </div>
             </div>
 
@@ -69,13 +86,23 @@ function LabourCard({ labour, distance, onBook }) {
             <div className='flex flex-col flex-1 p-5 gap-4'>
                 <div className='flex items-start justify-between gap-3'>
                     <div className='min-w-0'>
-                        <h3 className='text-zinc-900 text-base font-black tracking-tight leading-tight truncate'>{labour.name}</h3>
-                        {distance !== undefined && (
-                            <div className='mt-1.5 inline-flex items-center gap-1 bg-zinc-100 px-2.5 py-1 rounded-lg border border-zinc-200'>
-                                <MapPin size={10} className="text-zinc-500" />
-                                <span className='text-zinc-500 text-xs font-bold'>{distance.toFixed(1)} km away</span>
-                            </div>
-                        )}
+                        <h3 className='text-zinc-900 text-base font-black tracking-tight leading-tight truncate'>
+                            {labour?.name || "Labour Worker"}
+                        </h3>
+                        <div className='mt-1.5 flex flex-wrap items-center gap-1.5'>
+                            {hasDistance && (
+                                <div className='inline-flex items-center gap-1 bg-zinc-100 px-2.5 py-1 rounded-lg border border-zinc-200'>
+                                    <MapPin size={10} className="text-zinc-500" />
+                                    <span className='text-zinc-500 text-xs font-bold'>{distance.toFixed(1)} km away</span>
+                                </div>
+                            )}
+                            {experienceYears && (
+                                <div className='inline-flex items-center gap-1 bg-zinc-100 px-2.5 py-1 rounded-lg border border-zinc-200'>
+                                    <Briefcase size={10} className="text-zinc-500" />
+                                    <span className='text-zinc-500 text-xs font-bold'>{experienceYears} yrs</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -86,7 +113,7 @@ function LabourCard({ labour, distance, onBook }) {
                             <p className='text-zinc-400 text-[9px] uppercase tracking-widest font-bold'>Per Hour</p>
                         </div>
                         <p className='text-zinc-900 text-sm flex items-center font-black'>
-                            <IndianRupee size={11} />{labour.hourlyRate ?? "—"}
+                            {hourlyRate ? <><IndianRupee size={11} />{inr(hourlyRate)}</> : "—"}
                         </p>
                     </div>
 
@@ -96,15 +123,17 @@ function LabourCard({ labour, distance, onBook }) {
                             <p className='text-zinc-400 text-[9px] uppercase tracking-widest font-bold'>Per Day</p>
                         </div>
                         <p className='text-zinc-900 text-sm flex items-center font-black'>
-                            <IndianRupee size={11} />{labour.dailyRate ?? "—"}
+                            {dailyRate ? <><IndianRupee size={11} />{inr(dailyRate)}</> : "—"}
                         </p>
                     </div>
                 </div>
 
                 <div className='flex gap-1.5 bg-zinc-50 border border-zinc-100 rounded-2xl p-1'>
-                    {Object.entries(DURATION_CONFIG).map(([key, cfg]) => (
+                    {Object.entries(DURATION_CONFIG).map(([key, c]) => (
                         <button
                             key={key}
+                            type="button"
+                            aria-pressed={duration === key}
                             onClick={() => setDuration(key)}
                             className={`flex-1 text-[10px] font-bold py-2 rounded-xl transition-colors ${
                                 duration === key
@@ -112,7 +141,7 @@ function LabourCard({ labour, distance, onBook }) {
                                     : "text-zinc-500 hover:bg-zinc-100"
                             }`}
                         >
-                            {cfg.label}
+                            {c.label}
                         </button>
                     ))}
                 </div>
@@ -120,38 +149,40 @@ function LabourCard({ labour, distance, onBook }) {
                 <div className='flex items-end justify-between pt-3 border-t border-zinc-100'>
                     <div>
                         <p className='text-zinc-400 text-[9px] uppercase tracking-widest font-bold mb-0.5'>
-                            Est. for {DURATION_CONFIG[duration].label}
+                            Est. for {cfg.label}
                         </p>
-                        <motion.div
-                            key={estimated}
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.25 }}
-                            className="flex items-baseline gap-0.5"
-                        >
-                            <IndianRupee size={16} className="text-zinc-900 mb-0.5" strokeWidth={2.5} />
-                            <span className='text-zinc-900 text-3xl font-black tracking-tight leading-none'>{estimated}</span>
-                        </motion.div>
-                        {DURATION_CONFIG[duration].discount > 0 && (
+                        {canBook ? (
+                            <motion.div
+                                key={estimated}
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25 }}
+                                className="flex items-baseline gap-0.5"
+                            >
+                                <IndianRupee size={16} className="text-zinc-900 mb-0.5" strokeWidth={2.5} />
+                                <span className='text-zinc-900 text-3xl font-black tracking-tight leading-none'>
+                                    {inr(estimated)}
+                                </span>
+                            </motion.div>
+                        ) : (
+                            <p className='text-zinc-400 text-sm font-bold'>Rate not set</p>
+                        )}
+                        {cfg.discount > 0 && canBook && (
                             <p className='text-green-600 text-[10px] font-bold mt-1'>
-                                {DURATION_CONFIG[duration].discount * 100}% off applied
+                                {Math.round(cfg.discount * 100)}% off applied
                             </p>
                         )}
                     </div>
                     <motion.button
-                        whileTap={{ scale: 0.92 }}
-                        whileHover={{ scale: 1.04 }}
-                        onClick={() => onBook(duration, estimated, labour.dailyRate)}
-                        className="flex items-center gap-2 bg-zinc-900 hover:bg-black text-white text-sm font-black px-6 py-3.5 rounded-2xl transition-colors shadow-md"
+                        type="button"
+                        disabled={!canBook}
+                        whileTap={canBook ? { scale: 0.92 } : {}}
+                        whileHover={canBook ? { scale: 1.04 } : {}}
+                        onClick={() => canBook && onBook(duration, estimated, dailyRate)}
+                        className="flex items-center gap-2 bg-zinc-900 hover:bg-black disabled:opacity-35 disabled:cursor-not-allowed text-white text-sm font-black px-6 py-3.5 rounded-2xl transition-colors shadow-md disabled:shadow-none"
                     >
                         Book
-                        <motion.div
-                            initial={{ x: 0 }}
-                            whileHover={{ x: 3 }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            <ArrowRight size={14} />
-                        </motion.div>
+                        <ArrowRight size={14} />
                     </motion.button>
                 </div>
             </div>

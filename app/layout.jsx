@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 import { ToastContainer } from 'react-toastify';
 import GlobalProvider from "@/components/Application/GlobalProvider";
 
@@ -15,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "ConstructEzy",
+  title: "QuickMason",
   description: "Discover a wide range of athletic.",
 };
 

@@ -1,6 +1,6 @@
 "use client";
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, Clock, Lock, Video } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -9,9 +9,10 @@ import StatusCard from "./StatusCard";
 import ActionCard from "./ActionCard";
 import PartnerEarning from "./PartnerEarning";
 import PricingModal from "./PricingModal";
+import PartnerLiveRequests from "./PartnerLiveRequests";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "@/store/reducer/authReducer";
-
+import GeoUpdater from "@/components/Application/Labour/GeoUpdater";
 /* ================= STEPS (Labour flow) ================= */
 
 const STEPS = [
@@ -26,6 +27,7 @@ const STEPS = [
 ];
 
 const TOTAL_STEPS = STEPS.length;
+const POLL_MS = 5000;
 
 function PartnerDashboard() {
   const [activeStep, setActiveStep] = useState(0);
@@ -34,10 +36,7 @@ function PartnerDashboard() {
   const [requestLoading, setRequestLoading] = useState(false);
   const [joiningKyc, setJoiningKyc] = useState(false);
 
-  // NEW: pricing modal open/close state + the Labour document itself
-  // (mirrors `showPricing` + `vehicleData` from the vehicle reference,
-  // but renamed to match what it actually is here — a Labour profile,
-  // not a vehicle)
+  // pricing modal open/close state + the Labour document itself
   const [showPricing, setShowPricing] = useState(false);
   const [labourData, setLabourData] = useState(null);
 
@@ -49,53 +48,54 @@ function PartnerDashboard() {
     }
   }, [userData]);
 
-  // NEW: fetch the labour's own pricing/profile doc so we know its
+  // fetch the labour's own pricing/profile doc so we know its
   // rateType/pricePerHour/pricePerDay (to prefill the modal on edit)
   // and its review `status` (pending/rejected/approved) for step 6/7 cards
-  const handleGetPricing = async () => {
+  const handleGetPricing = useCallback(async () => {
     try {
       const { data } = await axios.get("/api/partner/onboarding/pricing");
       setLabourData(data);
     } catch (error) {
       console.log(error);
     }
-  };
-
-  useEffect(() => {
-    handleGetPricing();
   }, []);
 
   /* ============ AUTO REFRESH USER DATA (fixes step not updating live) ============
      Jab admin video KYC approve/reject karta hai, is partner ki dashboard screen ko
      khud pata nahi chalta jab tak page refresh na ho. Yeh interval har 5 second me
      latest user data fetch karke redux update kar deta hai, taaki step khud-ba-khud
-     aage badh jaye bina F5 dabaye. */
+     aage badh jaye bina F5 dabaye.
+     Ab: tab hidden ho to polling ruk jaati hai, aur tab wapas aane par turant refresh. */
   useEffect(() => {
-    const refreshUser = async () => {
+    const refreshAll = async () => {
       try {
         const { data } = await axios.get("/api/auth/me");
         dispatch(login(data));
       } catch (error) {
         console.log(error);
       }
+      handleGetPricing();
     };
 
-    refreshUser(); // pehli baar turant
-    handleGetPricing(); // labourData bhi turant refresh, taaki reject/approve turant reflect ho
+    refreshAll(); // first load (this also loads labourData)
 
     const interval = setInterval(() => {
-      refreshUser();
-      handleGetPricing(); // FIX: labourData ko bhi poll karo, warna already-open
-      // dashboard par admin ke reject/approve ka pata tab tak nahi chalta
-      // jab tak page manually refresh na ho
-    }, 5000);
+      if (document.visibilityState === "visible") refreshAll();
+    }, POLL_MS);
 
-    return () => clearInterval(interval);
-  }, [dispatch]);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refreshAll();
+    };
+    document.addEventListener("visibilitychange", onVisible);
 
-  // UPDATED: step 6 (Pricing) ko route pe navigate karne ke bajaye modal
-  // kholna hai — sirf tab jab partner review + video KYC dono approved
-  // ho chuke hon (reference ke goToStep logic jaisa)
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [dispatch, handleGetPricing]);
+
+  // step 6 (Pricing) opens the modal — only when partner review + video KYC
+  // are both approved
   const goToStep = (step) => {
     if (
       step.id === 6 &&
@@ -121,9 +121,11 @@ function PartnerDashboard() {
   };
 
   const progressPercentage = ((activeStep - 1) / (TOTAL_STEPS - 1)) * 100;
+  const isLive = activeStep === 8 && userData?.partnerStatus === "approved";
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-100 to-gray-200 px-4 pt-40 pb-20">
+    {isLive && <GeoUpdater userId={userData?._id ?? userData?.id} />}
       <div className="max-w-7xl mx-auto space-y-16">
         <div>
           <h1 className="text-4xl font-bold">Partner Onboarding</h1>
@@ -212,8 +214,13 @@ function PartnerDashboard() {
               actionLabel={requestLoading ? "Requesting..." : "Request Again"}
               onAction={async () => {
                 setRequestLoading(true);
-                await axios.get("/api/partner/video-kyc/request");
-                setRequestLoading(false);
+                try {
+                  await axios.get("/api/partner/video-kyc/request");
+                } catch (error) {
+                  console.log(error);
+                } finally {
+                  setRequestLoading(false);
+                }
               }}
             />
           ) : userData?.videoKycStatus === "in_progress" &&
@@ -233,9 +240,8 @@ function PartnerDashboard() {
             />
           ))}
 
-        {/* UPDATED: step 6/7 status cards now read the Labour doc's own
-            `status` field (labourData?.status) instead of the User's
-            overall partnerStatus — pricing approval is a separate review
+        {/* step 6/7 status cards read the Labour doc's own `status` field
+            (labourData?.status) — pricing approval is a separate review
             stage from the initial partner/document approval */}
         {activeStep === 6 && labourData?.status === "pending" && (
           <StatusCard
@@ -262,11 +268,9 @@ function PartnerDashboard() {
           />
         )}
 
-        {/* FIX: this case was missing entirely — final review rejection
-            had no UI at all, so the labour never saw it and had no way
-            to resubmit. Opens the pricing modal again so they can edit
-            and resubmit; the pricing POST route resets status back to
-            "pending" on resubmit. */}
+        {/* final review rejection: opens the pricing modal again so the
+            labour can edit and resubmit; the pricing POST route resets
+            status back to "pending" on resubmit. */}
         {activeStep === 7 && labourData?.status === "rejected" && (
           <RejectionCard
             title="Final Review Rejected"
@@ -276,24 +280,43 @@ function PartnerDashboard() {
           />
         )}
 
-        {activeStep === 8 && userData?.partnerStatus === "approved" && (
+        {isLive && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-black text-white rounded-3xl p-10 shadow-2xl"
           >
             <h2 className="text-2xl font-bold">🚀 You're Live</h2>
-            <button className="mt-6 bg-white text-black px-6 py-3 rounded-xl font-semibold flex items-center gap-2">
-              Go to Bookings <ArrowRight size={16} />
-            </button>
+            <p className="text-zinc-400 text-sm mt-2">
+              Keep this app open with location on to receive new job requests.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => router.push("/partner/pending-requests")}
+                className="bg-white text-black px-6 py-3 rounded-xl font-semibold flex items-center gap-2"
+              >
+                Open Job Requests <ArrowRight size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push("/partner/bookings")}
+                className="border border-white/30 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/10 transition-colors"
+              >
+                My Bookings
+              </button>
+            </div>
           </motion.div>
         )}
+
+        {/* live status: pending request count, server connection, location permission */}
+        {isLive && <PartnerLiveRequests />}
 
         <PartnerEarning />
       </div>
 
-      {/* NEW: pricing modal — opens when step 6 clicked (goToStep logic
-          above), prefilled with the labour's existing pricing data if any */}
+      {/* pricing modal — opens when step 6 clicked (goToStep logic above),
+          prefilled with the labour's existing pricing data if any */}
       <PricingModal
         open={showPricing}
         onClose={() => {
@@ -307,13 +330,3 @@ function PartnerDashboard() {
 }
 
 export default PartnerDashboard;
-
-
-
-
-
-
-
-
-
-

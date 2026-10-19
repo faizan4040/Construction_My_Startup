@@ -17,7 +17,7 @@ const ROLE_DASHBOARDS: Record<Role, string> = {
   admin:          ADMIN_DASHBOARD,
   customer:       USER_DASHBOARD,
   "shop owner":   SHOP_OWNER_DASHBOARD,
-  laber:          "/partner/onboarding/labour",
+  laber:          "/partner/dashboard", // CHANGED: was "/partner/onboarding/labour" (sent registered labour back to step 1 on every login)
   "delivery boy": "/delivery/dashboard",
 };
 
@@ -141,7 +141,6 @@ export const config = {
     "/auth/:path*",
   ],
 };
-
 
 
 

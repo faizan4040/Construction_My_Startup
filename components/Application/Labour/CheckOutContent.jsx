@@ -1,21 +1,54 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { AnimatePresence, motion } from "framer-motion"
 import {
-  ArrowRight, Banknote, CheckCircle, Clock, CreditCard, HardHat,
-  IndianRupee, Loader2, MapPin, Shield, Wallet, XCircle
-} from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import axios from 'axios';
-import { getSocket } from '@/lib/socket-client';
+  AlertCircle, ArrowRight, CheckCircle, Clock, CreditCard, HardHat,
+  IndianRupee, Loader2, MapPin, Shield, XCircle,
+} from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useSelector } from 'react-redux'
+import axios from 'axios'
+import { connectSocket, getSocket } from '@/lib/socket-client'
+
+const POLL_MS = 8000
+const IN_PROGRESS = ["arrived", "started", "work_completed"]
+
+const DURATION_LABEL = {
+  day: "1 Day",
+  week: "7 Days",
+  month: "1 Month",
+  year: "1 Year",
+}
+
+function Countdown({ expiresAt }) {
+  const calc = () =>
+    Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 1000))
+  const [left, setLeft] = useState(calc)
+
+  useEffect(() => {
+    setLeft(calc())
+    const t = setInterval(() => setLeft(calc()), 1000)
+    return () => clearInterval(t)
+  }, [expiresAt])
+
+  const m = Math.floor(left / 60)
+  const s = String(left % 60).padStart(2, "0")
+  return (
+    <span className="text-xs font-bold text-zinc-500">
+      Request expires in {m}:{s}
+    </span>
+  )
+}
 
 function CheckOutContent() {
   const router = useRouter()
   const params = useSearchParams()
+  const auth = useSelector((store) => store.authStore.auth)
+  const myId = auth?._id ?? auth?.id
 
   const address = params.get("address") || ""
   const siteDetails = params.get("siteDetails") || ""
-  const mobile = params.get("mobile")
+  const mobile = params.get("mobile") || ""
   const lat = Number(params.get("lat"))
   const lon = Number(params.get("lon"))
   const category = params.get("category") || ""
@@ -26,154 +59,152 @@ function CheckOutContent() {
   const ratePerUnit = params.get("ratePerUnit") || ""
 
   const [loading, setLoading] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  // idle | requested | confirmed | rejected | expired
   const [status, setStatus] = useState("idle")
   const [booking, setBooking] = useState(null)
-  const [paymentMethod, setPaymentMethod] = useState("cash")
+  const [errorMsg, setErrorMsg] = useState("")
 
-  const DURATION_LABEL = {
-    day: "1 Day",
-    week: "7 Days",
-    month: "1 Month",
-    year: "1 Year",
-  }
+  // once a booking exists the server's fare wins over the URL's display value
+  const shownFare = booking?.fare ?? fare
+  const shownCategory = booking?.category || category
+
+  const applyBooking = useCallback((b) => {
+    setBooking(b)
+    setStatus(b?.bookingStatus ?? "idle")
+  }, [])
+
+  const fetchActiveBooking = useCallback(
+    async ({ markExpiredIfNone = false } = {}) => {
+      try {
+        const { data } = await axios.get("/api/booking/active")
+        const b = data.booking
+        if (b) {
+          if (IN_PROGRESS.includes(b.bookingStatus)) {
+            router.replace(`/user/booking/${b._id}`)
+            return
+          }
+          applyBooking(b)
+        } else {
+          // no active booking on server
+          setBooking(null)
+          setStatus((prev) =>
+            markExpiredIfNone && prev === "requested" ? "expired" : prev === "requested" ? "idle" : prev
+          )
+        }
+      } catch (error) {
+        if (error.response?.status === 401) router.push("/auth/login")
+        else console.log(error)
+      }
+    },
+    [applyBooking, router]
+  )
 
   const handleRequestBooking = async () => {
+    if (loading) return
+    if (!labourId || !category || !mobile || !Number.isFinite(lat) || !Number.isFinite(lon)) {
+      setErrorMsg("Booking details are incomplete. Please go back and select again.")
+      return
+    }
     setLoading(true)
+    setErrorMsg("")
     try {
       const { data } = await axios.post("/api/booking/create", {
         labourId,
         category,
         pricingType,
         durationKey: duration,
-        pickUpAddress: siteDetails ? `${siteDetails}, ${address}` : address,
-        pickUpLocation: {
-          latitude: lat,
-          longitude: lon,
-        },
-        userMobileNumber: mobile,
+        workAddress: address,
+        siteDetails,
+        workLocation: { latitude: lat, longitude: lon },
+        mobileNumber: mobile,
       })
-      setBooking(data)
-      setLoading(false)
-      setStatus("requested")
+      applyBooking(data.booking)
     } catch (error) {
-      setLoading(false)
-      console.log(error?.response?.data?.message)
-    }
-  }
-
-  useEffect(() => {
-    const socket = getSocket()
-    socket.on("accept-booking", (data) => {
-      setStatus(data)
-    })
-    socket.on("reject-booking", (data) => {
-      setStatus(data)
-    })
-    return () => {
-      socket.off("accept-booking")
-      socket.off("reject-booking")
-    }
-  }, [])
-
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      if (typeof window === "undefined") {
-        resolve(false)
-        return;
+      const res = error.response
+      if (res?.status === 401) {
+        router.push("/auth/login")
+        return
       }
-      if (window.Razorpay) {
-        resolve(true)
-        return;
-      }
-      const script = document.createElement("script")
-      script.src = "https://checkout.razorpay.com/v1/checkout.js"
-      script.onload = () => resolve(true)
-      script.onerror = () => resolve(false)
-      document.body.appendChild(script)
-    })
-  }
-
-  const handleConfirmPayment = async () => {
-    if (!booking || !paymentMethod) return;
-    setLoading(true)
-    try {
-      if (paymentMethod == "online") {
-        const razorpayLoaded = await loadRazorpayScript()
-        if (!razorpayLoaded) {
-          alert("razorpay script failed to load")
-        }
-
-        const { data } = await axios.post("/api/payment/create", {
-          bookingId: booking._id
-        })
-
-        const paymentObject = new window.Razorpay({
-          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-          amount: data.amount,
-          currency: "INR",
-          name: "Constructezy",
-          description: "Labour Booking Payment",
-          order_id: data.orderId,
-          handler: async function (response) {
-            const { data } = await axios.post("/api/payment/verify", {
-              bookingId: booking._id,
-              ...response
-            })
-            setLoading(false)
-
-            if (data.success) {
-              setStatus("confirmed")
-              window.location.href = `/user/booking/${booking._id}`
-            }
-          }
-        })
-
-        paymentObject.open()
-
+      if (res?.status === 409 && res.data?.booking) {
+        applyBooking(res.data.booking) // an active booking already exists
       } else {
-        const { data } = await axios.get(`/api/booking/${booking._id}/confirm`)
-        setLoading(false)
-        if (data.success) {
-          setStatus("confirmed")
-          window.location.href = `/user/booking/${booking._id}`
-        }
+        setErrorMsg(res?.data?.message || "Could not send the request. Please try again.")
       }
-    } catch (error) {
-      console.log(error)
+    } finally {
       setLoading(false)
     }
   }
 
-  const fetchActiveBooking = async () => {
-    try {
-      const { data } = await axios.get("/api/booking/active")
-      setBooking(data.booking)
-      setStatus(data.booking.bookingStatus || data.booking)
-    } catch (error) {
-      console.log(error)
-    }
-  }
-
+  // NOTE: cancel route abhi GET hai (file dekhi nahi). File bhejo, POST bana dunga.
   const handleCancel = async () => {
+    if (!booking?._id || cancelling) return
+    setCancelling(true)
+    setErrorMsg("")
     try {
-      await axios.get(`/api/booking/${booking._id}/cancel`)
+      await axios.post(`/api/booking/${booking._id}/cancel`)
+      setBooking(null)
       setStatus("idle")
     } catch (error) {
-      console.log(error)
+      setErrorMsg(error.response?.data?.message || "Could not cancel. Please try again.")
+      fetchActiveBooking()
+    } finally {
+      setCancelling(false)
     }
   }
 
+  // customer's own socket: connect + identity (GeoUpdater only runs for labour)
+  useEffect(() => {
+    if (!myId) return
+    const socket = connectSocket({ userId: myId })
+    const sendIdentity = () => socket.emit("identity", myId)
+    socket.on("connect", sendIdentity)
+    if (socket.connected) sendIdentity()
+    return () => {
+      socket.off("connect", sendIdentity)
+    }
+  }, [myId])
+
+  // live events (named handlers: off() removes only OUR listeners)
+  useEffect(() => {
+    const socket = getSocket()
+    const onAccept = (payload) => {
+      if (payload?.booking) applyBooking(payload.booking)
+      else fetchActiveBooking()
+    }
+    const onReject = () => {
+      setBooking(null)
+      setStatus("rejected")
+    }
+    socket.on("accept-booking", onAccept)
+    socket.on("reject-booking", onReject)
+    return () => {
+      socket.off("accept-booking", onAccept)
+      socket.off("reject-booking", onReject)
+    }
+  }, [applyBooking, fetchActiveBooking])
+
+  // initial load: resume an existing active booking if there is one
   useEffect(() => {
     fetchActiveBooking()
-  }, [])
+  }, [fetchActiveBooking])
 
+  // fallback if a socket event is missed: poll while waiting for labour
   useEffect(() => {
-    if (status !== "awaiting_payment") return;
-    const t = setTimeout(() => {
-      setStatus("payment")
-    }, 2000)
-    return () => { clearTimeout(t) }
-  }, [status])
+    if (status !== "requested") return
+    const t = setInterval(() => {
+      if (document.visibilityState === "visible") fetchActiveBooking({ markExpiredIfNone: true })
+    }, POLL_MS)
+    return () => clearInterval(t)
+  }, [status, fetchActiveBooking])
+
+  // request timed out on the server -> reflect it in the UI
+  useEffect(() => {
+    if (status !== "requested" || !booking?.requestExpiresAt) return
+    const ms = new Date(booking.requestExpiresAt).getTime() - Date.now() + 1500
+    const t = setTimeout(() => fetchActiveBooking({ markExpiredIfNone: true }), Math.max(ms, 0))
+    return () => clearTimeout(t)
+  }, [status, booking?.requestExpiresAt, fetchActiveBooking])
 
   return (
     <div className='min-h-screen bg-zinc-100 px-4 py-12'>
@@ -193,6 +224,7 @@ function CheckOutContent() {
         </motion.div>
 
         <div className='grid lg:grid-cols-2 gap-6'>
+          {/* ───────── Summary card ───────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -205,7 +237,9 @@ function CheckOutContent() {
               <div className='flex items-center justify-between mb-8'>
                 <div>
                   <div className='text-[10px] font-black uppercase tracking-[0.18em] text-zinc-400 mb-1'>Category</div>
-                  <div className='text-3xl font-black tracking-tight text-zinc-900 capitalize'>{category}</div>
+                  <div className='text-3xl font-black tracking-tight text-zinc-900 capitalize'>
+                    {shownCategory.replace(/-/g, " ")}
+                  </div>
                 </div>
                 <div className='w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center shadow-lg'>
                   <HardHat size={28} className="text-white" />
@@ -219,8 +253,9 @@ function CheckOutContent() {
                   </div>
                   <div className='flex-1 min-w-0'>
                     <div className='text-[9px] font-black uppercase tracking-[0.18em] text-zinc-400 mb-0.5'>Work Site</div>
-                    <div className='text-sm font-semibold text-zinc-900 leading-snug truncate'>
-                      {siteDetails ? `${siteDetails}, ` : ""}{address}
+                    <div className='text-sm font-semibold text-zinc-900 leading-snug'>
+                      {(booking?.siteDetails ?? siteDetails) ? `${booking?.siteDetails ?? siteDetails}, ` : ""}
+                      {booking?.workAddress ?? address}
                     </div>
                   </div>
                   <MapPin size={14} className="text-zinc-400 flex-shrink-0 mt-1" />
@@ -241,8 +276,11 @@ function CheckOutContent() {
                 <div>
                   <p className='text-[10px] font-black uppercase tracking-[0.18em] text-zinc-400 mb-1'>Total Fare</p>
                   <p className='text-zinc-400 text-xs font-medium'>
-                    {ratePerUnit ? `₹${ratePerUnit} × ${DURATION_LABEL[duration] || duration}` : "Includes applicable discount"}
+                    {ratePerUnit
+                      ? `₹${Number(ratePerUnit).toLocaleString("en-IN")} × ${DURATION_LABEL[duration] || duration}`
+                      : "Includes applicable discount"}
                   </p>
+                  <p className='text-zinc-400 text-[10px] font-medium mt-1'>Payable after the work is completed</p>
                 </div>
 
                 <motion.div
@@ -251,14 +289,17 @@ function CheckOutContent() {
                   transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
                   className="flex items-baseline gap-1"
                 >
-                  <span className='text-zinc-400 text-lg font-black'><IndianRupee /></span>
-                  <span className='text-zinc-900 text-5xl font-black tracking-tight leading-none'>{fare}</span>
+                  <IndianRupee size={22} className="text-zinc-400 self-center" strokeWidth={2.5} />
+                  <span className='text-zinc-900 text-5xl font-black tracking-tight leading-none'>
+                    {shownFare !== "" && shownFare != null ? Number(shownFare).toLocaleString("en-IN") : "—"}
+                  </span>
                 </motion.div>
               </div>
 
             </div>
           </motion.div>
 
+          {/* ───────── Status card ───────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -269,7 +310,8 @@ function CheckOutContent() {
             <div className='flex-1 p-8 sm:p-10 flex flex-col'>
               <AnimatePresence mode="wait">
 
-                {(status == "idle" || status == "rejected") && (
+                {/* idle / rejected / expired */}
+                {["idle", "rejected", "expired"].includes(status) && (
                   <motion.div
                     key="idle"
                     initial={{ opacity: 0, y: 12 }}
@@ -279,35 +321,57 @@ function CheckOutContent() {
                     className="flex flex-col flex-1 justify-between"
                   >
                     <div>
+                      {status === "rejected" && (
+                        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold rounded-xl px-3 py-2 mb-4">
+                          <AlertCircle size={14} /> Labour is not available right now. Please pick another one.
+                        </div>
+                      )}
+                      {status === "expired" && (
+                        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold rounded-xl px-3 py-2 mb-4">
+                          <AlertCircle size={14} /> No response in time. You can try again or choose another labour.
+                        </div>
+                      )}
+
                       <p className='text-[10px] font-black uppercase tracking-[0.18em] text-zinc-400 mb-1'>Ready to go?</p>
                       <h3 className='text-2xl font-black text-zinc-900 mb-6'>Confirm Your Booking</h3>
                       <div className='bg-zinc-50 border border-zinc-100 rounded-2xl p-5 space-y-3'>
-                        {
-                          [
-                            { icon: <Clock size={14} />, text: "Labour will respond within 2 minutes" },
-                            { icon: <Shield size={14} />, text: "Verified & approved workers only" },
-                            { icon: <CreditCard size={14} />, text: "Pay after labour accepts" },
-                          ].map((item, i) => (
-                            <div key={i} className="flex items-center gap-3">
-                              <div className='w-7 h-7 rounded-xl bg-zinc-200 flex items-center justify-center text-zinc-600 flex-shrink-0'>{item.icon}</div>
-                              <p className='text-zinc-500 text-xs font-medium'>{item.text}</p>
-                            </div>
-                          ))
-                        }
+                        {[
+                          { icon: <Clock size={14} />, text: "Labour will respond within 2 minutes" },
+                          { icon: <Shield size={14} />, text: "Verified & approved workers only" },
+                          { icon: <CreditCard size={14} />, text: "Pay after the work is completed" },
+                        ].map((item, i) => (
+                          <div key={i} className="flex items-center gap-3">
+                            <div className='w-7 h-7 rounded-xl bg-zinc-200 flex items-center justify-center text-zinc-600 flex-shrink-0'>{item.icon}</div>
+                            <p className='text-zinc-500 text-xs font-medium'>{item.text}</p>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    <motion.button
-                      whileTap={{ scale: 0.97 }}
-                      whileHover={{ scale: 1.02 }}
-                      onClick={handleRequestBooking}
-                      className="w-full h-14 mt-8 bg-zinc-900 hover:bg-black disabled:opacity-40 text-white font-black text-sm rounded-2xl flex items-center justify-center gap-2.5 transition-colors shadow-md"
-                    >
-                      <span>Request Booking</span><ArrowRight size={15} />
-                    </motion.button>
+
+                    <div>
+                      {errorMsg && (
+                        <p className="text-red-500 text-xs font-semibold mt-6">{errorMsg}</p>
+                      )}
+                      <motion.button
+                        type="button"
+                        whileTap={{ scale: 0.97 }}
+                        whileHover={loading ? {} : { scale: 1.02 }}
+                        disabled={loading}
+                        onClick={handleRequestBooking}
+                        className="w-full h-14 mt-8 bg-zinc-900 hover:bg-black disabled:opacity-40 text-white font-black text-sm rounded-2xl flex items-center justify-center gap-2.5 transition-colors shadow-md"
+                      >
+                        {loading ? (
+                          <Loader2 size={17} className="animate-spin" />
+                        ) : (
+                          <><span>Request Booking</span><ArrowRight size={15} /></>
+                        )}
+                      </motion.button>
+                    </div>
                   </motion.div>
                 )}
 
-                {status == "requested" && (
+                {/* waiting for labour */}
+                {status === "requested" && (
                   <motion.div
                     key="requested"
                     initial={{ opacity: 0, scale: 0.96 }}
@@ -328,112 +392,24 @@ function CheckOutContent() {
                     </div>
                     <div>
                       <h3 className='text-xl font-black text-zinc-900 mb-1'>Finding Your Labour</h3>
-                      <p className='text-zinc-400 text-sm font-medium'>Waiting for labour to accept…</p>
+                      <p className='text-zinc-400 text-sm font-medium mb-1'>Waiting for labour to accept…</p>
+                      {booking?.requestExpiresAt && <Countdown expiresAt={booking.requestExpiresAt} />}
                     </div>
-                    <motion.div
-                      whileTap={{ scale: 0.95 }}
+                    {errorMsg && <p className="text-red-500 text-xs font-semibold">{errorMsg}</p>}
+                    <button
+                      type="button"
                       onClick={handleCancel}
-                      className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-zinc-900 transition-colors border border-zinc-200 hover:border-zinc-400 px-4 py-2.5 rounded-xl"
+                      disabled={cancelling}
+                      className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-zinc-900 disabled:opacity-50 transition-colors border border-zinc-200 hover:border-zinc-400 px-4 py-2.5 rounded-xl"
                     >
-                      <XCircle size={13} /> Cancel Request
-                    </motion.div>
+                      {cancelling ? <Loader2 size={13} className="animate-spin" /> : <XCircle size={13} />}
+                      Cancel Request
+                    </button>
                   </motion.div>
                 )}
 
-                {status == "awaiting_payment" && (
-                  <motion.div
-                    key="awaiting_payment"
-                    initial={{ opacity: 0, scale: 0.94 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.35 }}
-                    className="flex flex-col flex-1 items-center justify-center gap-5 text-center"
-                  >
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 260, damping: 16 }}
-                      className="w-20 h-20 rounded-full bg-zinc-100 border-2 border-zinc-200 flex items-center justify-center"
-                    >
-                      <CheckCircle size={36} className='text-zinc-900' />
-                    </motion.div>
-                    <div>
-                      <h3 className='text-xl font-black text-zinc-900 mb-1'>Labour Accepted</h3>
-                      <p className='text-zinc-400 text-sm font-medium'>Preparing payment options…</p>
-                    </div>
-                    <div className='w-48 h-1.5 bg-zinc-100 rounded-full overflow-hidden'>
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: "100%" }}
-                        transition={{ duration: 2 }}
-                        className="h-full bg-zinc-900 rounded-full"
-                      />
-                    </div>
-                  </motion.div>
-                )}
-
-                {status == "payment" && (
-                  <motion.div
-                    key="payment"
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="flex flex-col flex-1 gap-6"
-                  >
-                    <div>
-                      <p className='text-[10px] font-black uppercase tracking-[0.18em] text-zinc-400 mb-1'>Almost There</p>
-                      <h3 className='text-2xl font-black text-zinc-900'>Select Payment Method</h3>
-                    </div>
-
-                    <div className='space-y-3'>
-                      {[
-                        { id: "cash", Icon: Banknote, title: "Cash", sub: "Pay labour after work" },
-                        { id: "online", Icon: Wallet, title: "Online Payment", sub: "UPI · Card · Netbanking" }
-                      ].map((p) => {
-                        const active = paymentMethod == p.id
-                        return (
-                          <motion.div
-                            key={p.id}
-                            whileTap={{ scale: 0.97 }}
-                            onClick={() => setPaymentMethod(p.id)}
-                            className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 text-left transition-all duration-200 ${active ? "bg-zinc-900 border-zinc-900" : "bg-zinc-50 border-zinc-200 hover:border-zinc-400"
-                              }`}
-                          >
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${active ? "bg-white/10" : "bg-zinc-200"
-                              }`}><p.Icon size={18} className={active ? "text-white" : "text-zinc-600"} /></div>
-                            <div className='flex-1 min-w-0'>
-                              <p className={`text-sm font-bold ${active ? "text-white" : "text-zinc-900"}`}>{p.title}</p>
-                              <p className={`text-xs font-medium ${active ? "text-zinc-400" : "text-zinc-400"}`}>{p.sub}</p>
-                            </div>
-                            <AnimatePresence>
-                              {active && (
-                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                                  <CheckCircle size={16} className="text-white flex-shrink-0" />
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </motion.div>
-                        )
-                      })}
-                    </div>
-                    <motion.button
-                      whileTap={{ scale: 0.97 }}
-                      onClick={handleConfirmPayment}
-                      whileHover={paymentMethod ? { scale: 1.02 } : {}}
-                      disabled={!paymentMethod}
-                      className="w-full h-14 bg-zinc-900 hover:bg-black disabled:opacity-30 text-white font-black text-sm rounded-2xl flex items-center justify-center gap-2.5 transition-colors shadow-md mt-auto"
-                    >
-                      {loading
-                        ? <Loader2 size={17} className="animate-spin" />
-                        : paymentMethod == "cash"
-                          ? <><Banknote size={16} /><span>Confirm Cash Booking</span></>
-                          : <><span>Proceed to Payment</span><ArrowRight size={16} /></>}
-                    </motion.button>
-                  </motion.div>
-                )}
-
-                {status == "confirmed" && (
+                {/* labour accepted */}
+                {status === "confirmed" && (
                   <motion.div
                     key="confirmed"
                     initial={{ opacity: 0, scale: 0.94 }}
@@ -451,7 +427,7 @@ function CheckOutContent() {
                       <div className='w-24 h-24 rounded-full bg-zinc-100 border-2 border-zinc-200 flex items-center justify-center'>
                         <CheckCircle size={44} className="text-zinc-900" />
                       </div>
-                      {[0, 1].map(i => (
+                      {[0, 1].map((i) => (
                         <motion.div
                           key={i}
                           initial={{ scale: 1, opacity: 0.5 }}
@@ -461,26 +437,50 @@ function CheckOutContent() {
                         />
                       ))}
                     </motion.div>
-                    <div>
+
+                    <div className="w-full">
                       <motion.h3
                         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
                         className="text-2xl font-black text-zinc-900 mb-1"
-                      >Booking Confirmed!
+                      >
+                        Labour Accepted!
                       </motion.h3>
                       <motion.p
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-                        className="text-zinc-400 text-sm font-medium max-w-xs"
+                        className="text-zinc-400 text-sm font-medium max-w-xs mx-auto mb-4"
                       >
                         Your labour is on the way. Track live from the booking screen.
                       </motion.p>
+
+                      {/* name + photo only — phone number is never sent to the customer */}
+                      {booking?.labour && (
+                        <div className="flex items-center gap-3 bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 max-w-xs mx-auto">
+                          {booking.labour.avatar ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={booking.labour.avatar} alt="" className="w-12 h-12 rounded-full object-cover" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-zinc-200 flex items-center justify-center">
+                              <HardHat size={18} className="text-zinc-500" />
+                            </div>
+                          )}
+                          <div className="text-left min-w-0">
+                            <p className="text-sm font-bold text-zinc-900 truncate">{booking.labour.name}</p>
+                            <p className="text-xs text-zinc-400 capitalize">
+                              {(booking.category || "").replace(/-/g, " ")}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
+
                     <motion.button
+                      type="button"
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.5 }}
                       whileTap={{ scale: 0.97 }}
                       whileHover={{ scale: 1.03 }}
-                      onClick={() => { window.location.href = `/user/booking/${booking._id}`; }}
+                      onClick={() => booking?._id && router.push(`/user/booking/${booking._id}`)}
                       className="flex items-center gap-2.5 bg-zinc-900 hover:bg-black text-white font-black text-sm px-8 py-4 rounded-2xl transition-colors shadow-md"
                     >
                       Track Booking <ArrowRight size={16} />

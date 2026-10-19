@@ -1,124 +1,110 @@
 import mongoose from "mongoose";
 
+export const ACTIVE_STATUSES = ["requested", "confirmed", "arrived", "started", "work_completed"];
+// labour is occupied with this booking
+export const BUSY_STATUSES = ["confirmed", "arrived", "started", "work_completed"];
+
+const pointSchema = new mongoose.Schema(
+  {
+    type: { type: String, enum: ["Point"], default: "Point" },
+    coordinates: { type: [Number], required: true },
+  },
+  { _id: false }
+);
+
+const historySchema = new mongoose.Schema(
+  {
+    status: String,
+    at: { type: Date, default: Date.now },
+    by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    byRole: String, // customer | labour | admin | system
+    note: String,
+  },
+  { _id: false }
+);
+
 const bookingSchema = new mongoose.Schema(
   {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    labour: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // partner's User id
+    labourProfile: { type: mongoose.Schema.Types.ObjectId, ref: "Labour" },
+    category: { type: String, required: true },
 
-    // The labour being hired
-    labour: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+    workAddress: { type: String, required: true },
+    siteDetails: { type: String, default: "" }, // exact flat/floor/landmark
+    workLocation: { type: pointSchema, required: true },
 
-    // Snapshot of category at booking time (helpers, masons, electricians, etc.)
-    category: {
-      type: String,
-      required: true,
-    },
+    fare: { type: Number, required: true },
+    pricingType: { type: String, enum: ["hourly", "daily"], required: true },
+    durationKey: { type: String },
+    duration: { type: Number, required: true },
+    ratePerUnit: { type: Number, required: true },
 
-    // Where the labour needs to work
-    workAddress: {
-      type: String,
-      required: true,
-    },
-    workLocation: {
-      type: {
-        type: String,
-        enum: ["Point"],
-      },
-      coordinates: [Number],
-    },
-
-    fare: {
-      type: Number,
-      required: true,
-    },
-    pricingType: {
-      type: String,
-      enum: ["hourly", "daily"],
-      required: true,
-    },
-    duration: {
-      type: Number,
-      required: true,
-    },
-    ratePerUnit: {
-      type: Number,
-      required: true,
-    },
-
-    userMobileNumber: {
-      type: String,
-      required: true,
-    },
-    labourMobileNumber: {
-      type: String,
-      required: true,
-    },
+    userMobileNumber: { type: String, required: true },
 
     bookingStatus: {
       type: String,
       enum: [
-        "idle",
-        "requested",
-        "awaiting_payment",
-        "confirmed",
-        "started",
-        "completed",
-        "cancelled",
-        "rejected",
-        "expired",
+        "idle", "requested", "confirmed", "arrived", "started",
+        "work_completed", "completed", "cancelled", "rejected", "expired",
+        "awaiting_payment", // legacy, unused
       ],
-      default: "idle",
+      default: "requested",
     },
-    paymentStatus: {
-      type: String,
-      enum: ["pending", "paid", "cash", "failed"],
-      default: "pending",
-    },
-    paymentDeadline: {
-      type: Date,
-    },
-    adminCommission: {
-      type: Number,
-      default: 0,
-    },
-    labourAmount: {
-      type: Number,
-      default: 0,
-    },
+    requestExpiresAt: { type: Date },
+    acceptedAt: Date,
+    arrivedAt: Date,
+    startedAt: Date,
+    completedAt: Date,
+    workDurationMinutes: Number,
 
-    // OTP to confirm labour has started work at the site
-    startOtp: {
-      type: String,
-    },
-    startOtpExpires: {
-      type: Date,
-    },
-    // OTP to confirm work completion
-    completeOtp: {
-      type: String,
-    },
-    completeOtpExpires: {
-      type: Date,
-    },
+    paymentMethod: { type: String, enum: ["cash", "online"] },
+    paymentStatus: { type: String, enum: ["pending", "paid", "cash", "failed"], default: "pending" },
+    paymentDeadline: Date,
+    commissionRate: { type: Number, default: 0 }, // snapshot at completion
+    adminCommission: { type: Number, default: 0 },
+    labourAmount: { type: Number, default: 0 },
 
-    cancellationReason: {
-      type: String,
-      default: "",
-    },
+    startOtp: { type: String, select: false },
+    startOtpExpires: { type: Date, select: false },
+    completeOtp: { type: String, select: false },
+    completeOtpExpires: { type: Date, select: false },
+
+    cancellationReason: { type: String, default: "" },
+    cancelledBy: { type: String, default: "" },
+
+    // admin soft delete: hidden from the admin bookings table only,
+    // earnings / analytics keep counting it
+    deletedAt: { type: Date, default: null },
+    deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+
+    history: [historySchema], // audit trail
   },
   { timestamps: true }
 );
 
-const Booking =
-  mongoose.models.Booking || mongoose.model("Booking", bookingSchema);
+bookingSchema.index({ labour: 1, bookingStatus: 1, requestExpiresAt: 1 });
+bookingSchema.index({ user: 1, bookingStatus: 1 });
+bookingSchema.index({ createdAt: -1 });
+
+// DB-level guarantees (needs MongoDB 6.0+ for $in in partial indexes):
+// 1) a customer can have only one active booking
+bookingSchema.index(
+  { user: 1 },
+  { unique: true, partialFilterExpression: { bookingStatus: { $in: ACTIVE_STATUSES } } }
+);
+// 2) a labour can be busy with only one job
+bookingSchema.index(
+  { labour: 1 },
+  { unique: true, partialFilterExpression: { bookingStatus: { $in: BUSY_STATUSES } } }
+);
+
+const Booking = mongoose.models.Booking || mongoose.model("Booking", bookingSchema);
 export default Booking;
+
+
+
+
 
 
 
@@ -146,65 +132,31 @@ export default Booking;
 
 // const bookingSchema = new mongoose.Schema(
 //   {
-//     // Distinguishes a vehicle ride booking from a labour hire booking
-//     bookingType: {
-//       type: String,
-//       enum: ["vehicle", "labour"],
-//       required: true,
-//       default: "vehicle",
-//     },
-
 //     user: {
 //       type: mongoose.Schema.Types.ObjectId,
 //       ref: "User",
 //       required: true,
 //     },
 
-//     // For vehicle bookings: the driver. For labour bookings: the labour
-//     // partner. Kept as one field so earning/stat queries can stay simple.
-//     driver: {
+//     // The labour being hired
+//     labour: {
 //       type: mongoose.Schema.Types.ObjectId,
 //       ref: "User",
 //       required: true,
 //     },
 
-//     // Only required for bookingType "vehicle"
-//     vehicle: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: "Vehicle",
-//       required: function () {
-//         return this.bookingType === "vehicle";
-//       },
-//     },
-
-//     // Only relevant for bookingType "labour" — snapshot of category at
-//     // booking time (helpers, masons, electricians, etc.)
+//     // Snapshot of category at booking time (helpers, masons, electricians, etc.)
 //     category: {
-//       type: String,
-//       required: function () {
-//         return this.bookingType === "labour";
-//       },
-//     },
-
-//     pickUpAddress: {
 //       type: String,
 //       required: true,
 //     },
-//     dropAddress: {
-//       type: String,
-//       required: function () {
-//         return this.bookingType === "vehicle";
-//       },
-//     },
 
-//     pickUpLocation: {
-//       type: {
-//         type: String,
-//         enum: ["Point"],
-//       },
-//       coordinates: [Number],
+//     // Where the labour needs to work
+//     workAddress: {
+//       type: String,
+//       required: true,
 //     },
-//     dropLocation: {
+//     workLocation: {
 //       type: {
 //         type: String,
 //         enum: ["Point"],
@@ -219,19 +171,22 @@ export default Booking;
 //     pricingType: {
 //       type: String,
 //       enum: ["hourly", "daily"],
+//       required: true,
 //     },
 //     duration: {
 //       type: Number,
+//       required: true,
 //     },
 //     ratePerUnit: {
 //       type: Number,
+//       required: true,
 //     },
 
 //     userMobileNumber: {
 //       type: String,
 //       required: true,
 //     },
-//     driverMobileNumber: {
+//     labourMobileNumber: {
 //       type: String,
 //       required: true,
 //     },
@@ -263,21 +218,23 @@ export default Booking;
 //       type: Number,
 //       default: 0,
 //     },
-//     partnerAmount: {
+//     labourAmount: {
 //       type: Number,
 //       default: 0,
 //     },
 
-//     pickUpOtp: {
+//     // OTP to confirm labour has started work at the site
+//     startOtp: {
 //       type: String,
 //     },
-//     dropOtp: {
-//       type: String,
-//     },
-//     pickUpOtpExpires: {
+//     startOtpExpires: {
 //       type: Date,
 //     },
-//     dropOtpExpires: {
+//     // OTP to confirm work completion
+//     completeOtp: {
+//       type: String,
+//     },
+//     completeOtpExpires: {
 //       type: Date,
 //     },
 
@@ -292,3 +249,17 @@ export default Booking;
 // const Booking =
 //   mongoose.models.Booking || mongoose.model("Booking", bookingSchema);
 // export default Booking;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
