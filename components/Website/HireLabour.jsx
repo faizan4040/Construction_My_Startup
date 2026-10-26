@@ -389,7 +389,10 @@ function WorkersDrawer({ item, loc, onClose, onPick, onAuto, onSchedule }) {
         setTab(data.counts.free > 0 ? "free" : data.counts.busy > 0 ? "busy" : "free");
       })
       .catch((e) => {
-        if (!axios.isCancel(e)) setState({ loading: false, error: true, data: null });
+        if (!axios.isCancel(e)) {
+          console.error("labours/list failed:", e?.response?.status, e?.response?.data || e.message);
+          setState({ loading: false, error: e?.response?.status || "network", data: null });
+        }
       });
     return () => ac.abort();
   }, [item.slug, loc.lat, loc.lon]);
@@ -481,6 +484,13 @@ function WorkersDrawer({ item, loc, onClose, onPick, onAuto, onSchedule }) {
           {error && (
             <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
               Couldn't load workers right now. Please try again, or use "Schedule for Later".
+              <span className="mt-1 block text-[11px] text-red-400">
+                {error === 404
+                  ? "Server error 404 — /api/labours/list route not found (check file: app/api/labours/list/route.js)"
+                  : error === 500
+                  ? "Server error 500 — check the terminal for 'labour list error'"
+                  : `Error: ${error}`}
+              </span>
             </div>
           )}
 
