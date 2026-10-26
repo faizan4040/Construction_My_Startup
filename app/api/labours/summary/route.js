@@ -1,17 +1,3 @@
-// Place at: app/api/labours/summary/route.js
-//
-// Card-level summary per category. Built to stay fast with lakhs/crores of workers:
-//   1. City-wide numbers come from ONE aggregation ($group by category) — no documents loaded.
-//   2. Location-specific numbers (nearby / busy / rates / next slot / photos) come only from
-//      a bounding-box query around the customer (max ~40 km), capped at 3000 docs.
-//
-// IMPORTANT for scale — add this index in your Labour model:
-//   labourSchema.index({ category: 1, status: 1, isActive: 1, "location.latitude": 1, "location.longitude": 1 });
-//
-// Per category you get:
-//   registered, available (city-wide) | nearby (FREE in range), busyNearby, inArea (free+busy in range)
-//   rateHour / rateDay (real min-max), rating, reviews, jobs, verified, nextSlot, etaMinutes, eta30, workers[]
-
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/databaseConnection";
 import Labour from "@/models/Labour.model"; // <-- apna asli Labour model file naam
