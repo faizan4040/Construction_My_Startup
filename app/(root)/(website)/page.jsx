@@ -11,7 +11,8 @@ import JustDropped from "@/components/Website/JustDropped";
 import HireLabour from "@/components/Website/HireLabour";
 import ShopBySlider from "@/components/Website/ShopBySlider";
 import PartnerDashboard from "@/components/Application/Labour/PartnerDashboard";
-import BookNow from "@/components/Application/Labour/BookNow";
+// import BookNow from "@/components/Application/Labour/BookNow";
+import QuickActionCards from "@/components/Website/QuickActionCards";
 import GeoUpdater from "@/components/Application/Labour/GeoUpdater";
 import DeliveryDashboard from "@/components/Application/Delivery/DeliveryDashboard"; 
 import Testimonial from '@/components/Website/Testimonial'
@@ -126,8 +127,12 @@ const Home = () => {
     </section>
 
     <section className="w-full py-10">
-      <BookNow />
+      <QuickActionCards />
     </section>
+
+    {/* <section className="w-full py-10">
+      <BookNow />
+    </section> */}
 
     <section className="w-full py-10">
       <HireLabour />

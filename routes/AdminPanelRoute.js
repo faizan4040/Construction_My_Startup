@@ -1,5 +1,5 @@
 export const ADMIN_DASHBOARD = '/admin/dashboard'
-
+export const ADMIN_ORDER_BY_USER = "/admin/order-by-user";
 
 // Media routes
 export const ADMIN_MEDIA_SHOW = '/admin/media'
