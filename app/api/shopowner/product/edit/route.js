@@ -29,7 +29,7 @@ export async function PUT(request) {
       discountPercentage: true,
       media: true,
       description: true,
-      isReturnable: true,   // ✅ ADD
+      // isReturnable: true,
     });
 
     const validatedData = validationSchema.safeParse(rest);

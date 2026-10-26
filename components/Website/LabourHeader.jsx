@@ -9,18 +9,18 @@ import axios from "axios";
 import { Avatar, AvatarImage } from "../ui/avatar";
 import { IMAGES } from "@/routes/AllImages";
 import { logout } from "@/store/reducer/authReducer";
-import { getSocket } from "@/lib/socket-client";
+import { disconnectSocket, getSocket } from "@/lib/socket-client";
 
-/* Adjust these routes if your actual paths are different */
 const NAV_LINKS = [
   { label: "Home", href: "/partner/dashboard" },
   { label: "Pending Requests", href: "/partner/pending-requests", badge: true },
+  { label: "Active Job", href: "/partner/active-job" },
+  { label: "Wallet", href: "/partner/wallet" },
   { label: "Bookings", href: "/partner/bookings" },
-  { label: "Active Job", href: "/partner/active-ride" },
 ];
 
 const PENDING_HREF = "/partner/pending-requests";
-const ACCENT = "#F5A623"; // safety-amber — construction/high-vis accent
+const ACCENT = "#F5A623"; // safety-amber
 const COUNT_REFRESH_MS = 30000;
 
 const isActive = (pathname, href) =>
@@ -71,12 +71,12 @@ export default function LabourHeader() {
   const profileId = auth?._id ?? auth?.id;
 
   const [profileOpen, setProfileOpen] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false); // mobile bottom sheet
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const profileRef = useRef(null);
 
-  /* ── close desktop dropdown on outside click ── */
+  /* close desktop dropdown on outside click */
   useEffect(() => {
     const handler = (e) => {
       if (!(e.target instanceof Node)) return;
@@ -88,13 +88,13 @@ export default function LabourHeader() {
     return () => document.removeEventListener("pointerdown", handler);
   }, []);
 
-  /* ── close menus on route change ── */
+  /* close menus on route change */
   useEffect(() => {
     setProfileOpen(false);
     setSheetOpen(false);
   }, [pathname]);
 
-  /* ── Escape closes menus ── */
+  /* Escape closes menus */
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") {
@@ -106,7 +106,7 @@ export default function LabourHeader() {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  /* ── lock page scroll while mobile sheet is open ── */
+  /* lock page scroll while mobile sheet is open */
   useEffect(() => {
     if (!sheetOpen) return;
     const prev = document.body.style.overflow;
@@ -116,7 +116,7 @@ export default function LabourHeader() {
     };
   }, [sheetOpen]);
 
-  /* ── pending requests count (server is the source of truth) ── */
+  /* pending requests count (server is the source of truth) */
   const fetchPendingCount = useCallback(async () => {
     try {
       const { data } = await axios.get("/api/partner/bookings/pending-requests-count");
@@ -131,7 +131,7 @@ export default function LabourHeader() {
     if (isLabour) fetchPendingCount();
   }, [isLabour, fetchPendingCount]);
 
-  /* ── live refresh: new request, cancelled request, socket reconnect ── */
+  /* live refresh: new request, cancelled request, socket reconnect */
   useEffect(() => {
     if (!isLabour) return;
     const socket = getSocket();
@@ -139,7 +139,7 @@ export default function LabourHeader() {
 
     socket.on("new-booking", refresh);
     socket.on("booking-cancelled", refresh);
-    socket.on("connect", refresh); // catch anything missed while offline
+    socket.on("connect", refresh);
     return () => {
       socket.off("new-booking", refresh);
       socket.off("booking-cancelled", refresh);
@@ -147,7 +147,7 @@ export default function LabourHeader() {
     };
   }, [isLabour, fetchPendingCount]);
 
-  /* ── fallback: expired requests drop out of the count; refresh on tab focus ── */
+  /* fallback: expired requests drop out of the count; refresh on tab focus */
   useEffect(() => {
     if (!isLabour) return;
     const tick = () => {
@@ -169,6 +169,7 @@ export default function LabourHeader() {
     } catch (error) {
       console.log(error);
     } finally {
+      disconnectSocket(); // next login must get a fresh socket identity
       dispatch(logout());
       setLoggingOut(false);
       setProfileOpen(false);
@@ -203,7 +204,7 @@ export default function LabourHeader() {
           </Link>
 
           {/* CENTER: Nav Links (desktop) */}
-          <nav className="hidden lg:flex items-center justify-center gap-8 xl:gap-10">
+          <nav className="hidden lg:flex items-center justify-center gap-6 xl:gap-8">
             {NAV_LINKS.map((link) => {
               const active = isActive(pathname, link.href);
               return (
@@ -220,7 +221,7 @@ export default function LabourHeader() {
                     {link.badge && (
                       <CountBadge
                         count={pendingCount}
-                        className="min-w-[20px] h-5 text-[11px]"
+                        className="min-w-5 h-5 text-[11px]"
                       />
                     )}
                   </span>
@@ -237,7 +238,6 @@ export default function LabourHeader() {
 
           {/* RIGHT: Bell + Profile */}
           <div className="flex items-center justify-end gap-2 sm:gap-3">
-            {/* Notification bell (desktop + mobile) */}
             <Link
               href={PENDING_HREF}
               aria-label={
@@ -330,7 +330,7 @@ export default function LabourHeader() {
         </div>
       </motion.header>
 
-      {/* ── MOBILE / TABLET BOTTOM SHEET ── */}
+      {/* MOBILE / TABLET BOTTOM SHEET */}
       <AnimatePresence>
         {sheetOpen && (
           <>
@@ -352,7 +352,6 @@ export default function LabourHeader() {
                          bg-white text-black rounded-t-3xl shadow-2xl
                          pb-[calc(env(safe-area-inset-bottom)+1.25rem)]"
             >
-              {/* drag handle (tap to close) */}
               <button
                 type="button"
                 onClick={() => setSheetOpen(false)}

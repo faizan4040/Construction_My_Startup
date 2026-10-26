@@ -1,5 +1,6 @@
 'use client'
 import React, { useCallback, useEffect, useState } from 'react'
+import BackButton from '@/components/Application/Labour/BackButton'
 import { AnimatePresence, motion } from "framer-motion"
 import axios from 'axios'
 import {
@@ -76,7 +77,7 @@ function PendingRequestsPage() {
       setActingType("accept")
       setError("")
       await axios.post(`/api/partner/bookings/${id}/accept`)
-      router.push("/partner/bookings")
+      router.push("/partner/active-job")
     } catch (e) {
       setError(e.response?.data?.message || "Could not accept this request")
       setActingId(null)
@@ -137,6 +138,7 @@ function PendingRequestsPage() {
     <div className='min-h-screen bg-[#f4f5f7]'>
       <div className='bg-white border-b border-gray-200'>
         <div className='max-w-6xl mx-auto px-6 pt-32 pb-12 sm:pt-36'>
+          <BackButton href="/partner/dashboard" className="mb-6" />
           <div className='flex items-center gap-3'>
             <h1 className='text-4xl font-semibold text-gray-900'>Job Requests</h1>
             {bookings.length > 0 && (

@@ -1,6 +1,8 @@
 'use client'
 import React, { useCallback, useEffect, useState } from 'react'
 import { AnimatePresence, motion } from "framer-motion"
+import PaymentChooser from './PaymentChooser'
+import BackButton from './BackButton'
 import {
   AlertCircle, ArrowRight, CheckCircle, Clock, CreditCard, HardHat,
   IndianRupee, Loader2, MapPin, Shield, XCircle,
@@ -80,7 +82,7 @@ function CheckOutContent() {
         const { data } = await axios.get("/api/booking/active")
         const b = data.booking
         if (b) {
-          if (IN_PROGRESS.includes(b.bookingStatus)) {
+          if (IN_PROGRESS.includes(b.bookingStatus) || (b.bookingStatus === "confirmed" && (b.paymentMethod === "cash" || b.paymentStatus === "paid"))) {
             router.replace(`/user/booking/${b._id}`)
             return
           }
@@ -209,6 +211,7 @@ function CheckOutContent() {
   return (
     <div className='min-h-screen bg-zinc-100 px-4 py-12'>
       <div className='relative max-w-6xl mx-auto z-10'>
+        <BackButton className="mb-6" />
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -410,81 +413,8 @@ function CheckOutContent() {
 
                 {/* labour accepted */}
                 {status === "confirmed" && (
-                  <motion.div
-                    key="confirmed"
-                    initial={{ opacity: 0, scale: 0.94 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.4 }}
-                    className="flex flex-col flex-1 items-center justify-center gap-6 text-center"
-                  >
-                    <motion.div
-                      initial={{ scale: 0, rotate: -20 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ type: "spring", stiffness: 240, damping: 14, delay: 0.1 }}
-                      className="relative"
-                    >
-                      <div className='w-24 h-24 rounded-full bg-zinc-100 border-2 border-zinc-200 flex items-center justify-center'>
-                        <CheckCircle size={44} className="text-zinc-900" />
-                      </div>
-                      {[0, 1].map((i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ scale: 1, opacity: 0.5 }}
-                          animate={{ scale: 2.2 + i * 0.6, opacity: 0 }}
-                          transition={{ duration: 0.9, delay: 0.2 + i * 0.15 }}
-                          className="absolute inset-0 rounded-full border-2 border-zinc-900"
-                        />
-                      ))}
-                    </motion.div>
-
-                    <div className="w-full">
-                      <motion.h3
-                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                        className="text-2xl font-black text-zinc-900 mb-1"
-                      >
-                        Labour Accepted!
-                      </motion.h3>
-                      <motion.p
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-                        className="text-zinc-400 text-sm font-medium max-w-xs mx-auto mb-4"
-                      >
-                        Your labour is on the way. Track live from the booking screen.
-                      </motion.p>
-
-                      {/* name + photo only — phone number is never sent to the customer */}
-                      {booking?.labour && (
-                        <div className="flex items-center gap-3 bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 max-w-xs mx-auto">
-                          {booking.labour.avatar ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={booking.labour.avatar} alt="" className="w-12 h-12 rounded-full object-cover" />
-                          ) : (
-                            <div className="w-12 h-12 rounded-full bg-zinc-200 flex items-center justify-center">
-                              <HardHat size={18} className="text-zinc-500" />
-                            </div>
-                          )}
-                          <div className="text-left min-w-0">
-                            <p className="text-sm font-bold text-zinc-900 truncate">{booking.labour.name}</p>
-                            <p className="text-xs text-zinc-400 capitalize">
-                              {(booking.category || "").replace(/-/g, " ")}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <motion.button
-                      type="button"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5 }}
-                      whileTap={{ scale: 0.97 }}
-                      whileHover={{ scale: 1.03 }}
-                      onClick={() => booking?._id && router.push(`/user/booking/${booking._id}`)}
-                      className="flex items-center gap-2.5 bg-zinc-900 hover:bg-black text-white font-black text-sm px-8 py-4 rounded-2xl transition-colors shadow-md"
-                    >
-                      Track Booking <ArrowRight size={16} />
-                    </motion.button>
+                  <motion.div key="confirmed" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex flex-col flex-1">
+                    <PaymentChooser booking={booking} />
                   </motion.div>
                 )}
               </AnimatePresence>

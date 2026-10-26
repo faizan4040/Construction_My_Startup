@@ -1,6 +1,6 @@
 'use client'
 
-import LabourSlider from '@/components/Website/LabourSlider'
+import LabourSlider from '@/components/Website/HireLabour'
 import { IMAGES } from '@/routes/AllImages'
 import React, { useState } from 'react'
 

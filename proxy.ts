@@ -27,7 +27,8 @@ const ROLE_PREFIXES: Record<Role, string> = {
   admin:          "/admin",
   customer:       "/my-account",
   "shop owner":   "/shop",
-  laber:          "/partner/onboarding/labour",
+  // laber:          "/partner/onboarding/labour",
+  laber:          "/partner",
   "delivery boy": "/delivery",
 };
 
@@ -136,11 +137,25 @@ export const config = {
     "/admin/:path*",
     "/my-account/:path*",
     "/shop/:path*",
-    "/labour/:path*",       // still runs middleware on /labour/* ...
+    "/labours/:path*",
+    "/partner/:path*",
     "/delivery/:path*",
     "/auth/:path*",
   ],
 };
+
+
+
+// export const config = {
+//   matcher: [
+//     "/admin/:path*",
+//     "/my-account/:path*",
+//     "/shop/:path*",
+//     "/labour/:path*",       // still runs middleware on /labour/* ...
+//     "/delivery/:path*",
+//     "/auth/:path*",
+//   ],
+// };
 
 
 

@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import connectDb from "@/lib/databaseConnection";
 import { isAuthenticated } from "@/lib/authentication";
 import Booking from "@/models/Booking.model";
+import Review from "@/models/Review.model";
 import "@/models/User.model";
 import "@/models/Labour.model";
 import { ADMIN_POPULATE, shapeAdminBooking } from "@/lib/adminBookingShape";
@@ -24,6 +25,8 @@ export async function GET(req, context) {
     const b = await Booking.findById(id).populate(ADMIN_POPULATE).lean();
     if (!b || b.deletedAt) return NextResponse.json({ message: "not found" }, { status: 404 });
 
+    const review = await Review.findOne({ booking: id }).select("rating comment createdAt").lean();
+
     return NextResponse.json({
       booking: {
         ...shapeAdminBooking(b),
@@ -33,6 +36,9 @@ export async function GET(req, context) {
           byRole: h.byRole || "",
           note: h.note || "",
         })),
+        review: review
+          ? { rating: review.rating, comment: review.comment || "", createdAt: review.createdAt }
+          : null,
       },
     });
   } catch (error) {
@@ -55,7 +61,7 @@ export async function DELETE(req, context) {
     const deleted = await Booking.findOneAndUpdate(
       { _id: id, deletedAt: null, bookingStatus: { $in: DELETABLE_STATUSES } },
       { $set: { deletedAt: new Date(), deletedBy: session.userId } },
-      { new: true }
+      { returnDocument: "after" }
     )
       .select("_id bookingStatus")
       .lean();
@@ -71,10 +77,7 @@ export async function DELETE(req, context) {
 
     // tell other open admin tabs to refresh; never fail the delete because of this
     try {
-      await emitToAdmins("admin-booking-update", {
-        bookingId: String(deleted._id),
-        status: "deleted",
-      });
+      await emitToAdmins("admin-booking-update", { bookingId: String(deleted._id), status: "deleted" });
     } catch (e) {
       console.error("admin delete emit error", e);
     }

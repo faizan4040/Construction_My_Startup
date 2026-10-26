@@ -6,24 +6,32 @@ import {
   BadgeCheck, Briefcase, ChevronLeft, ChevronRight, ExternalLink, IndianRupee,
   Loader2, MapPin, Phone, RefreshCcw, Search, Star, Trash2, User, X,
 } from 'lucide-react'
-import useAdminLive from '../../../hooks/useAdminLive'
+import useAdminLive from '@/hooks/useAdminLive'
 
 const STATUS = {
-  requested:      { label: 'Requested',        cls: 'bg-amber-50 text-amber-700 border-amber-200' },
-  confirmed:      { label: 'Accepted',         cls: 'bg-blue-50 text-blue-700 border-blue-200' },
-  arrived:        { label: 'Arrived',          cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-  started:        { label: 'Working',          cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  work_completed: { label: 'Awaiting payment', cls: 'bg-violet-50 text-violet-700 border-violet-200' },
-  completed:      { label: 'Completed',        cls: 'bg-zinc-900 text-white border-zinc-900' },
-  rejected:       { label: 'Rejected',         cls: 'bg-red-50 text-red-600 border-red-200' },
-  cancelled:      { label: 'Cancelled',        cls: 'bg-zinc-100 text-zinc-500 border-zinc-200' },
-  expired:        { label: 'Expired',          cls: 'bg-zinc-100 text-zinc-500 border-zinc-200' },
+  requested:      { label: 'Requested',      cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+  confirmed:      { label: 'Accepted',       cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+  arrived:        { label: 'Arrived',        cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  started:        { label: 'Working',        cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  work_completed: { label: 'Work done · OTP', cls: 'bg-violet-50 text-violet-700 border-violet-200' },
+  completed:      { label: 'Completed',      cls: 'bg-zinc-900 text-white border-zinc-900' },
+  rejected:       { label: 'Rejected',       cls: 'bg-red-50 text-red-600 border-red-200' },
+  cancelled:      { label: 'Cancelled',      cls: 'bg-zinc-100 text-zinc-500 border-zinc-200' },
+  expired:        { label: 'Expired',        cls: 'bg-zinc-100 text-zinc-500 border-zinc-200' },
 }
 const PAY_STATUS = {
-  pending: { label: 'Pending',       cls: 'bg-amber-50 text-amber-700 border-amber-200' },
-  paid:    { label: 'Paid',          cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  cash:    { label: 'Cash reported', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
-  failed:  { label: 'Failed',        cls: 'bg-red-50 text-red-600 border-red-200' },
+  pending:        { label: 'Pending',        cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+  paid:           { label: 'Paid',           cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  cash:           { label: 'Cash received',  cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+  failed:         { label: 'Failed',         cls: 'bg-red-50 text-red-600 border-red-200' },
+  refund_pending: { label: 'Refund pending', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+  refunded:       { label: 'Refunded',       cls: 'bg-zinc-100 text-zinc-600 border-zinc-200' },
+}
+const CANCELLER = {
+  customer: 'bg-red-50 text-red-600 border-red-200',
+  labour:   'bg-orange-50 text-orange-700 border-orange-200',
+  system:   'bg-zinc-100 text-zinc-600 border-zinc-200',
+  admin:    'bg-violet-50 text-violet-700 border-violet-200',
 }
 const CATEGORIES = [
   'helpers', 'masons', 'electricians', 'plumbers', 'carpenters', 'painters',
@@ -54,6 +62,18 @@ function Badge({ map, k, fallback = '—' }) {
     <span className={`inline-flex text-[10px] font-bold px-2.5 py-1 rounded-full border whitespace-nowrap ${m.cls}`}>
       {m.label}
     </span>
+  )
+}
+
+function CancelledBy({ by, reason }) {
+  if (!by) return <span className="text-zinc-300">—</span>
+  return (
+    <div>
+      <span className={`inline-flex text-[10px] font-bold px-2.5 py-1 rounded-full border capitalize whitespace-nowrap ${CANCELLER[by] || CANCELLER.system}`}>
+        {by}
+      </span>
+      {reason && <p className="text-[10px] text-zinc-400 mt-1 max-w-[130px] break-words">{String(reason).replace(/_/g, ' ')}</p>}
+    </div>
   )
 }
 
@@ -215,12 +235,31 @@ function Drawer({ booking: b, onClose }) {
             <Row label={`Platform commission (${d.money.commissionPercent}%)`}>{inr(d.money.adminCommission)}</Row>
             <Row label="Labour share">{inr(d.money.labourAmount)}</Row>
             {d.money.projected && (
-              <p className="text-[11px] text-amber-600 mt-2">Expected amounts. Final earning counts after the work is completed.</p>
+              <p className="text-[11px] text-amber-600 mt-2">Expected amounts. Final earning counts after the work is closed with OTP.</p>
             )}
           </div>
 
           {(d.cancellationReason || d.cancelledBy) && (
-            <Row label="Cancelled by">{d.cancelledBy} {d.cancellationReason && `(${d.cancellationReason})`}</Row>
+            <Row label="Cancelled by">
+              <span className="capitalize">{d.cancelledBy}</span>{d.cancellationReason && ` (${String(d.cancellationReason).replace(/_/g, ' ')})`}
+            </Row>
+          )}
+
+          {d.review && (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-2">Customer review</p>
+              <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4">
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star key={n} size={16} className={n <= d.review.rating ? 'fill-amber-400 text-amber-400' : 'text-zinc-300'} />
+                  ))}
+                  <span className="ml-2 text-sm font-black text-zinc-900">{d.review.rating}/5</span>
+                </div>
+                {d.review.comment
+                  ? <p className="text-sm text-zinc-700 mt-2 break-words">{d.review.comment}</p>
+                  : <p className="text-xs text-zinc-400 mt-2">No written comment.</p>}
+              </div>
+            </div>
           )}
 
           <div>
@@ -234,7 +273,7 @@ function Drawer({ booking: b, onClose }) {
                 {detail.history.map((h, i) => (
                   <li key={i} className="flex items-center gap-3 text-xs">
                     <span className="w-2 h-2 rounded-full bg-zinc-900 shrink-0" />
-                    <span className="font-semibold text-zinc-900">{STATUS[h.status]?.label || h.status}</span>
+                    <span className="font-semibold text-zinc-900">{STATUS[h.status]?.label || String(h.status).replace(/_/g, ' ')}</span>
                     <span className="text-zinc-400">{h.byRole}</span>
                     <span className="ml-auto text-zinc-400 whitespace-nowrap">{fmtDT(h.at)}</span>
                   </li>
@@ -284,6 +323,7 @@ function DeleteModal({ booking: b, deleting, onCancel, onConfirm }) {
 }
 
 const EMPTY_FILTERS = { status: '', category: '', paymentMethod: '', from: '', to: '' }
+const HEADERS = ['Booking', 'Labour', 'Customer', 'Work site', 'Status', 'Cancelled by', 'Timing', 'Work time', 'Payment', 'Amount', 'Action']
 
 export default function AdminBookings() {
   const [rows, setRows] = useState([])
@@ -348,7 +388,6 @@ export default function AdminBookings() {
     timerRef.current = setTimeout(() => load({ silent: true }), 500)
   })
 
-  // success message disappears by itself
   useEffect(() => {
     if (!notice) return
     const t = setTimeout(() => setNotice(''), 3000)
@@ -453,21 +492,21 @@ export default function AdminBookings() {
       {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">{error}</p>}
       {notice && <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 mb-4">{notice}</p>}
 
-      {/* KEY FIX: w-0 + min-w-full => table ki chaudai parent (main) ko phailati nahi, scroll sirf yahin aata hai */}
+      {/* w-0 + min-w-full: the wide table scrolls inside this box and never stretches the page */}
       <div className="w-0 min-w-full overflow-x-auto overscroll-x-contain rounded-2xl border border-zinc-100">
-        <table className="w-full min-w-[1250px] text-left">
+        <table className="w-full min-w-[1400px] text-left">
           <thead className="bg-zinc-50 text-[10px] uppercase tracking-widest text-zinc-400">
             <tr>
-              {['Booking', 'Labour', 'Customer', 'Work site', 'Status', 'Timing', 'Work time', 'Payment', 'Amount', 'Action'].map((h) => (
+              {HEADERS.map((h) => (
                 <th key={h} className="px-4 py-3 font-bold">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {loading && rows.length === 0 ? (
-              <tr><td colSpan={10} className="py-16 text-center"><Loader2 className="animate-spin inline text-zinc-500" /></td></tr>
+              <tr><td colSpan={HEADERS.length} className="py-16 text-center"><Loader2 className="animate-spin inline text-zinc-500" /></td></tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan={10} className="py-16 text-center text-sm text-zinc-400">No bookings found.</td></tr>
+              <tr><td colSpan={HEADERS.length} className="py-16 text-center text-sm text-zinc-400">No bookings found.</td></tr>
             ) : rows.map((b) => {
               const canDelete = DELETABLE.includes(b.bookingStatus)
               return (
@@ -527,6 +566,10 @@ export default function AdminBookings() {
                   </td>
 
                   <td className="px-4 py-4"><Badge map={STATUS} k={b.bookingStatus} /></td>
+
+                  <td className="px-4 py-4">
+                    <CancelledBy by={b.cancelledBy} reason={b.cancellationReason} />
+                  </td>
 
                   <td className="px-4 py-4 text-[11px] text-zinc-500 space-y-0.5 whitespace-nowrap">
                     <p>Accepted: <b className="text-zinc-800">{fmtTime(b.acceptedAt)}</b></p>

@@ -3,12 +3,13 @@ import React, { useCallback, useEffect, useState } from 'react'
 import axios from 'axios'
 import Link from 'next/link'
 import { AlertTriangle, Bell, MapPin, Wifi, WifiOff } from 'lucide-react'
-import { getSocket } from '@/lib/socket-client'
+import { connectSocket } from '@/lib/socket-client'
 
 export default function PartnerLiveRequests() {
   const [count, setCount] = useState(0)
   const [geo, setGeo] = useState('unknown') // granted | prompt | denied | unknown
   const [online, setOnline] = useState(false)
+  const [reason, setReason] = useState('')
 
   const fetchCount = useCallback(async () => {
     try {
@@ -22,21 +23,36 @@ export default function PartnerLiveRequests() {
 
   useEffect(() => {
     fetchCount()
-    const socket = getSocket()
+
+    // connectSocket() actually connects (getSocket() alone never does)
+    const socket = connectSocket()
     setOnline(socket.connected)
+
     const refresh = () => fetchCount()
-    const up = () => { setOnline(true); fetchCount() }
+    const up = () => { setOnline(true); setReason(''); fetchCount() }
     const down = () => setOnline(false)
+    const err = (e) => {
+      setOnline(false)
+      setReason(
+        e?.message === 'unauthorized'
+          ? 'Server rejected the login token. Check SOCKET_JWT_SECRET in both .env files.'
+          : `Cannot reach the socket server (${e?.message || 'unknown'}).`
+      )
+    }
+
     socket.on('new-booking', refresh)
     socket.on('booking-cancelled', refresh)
     socket.on('connect', up)
     socket.on('disconnect', down)
+    socket.on('connect_error', err)
     const t = setInterval(fetchCount, 30000)
+
     return () => {
       socket.off('new-booking', refresh)
       socket.off('booking-cancelled', refresh)
       socket.off('connect', up)
       socket.off('disconnect', down)
+      socket.off('connect_error', err)
       clearInterval(t)
     }
   }, [fetchCount])
@@ -95,7 +111,10 @@ export default function PartnerLiveRequests() {
         </div>
       </div>
 
-      {!receiving && (
+      {!online && reason && (
+        <p className="text-xs font-semibold text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{reason}</p>
+      )}
+      {!receiving && !reason && (
         <p className="text-xs text-zinc-400">
           Customers only see you when this page is open, you are connected, and location is allowed.
         </p>

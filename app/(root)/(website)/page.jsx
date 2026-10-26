@@ -8,12 +8,12 @@ import BuyerSupplierSection from "@/components/Website/BuyerSupplierSection";
 import CuponBanner from "@/components/Website/CuponBanner";
 import FeatureProduct from "@/components/Website/FeatureProduct";
 import JustDropped from "@/components/Website/JustDropped";
-import LabourSlider from "@/components/Website/LabourSlider";
+import HireLabour from "@/components/Website/HireLabour";
 import ShopBySlider from "@/components/Website/ShopBySlider";
 import PartnerDashboard from "@/components/Application/Labour/PartnerDashboard";
 import BookNow from "@/components/Application/Labour/BookNow";
 import GeoUpdater from "@/components/Application/Labour/GeoUpdater";
-import DeliveryDashboard from "@/components/Application/Delivery/DeliveryDashboard"; // ✅ NEW
+import DeliveryDashboard from "@/components/Application/Delivery/DeliveryDashboard"; 
 import Testimonial from '@/components/Website/Testimonial'
 import ProductBox from "@/components/Website/ProductBox";
 import { WEBSITE_SHOP, WEBSITE_HOME } from "@/routes/WebsiteRoute";
@@ -130,7 +130,7 @@ const Home = () => {
     </section>
 
     <section className="w-full py-10">
-      <LabourSlider />
+      <HireLabour />
     </section>
 
     <section className="w-full py-10">

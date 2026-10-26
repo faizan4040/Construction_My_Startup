@@ -134,21 +134,6 @@ function HireLabour({ onAuthRequired }) {
         </motion.div>
 
         {/* CTA */}
-        {/* <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.2, duration: 0.5 }}
-          whileHover="hover"
-          whileTap={{ scale: 0.96 }}
-          className="mt-14 group flex items-center gap-2 px-10 py-4 bg-amber-400 text-black rounded-full font-bold uppercase tracking-wide text-sm shadow-[0_8px_30px_rgba(251,191,36,0.25)] hover:shadow-[0_8px_40px_rgba(251,191,36,0.4)] transition-shadow"
-        >
-          Coming Soon
-          <motion.span variants={{ hover: { x: 4 } }} className="inline-flex">
-            <ArrowRight size={18} />
-          </motion.span>
-        </motion.button> */}
-
-
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

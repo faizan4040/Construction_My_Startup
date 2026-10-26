@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import connectDb from "@/lib/databaseConnection";
 import { isAuthenticated } from "@/lib/authentication";
+import { getLabourWallet, MAX_CASH_DUES } from "@/lib/finance";
 import User from "@/models/User.model";
 import Labour from "@/models/Labour.model";
 import Booking from "@/models/Booking.model";
@@ -98,6 +99,9 @@ export async function POST(req) {
       bookingStatus: { $in: BUSY_STATUSES },
     });
     if (busy) return bad("labour is busy with another job", 409);
+        // labour owes too much platform fee from cash jobs -> no new requests until it is cleared
+    const wallet = await getLabourWallet(labourUser._id);
+    if (wallet.available < -MAX_CASH_DUES) return bad("labour is not available right now", 409);
 
     // fare is always computed on the server, from the REAL Labour fields
     const canDay = profile.rateType === "day" || profile.rateType === "both";

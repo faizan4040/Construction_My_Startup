@@ -6,7 +6,8 @@ const mongoose         = require("mongoose");
 
 
 const dev  = process.env.NODE_ENV !== "production";
-const app  = next({ dev });
+// const app  = next({ dev });
+const app  = next({ dev, webpack: true });
 const handle = app.getRequestHandler();
 const PORT = process.env.PORT || 3000;
 

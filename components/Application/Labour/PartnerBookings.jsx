@@ -1,9 +1,13 @@
 'use client'
 import React, { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
 import axios from 'axios'
 import { motion } from 'framer-motion'
-import { AlertCircle, CheckCircle2, Clock, IndianRupee, Loader2, MapPin, Navigation, Phone, Play, User } from 'lucide-react'
+import {
+  AlertCircle, ArrowRight, Clock, IndianRupee, Loader2, MapPin, Navigation, Phone, User,
+} from 'lucide-react'
 import { getSocket } from '@/lib/socket-client'
+import BackButton from '@/components/Application/Labour/BackButton'
 
 const inr = (n) => Math.round(n || 0).toLocaleString('en-IN')
 const fmtDT = (d) =>
@@ -13,6 +17,13 @@ const fmtDur = (sec) => {
   return h > 0 ? `${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s` : `${m}m ${String(s).padStart(2, '0')}s`
 }
 const navLink = (c) => (c ? `https://www.google.com/maps/dir/?api=1&destination=${c[1]},${c[0]}` : null)
+
+const STATUS_LABEL = {
+  confirmed: 'On the way',
+  arrived: 'Arrived',
+  started: 'Working',
+  work_completed: 'Waiting for OTP',
+}
 
 function Timer({ startedAt }) {
   const [, tick] = useState(0)
@@ -27,7 +38,6 @@ export default function PartnerBookings() {
   const [active, setActive] = useState([])
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
-  const [acting, setActing] = useState('')
   const [error, setError] = useState('')
 
   const load = useCallback(async ({ silent = false } = {}) => {
@@ -49,39 +59,26 @@ export default function PartnerBookings() {
     const socket = getSocket()
     const refresh = () => load({ silent: true })
     socket.on('booking-cancelled', refresh)
+    socket.on('booking-update', refresh)
     socket.on('connect', refresh)
     const t = setInterval(() => {
       if (document.visibilityState === 'visible') refresh()
     }, 30000)
     return () => {
       socket.off('booking-cancelled', refresh)
+      socket.off('booking-update', refresh)
       socket.off('connect', refresh)
       clearInterval(t)
     }
   }, [load])
 
-  const act = async (id, action) => {
-    if (acting) return
-    if (action === 'complete' && !window.confirm('Is the work finished? This ends the timer.')) return
-    setActing(`${id}:${action}`)
-    setError('')
-    try {
-      await axios.post(`/api/partner/bookings/${id}/${action}`)
-      await load({ silent: true })
-    } catch (e) {
-      setError(e.response?.data?.message || 'Action failed. Please try again.')
-      load({ silent: true })
-    } finally {
-      setActing('')
-    }
-  }
-
   return (
     <div className="min-h-screen bg-[#f4f5f7] pt-32 sm:pt-36 pb-20 px-4">
       <div className="max-w-4xl mx-auto space-y-8">
         <div>
+          <BackButton href="/partner/dashboard" className="mb-6" />
           <h1 className="text-4xl font-semibold text-gray-900">My Bookings</h1>
-          <p className="text-gray-500 mt-2">Start and finish your jobs here.</p>
+          <p className="text-gray-500 mt-2">Your current job and past work.</p>
         </div>
 
         {error && (
@@ -96,7 +93,6 @@ export default function PartnerBookings() {
           <div className="bg-white rounded-2xl border p-14 text-center text-gray-500">No active job right now.</div>
         ) : active.map((b) => {
           const map = navLink(b.coordinates)
-          const canStart = ['confirmed', 'arrived'].includes(b.bookingStatus)
           return (
             <motion.div key={b._id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               className="bg-white rounded-3xl border shadow-lg overflow-hidden">
@@ -108,7 +104,7 @@ export default function PartnerBookings() {
                     <p className="text-2xl font-black capitalize">{b.category.replace(/-/g, ' ')}</p>
                   </div>
                   <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-black text-white">
-                    {b.bookingStatus === 'started' ? 'Working' : b.bookingStatus === 'work_completed' ? 'Awaiting payment' : 'Accepted'}
+                    {STATUS_LABEL[b.bookingStatus] || 'Active'}
                   </span>
                 </div>
 
@@ -142,7 +138,9 @@ export default function PartnerBookings() {
                   <div className="bg-gray-50 rounded-2xl p-4">
                     <p className="text-xs uppercase tracking-widest text-gray-400 font-bold">You earn</p>
                     <p className="text-2xl font-black flex items-center"><IndianRupee size={18} />{inr(b.youEarn)}</p>
-                    <p className="text-xs text-gray-400">after platform commission</p>
+                    <p className="text-xs text-gray-400 capitalize">
+                      {b.paymentMethod ? `${b.paymentMethod} payment` : 'payment not chosen yet'}
+                    </p>
                   </div>
                 </div>
 
@@ -159,22 +157,15 @@ export default function PartnerBookings() {
 
                 {b.bookingStatus === 'work_completed' && (
                   <div className="bg-violet-50 border border-violet-200 rounded-2xl px-5 py-4 text-sm text-violet-700">
-                    Work finished in {b.workDurationMinutes != null ? fmtDur(Math.round(b.workDurationMinutes * 60)) : '—'}. Waiting for the customer to pay.
+                    Work finished in {b.workDurationMinutes != null ? fmtDur(Math.round(b.workDurationMinutes * 60)) : '—'}.
+                    Ask the customer for the OTP to close the job.
                   </div>
                 )}
 
-                {canStart && (
-                  <button type="button" disabled={!!acting} onClick={() => act(b._id, 'start')}
-                    className="w-full h-14 rounded-2xl bg-black text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50">
-                    {acting === `${b._id}:start` ? <Loader2 className="animate-spin" size={18} /> : <><Play size={16} /> Start Work</>}
-                  </button>
-                )}
-                {b.bookingStatus === 'started' && (
-                  <button type="button" disabled={!!acting} onClick={() => act(b._id, 'complete')}
-                    className="w-full h-14 rounded-2xl bg-emerald-600 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50">
-                    {acting === `${b._id}:complete` ? <Loader2 className="animate-spin" size={18} /> : <><CheckCircle2 size={16} /> Complete Work</>}
-                  </button>
-                )}
+                <Link href="/partner/active-job"
+                  className="w-full h-14 rounded-2xl bg-black text-white font-bold flex items-center justify-center gap-2">
+                  Open active job <ArrowRight size={16} />
+                </Link>
               </div>
             </motion.div>
           )

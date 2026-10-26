@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useCallback } from "react"
 import {
   X, User, MapPin, ChevronDown, Clock, Shield, Store, Search,
   LayoutDashboard, LogIn, UserPlus, Zap, Bookmark, ChevronRight,
+  Mic, MicOff, AlertCircle,
 } from "lucide-react"
 import { USER_DASHBOARD, WEBSITE_HOME, WEBSITE_LOGIN, WEBSITE_REGISTER, WEBSITE_SHOP } from "@/routes/WebsiteRoute"
 import Card from '@/components/Website/Cart'
@@ -16,6 +17,7 @@ import LocationPanel from "@/components/Website/LocationPanel"
 import AddressModal from "@/components/Website/AddressModal"
 import { useSavedProducts } from "@/hooks/useSavedProducts"
 import { useDeliveryLocation } from "@/hooks/useDeliveryLocation"
+import { useVoiceSearch, cleanTranscript } from "@/hooks/useVoiceSearch"
 import { formatEta } from "@/lib/geo"
 
 const WEBSITE_SAVED = "/saved-products"
@@ -55,6 +57,23 @@ export default function Header() {
   const profileRef = useRef(null)
   const locationModalRef = useRef(null)
 
+  /* ── Search: one function used by typing + voice ── */
+  const runSearch = useCallback((text) => {
+    const q = cleanTranscript(text)
+    if (!q) return
+    setQuery(q)
+    router.push(`${WEBSITE_SHOP}?q=${encodeURIComponent(q)}`)
+  }, [router])
+
+  const handleSearch = () => runSearch(query)
+
+  /* ── Voice search ── */
+  const voice = useVoiceSearch({
+    lang: "en-IN", // change to "hi-IN" for Hindi speech
+    onInterim: (text) => setQuery(text), // show words live in the search box
+    onResult: (text) => runSearch(text), // when user stops speaking -> exact search
+  })
+
   /* Click outside handler */
   useEffect(() => {
     const handler = (e) => {
@@ -69,10 +88,6 @@ export default function Header() {
   useEffect(() => {
     setAvatarFailed(false)
   }, [auth?.avatar?.url])
-
-  const handleSearch = () => {
-    if (query.trim()) router.push(`${WEBSITE_SHOP}?q=${encodeURIComponent(query.trim())}`)
-  }
 
   /* ── Location handlers ── */
   const handleSelectAddress = useCallback((addr) => {
@@ -139,46 +154,110 @@ export default function Header() {
     </Link>
   )
 
-  /* ── Reusable search input ── */
+  /* ── Reusable search input (typing + voice) ── */
   const SearchBox = ({ className = "" }) => (
-    <div
-      className={`group flex items-stretch w-full h-12 rounded-2xl overflow-hidden bg-white/10 border border-white/10 backdrop-blur
-      focus-within:bg-white focus-within:border-orange-400 focus-within:ring-4 focus-within:ring-orange-500/20
-      transition-all duration-300 ${className}`}
-    >
-      <input
-        type="text"
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-        onKeyDown={e => e.key === "Enter" && handleSearch()}
-        placeholder="Search for items, brands and more..."
-        className="flex-1 min-w-0 h-full bg-transparent pl-5 pr-3 text-sm text-white placeholder-gray-400
-        group-focus-within:text-gray-900 group-focus-within:placeholder-gray-400 focus:outline-none transition-colors"
-      />
-      {query && (
+    <div className="relative w-full">
+      <div
+        className={`group flex items-stretch w-full h-12 rounded-2xl overflow-hidden border backdrop-blur
+        focus-within:bg-white focus-within:border-orange-400 focus-within:ring-4 focus-within:ring-orange-500/20
+        transition-all duration-300
+        ${voice.listening ? "bg-white border-red-400 ring-4 ring-red-500/20" : "bg-white/10 border-white/10"} ${className}`}
+      >
+        <input
+          type="text"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && handleSearch()}
+          placeholder={voice.listening ? "Listening... speak now" : "Search for items, brands and more..."}
+          className={`flex-1 min-w-0 h-full bg-transparent pl-5 pr-3 text-sm placeholder-gray-400
+          group-focus-within:text-gray-900 group-focus-within:placeholder-gray-400 focus:outline-none transition-colors
+          ${voice.listening ? "text-gray-900" : "text-white"}`}
+        />
+
+        {query && !voice.listening && (
+          <button
+            type="button"
+            onClick={() => setQuery("")}
+            aria-label="Clear search"
+            className="self-center mr-2 w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-gray-400 bg-white/10 group-focus-within:bg-gray-100 hover:text-gray-800 hover:bg-gray-200 transition-colors cursor-pointer"
+          >
+            <X size={13} />
+          </button>
+        )}
+
+        {/* 🎤 Voice search button */}
+        {voice.supported && (
+          <button
+            type="button"
+            onClick={voice.toggle}
+            aria-label={voice.listening ? "Stop listening" : "Search by voice"}
+            aria-pressed={voice.listening}
+            title={voice.listening ? "Tap to stop" : "Tap to speak"}
+            className={`relative self-center mr-2 w-9 h-9 shrink-0 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer
+            ${voice.listening
+                ? "bg-red-500 text-white shadow-lg shadow-red-500/40"
+                : "bg-white/10 text-gray-300 hover:bg-orange-500 hover:text-white group-focus-within:bg-gray-100 group-focus-within:text-gray-600 group-focus-within:hover:bg-orange-500 group-focus-within:hover:text-white"}`}
+          >
+            {voice.listening && (
+              <>
+                <span className="absolute inset-0 rounded-full bg-red-500/60 animate-ping" />
+                <span className="absolute -inset-1 rounded-full border-2 border-red-400/50 animate-pulse" />
+              </>
+            )}
+            {voice.listening ? <MicOff size={17} className="relative" /> : <Mic size={17} className="relative" />}
+          </button>
+        )}
+
         <button
           type="button"
-          onClick={() => setQuery("")}
-          aria-label="Clear search"
-          className="self-center mr-3 w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-gray-400 bg-white/10 group-focus-within:bg-gray-100 hover:text-gray-800 hover:bg-gray-200 transition-colors cursor-pointer"
+          onClick={handleSearch}
+          aria-label="Search"
+          className="relative overflow-hidden h-full px-5 sm:px-7 shrink-0 flex items-center justify-center gap-2
+          bg-linear-to-br from-orange-500 via-orange-500 to-amber-500 text-white text-sm font-bold tracking-wide
+          hover:from-orange-600 hover:via-orange-500 hover:to-amber-400 active:brightness-90
+          transition-all duration-300 cursor-pointer group/btn"
         >
-          <X size={13} />
+          {/* shine sweep on hover */}
+          <span className="pointer-events-none absolute inset-y-0 -left-full w-1/2 -skew-x-12 bg-white/30 blur-sm transition-all duration-700 group-hover/btn:left-[150%]" />
+          <Search size={18} strokeWidth={2.5} className="relative transition-transform duration-300 group-hover/btn:scale-110 group-hover/btn:-rotate-12" />
+          <span className="relative hidden sm:inline">Search</span>
         </button>
+      </div>
+
+      {/* Listening / error hint under the search box */}
+      {(voice.listening || voice.error) && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`absolute left-0 right-0 top-full mt-2 z-50 flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm shadow-xl
+          ${voice.error ? "bg-red-50 text-red-700 border border-red-200" : "bg-white text-gray-800 border border-gray-100"}`}
+        >
+          {voice.error ? (
+            <>
+              <AlertCircle size={16} className="shrink-0" />
+              <span className="flex-1">{voice.error}</span>
+              <button type="button" onClick={() => voice.setError("")} aria-label="Dismiss" className="shrink-0 cursor-pointer">
+                <X size={14} />
+              </button>
+            </>
+          ) : (
+            <>
+              <span className="flex items-end gap-0.5 h-4 shrink-0" aria-hidden="true">
+                <span className="w-0.5 h-2 bg-red-500 rounded animate-pulse" />
+                <span className="w-0.5 h-4 bg-red-500 rounded animate-pulse [animation-delay:150ms]" />
+                <span className="w-0.5 h-3 bg-red-500 rounded animate-pulse [animation-delay:300ms]" />
+                <span className="w-0.5 h-4 bg-red-500 rounded animate-pulse [animation-delay:450ms]" />
+              </span>
+              <span className="flex-1 min-w-0 truncate">
+                {voice.interim ? `"${voice.interim}"` : "Listening... say what you want to find"}
+              </span>
+              <button type="button" onClick={voice.stop} className="shrink-0 text-xs font-semibold text-red-600 hover:underline cursor-pointer">
+                Done
+              </button>
+            </>
+          )}
+        </div>
       )}
-      <button
-        type="button"
-        onClick={handleSearch}
-        aria-label="Search"
-        className="relative overflow-hidden h-full px-5 sm:px-7 shrink-0 flex items-center justify-center gap-2
-        bg-linear-to-br from-orange-500 via-orange-500 to-amber-500 text-white text-sm font-bold tracking-wide
-        hover:from-orange-600 hover:via-orange-500 hover:to-amber-400 active:brightness-90
-        transition-all duration-300 cursor-pointer group/btn"
-      >
-        {/* shine sweep on hover */}
-        <span className="pointer-events-none absolute inset-y-0 -left-full w-1/2 -skew-x-12 bg-white/30 blur-sm transition-all duration-700 group-hover/btn:left-[150%]" />
-        <Search size={18} strokeWidth={2.5} className="relative transition-transform duration-300 group-hover/btn:scale-110 group-hover/btn:-rotate-12" />
-        <span className="relative hidden sm:inline">Search</span>
-      </button>
     </div>
   )
 
