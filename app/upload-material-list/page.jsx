@@ -8,3 +8,6 @@ export const metadata = {
 export default function UploadMaterialListPage() {
   return <UploadMaterialFlow />;
 }
+
+
+
