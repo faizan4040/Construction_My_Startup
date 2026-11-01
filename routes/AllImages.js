@@ -86,6 +86,8 @@ export const IMAGES = {
   Home_Renovation: "/assets/images/Home_Renovation.jpg",
   Repair_Maintenance: "/assets/images/Repair_Maintenance.jpg",
 
+  Helpers: "/assets/workers/helpers.png",
+  masons: "/assets/workers/masons.png",
   
 
 }

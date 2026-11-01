@@ -16,6 +16,7 @@ import QuickActionCards from "@/components/Website/QuickActionCards";
 import GeoUpdater from "@/components/Application/Labour/GeoUpdater";
 import DeliveryDashboard from "@/components/Application/Delivery/DeliveryDashboard"; 
 import Testimonial from '@/components/Website/Testimonial'
+import Shopservicecards from "@/components/Website/Shopservicecards";
 import ProductBox from "@/components/Website/ProductBox";
 import { WEBSITE_SHOP, WEBSITE_HOME } from "@/routes/WebsiteRoute";
 import { X, Loader2 } from "lucide-react";
@@ -137,6 +138,11 @@ const Home = () => {
     <section className="w-full py-10">
       <HireLabour />
     </section>
+
+    <section className="w-full py-10">
+      <Shopservicecards />
+    </section>
+
 
     <section className="w-full py-10">
       <FeatureProduct />
