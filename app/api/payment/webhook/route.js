@@ -5,6 +5,7 @@ import Payout from "@/models/Payout.model";
 import { verifyWebhookSignature } from "@/lib/razorpay";
 import { markBookingPaid } from "@/lib/finance";
 import { failPayout } from "@/lib/payouts";
+import { markServicePaid } from "@/lib/serviceFinance";
 
 export const runtime = "nodejs";
 
@@ -19,8 +20,23 @@ export async function POST(req) {
     const pay = evt.payload?.payment?.entity;
     const out = evt.payload?.payout?.entity;
 
-    if ((evt.event === "payment.captured" || evt.event === "order.paid") && pay?.order_id) {
-      await markBookingPaid({ orderId: pay.order_id, paymentId: pay.id, amountPaise: pay.amount });
+    if (
+      (evt.event === "payment.captured" || evt.event === "order.paid") &&
+      pay?.order_id
+      ) {
+      const labourJob = await markBookingPaid({
+        orderId: pay.order_id,
+        paymentId: pay.id,
+        amountPaise: pay.amount
+      });
+
+      if (!labourJob) {
+        await markServicePaid({
+          orderId: pay.order_id,
+          paymentId: pay.id,
+          amountPaise: pay.amount
+        });
+      }
     } else if (evt.event === "refund.processed") {
       const refund = evt.payload?.refund?.entity;
       if (refund?.payment_id)

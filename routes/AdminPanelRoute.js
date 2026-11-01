@@ -1,6 +1,11 @@
 export const ADMIN_DASHBOARD = '/admin/dashboard'
 export const ADMIN_ORDER_BY_USER = "/admin/order-by-user";
 
+//Admin services routes
+export const ADMIN_SERVICES_DASHBOARD = '/admin/services'
+export const ADMIN_SERVICES_LABOURS = '/admin/services/labours'
+export const ADMIN_SERVICES_CATEGORIES = '/admin/services/categories'
+
 // Media routes
 export const ADMIN_MEDIA_SHOW = '/admin/media'
 export const ADMIN_MEDIA_EDIT = (id) => id ? `/admin/media/edit/${id}` : ''

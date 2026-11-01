@@ -55,7 +55,7 @@ const CARDS = [
       { icon: ShieldCheck, label: "Quality Assurance" },
     ],
     cta: "Browse Services",
-    href: "https://nextzabiirconstructezy.vercel.app/#services-section",
+    href: "/services",
   },
 ]
 
