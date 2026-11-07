@@ -372,38 +372,46 @@ function SearchMap({
         </div>
       )}
 
-      {ready && !searching && labourList.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute bottom-4 left-4 z-[500] flex items-center gap-2 bg-white border border-zinc-200 px-3.5 py-2 rounded-xl shadow-lg"
-        >
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-          <span className='text-zinc-900 text-xs font-bold'>{labourList.length} nearby</span>
-        </motion.div>
-      )}
+      {/* bottom info row — sits above the page's bottom sheet, which overlaps the map by 40px (-mt-10) */}
+      {ready && (
+        <div className="absolute left-3 right-3 bottom-14 z-[1100] flex items-end justify-between gap-2 pointer-events-none">
+          {!searching && labourList.length > 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="shrink-0 flex items-center gap-2 bg-white border border-zinc-200 px-3 py-2 rounded-xl shadow-lg"
+            >
+              <span className="relative flex w-2.5 h-2.5">
+                <span className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-60" />
+                <span className="relative w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              </span>
+              <span className='text-zinc-900 text-xs font-bold whitespace-nowrap'>{labourList.length} nearby</span>
+            </motion.div>
+          ) : <span />}
 
-      <AnimatePresence>
-        {shownRoute && selected && (
-          <motion.div
-            key={shownRoute.key}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="absolute bottom-4 right-4 z-[500] flex items-center gap-3 bg-zinc-900 text-white px-4 py-2.5 rounded-xl shadow-lg"
-          >
-            <Clock size={16} />
-            <div className="leading-tight">
-              <p className="text-sm font-black">
-                {shownRoute.approx ? "~" : ""}{fmtEta(shownRoute.timeS)} away
-              </p>
-              <p className="text-[10px] text-zinc-400 font-semibold">
-                {selected.name} · {shownRoute.approx ? "~" : ""}{fmtKm(shownRoute.distanceM)}
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          <AnimatePresence>
+            {shownRoute && selected && (
+              <motion.div
+                key={shownRoute.key}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="min-w-0 max-w-[65%] flex items-center gap-2.5 bg-zinc-900 text-white pl-3 pr-4 py-2 rounded-xl shadow-lg"
+              >
+                <Clock size={16} className="shrink-0" />
+                <div className="leading-tight min-w-0">
+                  <p className="text-sm font-black whitespace-nowrap">
+                    {shownRoute.approx ? "~" : ""}{fmtEta(shownRoute.timeS)} away
+                  </p>
+                  <p className="text-[10px] text-zinc-400 font-semibold truncate">
+                    {selected.name} · {shownRoute.approx ? "~" : ""}{fmtKm(shownRoute.distanceM)}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   )
 }
