@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import connectDb from "@/lib/databaseConnection";
 import { isAuthenticated } from "@/lib/authentication";
 import Booking from "@/models/Booking.model";
-import Review from "@/models/Review.model";
+import Review from "@/models/LabourReview.model";
 import "@/models/User.model";
 import "@/models/Labour.model";
 import { ADMIN_POPULATE, shapeAdminBooking } from "@/lib/adminBookingShape";

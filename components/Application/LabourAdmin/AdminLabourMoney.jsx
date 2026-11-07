@@ -83,7 +83,7 @@ function Wallets({ refreshKey, onChanged }) {
 }
 
 /* ───── Company earning + withdraw to bank ───── */
-function CompanyEarning({ platform, refreshKey, onChanged }) {
+export function CompanyEarning({ platform, refreshKey, onChanged }) {
   const [fin, setFin] = useState(null)
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState('')
@@ -179,7 +179,7 @@ function CompanyEarning({ platform, refreshKey, onChanged }) {
 }
 
 /* ───── Commission settings ───── */
-function CommissionSettings({ settings, onChanged }) {
+export function CommissionSettings({ settings, onChanged, only }) {
   const [f, setF] = useState(null)
   const [busy, setBusy] = useState(false)
   useEffect(() => { if (settings && !f) setF({ ...settings }) }, [settings]) // eslint-disable-line
@@ -190,7 +190,7 @@ function CommissionSettings({ settings, onChanged }) {
     ['settlementHoldHours', 'Online earning hold', 'hours', 'Safety period before labour can withdraw'],
     ['maxCashDues', 'Max cash dues', '₹', 'Labour stops getting live jobs above this'],
     ['minPayout', 'Minimum withdrawal', '₹', 'For labour and company withdrawals'],
-  ]
+  ].filter(([k]) => !only || only.includes(k))
   const save = async () => {
     setBusy(true)
     try { const { data } = await axios.put('/api/admin/labour/settings', f); setF({ ...data.settings }); toast.success('Commission settings saved. Applies to jobs completed from now.'); onChanged?.() }

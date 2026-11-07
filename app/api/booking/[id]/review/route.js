@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import connectDB from "@/lib/databaseConnection";
 import { isAuthenticated } from "@/lib/authentication";
 import Booking from "@/models/Booking.model";
-import Review from "@/models/Review.model";
+import Review from "@/models/LabourReview.model";
 import Labour from "@/models/Labour.model";
 import { emitToAdmins } from "@/lib/socketEmit";
 
@@ -36,8 +36,10 @@ export async function POST(req, context) {
       // atomic running average (MongoDB 4.2+ pipeline update)
       await Labour.updateOne({ _id: b.labourProfile }, [
         { $set: {
-            rating: { $round: [{ $divide: [{ $add: [{ $multiply: ["$rating", "$totalReviews"] }, rating] }, { $add: ["$totalReviews", 1] }] }, 2] },
-            totalReviews: { $add: ["$totalReviews", 1] } } },
+            rating: { $round: [{ $divide: [
+              { $add: [{ $multiply: [{ $ifNull: ["$rating", 0] }, { $ifNull: ["$totalReviews", 0] }] }, rating] },
+              { $add: [{ $ifNull: ["$totalReviews", 0] }, 1] }] }, 2] },
+            totalReviews: { $add: [{ $ifNull: ["$totalReviews", 0] }, 1] } } },
       ]);
     }
     await emitToAdmins("admin-booking-update", { bookingId: String(b._id), status: "reviewed" });

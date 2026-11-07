@@ -225,12 +225,20 @@ export default function LiveLabourMap({ sitePos, labourPos, heading, lastAt, cat
       `}</style>
 
       <MapContainer center={sitePos} zoom={16} zoomControl={false} attributionControl style={{ width: '100%', height: '100%' }}>
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          subdomains="abcd"
-          maxZoom={20}
-        />
+        {/* Carto basemaps now need an API key (tiles render "API KEY REQUIRED"), so use Geoapify, else plain OSM */}
+        {process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY ? (
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.geoapify.com/">Geoapify</a>'
+            url={`https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY}`}
+            maxZoom={20}
+          />
+        ) : (
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+            maxZoom={19}
+          />
+        )}
         <Camera site={sitePos} labour={labourPos} status={status} recenter={recenter} onDragged={setDragged} />
 
         {prog && (

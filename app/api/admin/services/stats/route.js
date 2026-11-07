@@ -3,6 +3,7 @@ import { isAuthenticated } from "@/lib/authentication";
 import ServiceBooking from "@/models/ServiceBooking.model";
 import { j, adminBooking } from "@/lib/serviceHelpers";
 import { istToday, slotHour24 } from "@/lib/serviceConfig";
+import { calcServiceSplit } from "@/lib/commission";
 
 const IST = 5.5 * 3600e3;
 const real = { status: { $nin: ["pending_payment"] } };
@@ -17,6 +18,47 @@ const month = (from, to) =>
         pending: { $sum: { $cond: [{ $eq: ["$status", "pending"] }, 1, 0] } },
         revenue: { $sum: { $cond: [{ $eq: ["$paymentStatus", "paid"] }, "$total", 0] } } } },
   ]).then((r) => r[0] || { total: 0, completed: 0, pending: 0, revenue: 0 });
+
+/*
+  Payment + commission picture for service bookings (all time, plus this month's commission).
+  online paid   : money is in Razorpay
+  cash pending  : "pay on service" bookings not finished yet (collected at the site)
+  cash collected: finished cash jobs (labour or admin holds the cash)
+  awaiting      : customer opened checkout but never paid
+  commission    : company share frozen on completed jobs; labourShare = what labours earned
+*/
+const sumIf = (cond, field = "$total") => ({ $sum: { $cond: [cond, field, 0] } });
+const cntIf = (cond) => ({ $sum: { $cond: [cond, 1, 0] } });
+async function serviceMoney(startThis) {
+  const isOnline = { $eq: ["$paymentMethod", "online"] };
+  const isCash = { $eq: ["$paymentMethod", "cash"] };
+  const done = { $eq: ["$status", "completed"] };
+  const [r] = await ServiceBooking.aggregate([
+    { $group: {
+        _id: null,
+        onlinePaid: sumIf({ $and: [isOnline, { $eq: ["$paymentStatus", "paid"] }] }),
+        onlinePaidCount: cntIf({ $and: [isOnline, { $eq: ["$paymentStatus", "paid"] }] }),
+        cashPending: sumIf({ $eq: ["$paymentStatus", "cod"] }),
+        cashPendingCount: cntIf({ $eq: ["$paymentStatus", "cod"] }),
+        cashCollected: sumIf({ $and: [isCash, done] }),
+        cashCollectedCount: cntIf({ $and: [isCash, done] }),
+        awaiting: sumIf({ $eq: ["$status", "pending_payment"] }),
+        awaitingCount: cntIf({ $eq: ["$status", "pending_payment"] }),
+        refunded: sumIf({ $in: ["$paymentStatus", ["refunded", "refund_pending"]] }),
+        refundPending: cntIf({ $eq: ["$paymentStatus", "refund_pending"] }),
+        commission: sumIf(done, "$adminCommission"),
+        commissionOnline: sumIf({ $and: [done, isOnline] }, "$adminCommission"),
+        commissionCash: sumIf({ $and: [done, isCash] }, "$adminCommission"),
+        commissionMonth: sumIf({ $and: [done, { $gte: ["$completedAt", startThis] }] }, "$adminCommission"),
+        labourShare: sumIf({ $and: [done, { $ne: ["$assignedLabour", null] }] }, "$labourAmount"),
+        outsideShare: sumIf({ $and: [done, { $eq: [{ $ifNull: ["$assignedLabour", null] }, null] }] }, "$labourAmount"),
+    } },
+  ]);
+  const { percent } = await calcServiceSplit({ price: 100, fee: 0, total: 100 });
+  const out = r || {};
+  delete out._id;
+  return { ...out, percent };
+}
 
 const delta = (cur, prev) => (prev ? Math.round(((cur - prev) / prev) * 100) : null);
 
@@ -50,6 +92,8 @@ export async function GET() {
       ServiceBooking.countDocuments({ adminSeen: false, status: "pending" }),
     ]);
 
+    const money = await serviceMoney(startThis);
+
     const dm = new Map(daily.map((d) => [d._id, d]));
     const chart = Array.from({ length: 30 }, (_, i) => {
       const d = new Date(Date.now() + IST - (29 - i) * 864e5).toISOString().slice(0, 10);
@@ -67,7 +111,7 @@ export async function GET() {
         pending: cur.pending, pendingDelta: delta(cur.pending, prev.pending),
         revenue: cur.revenue, revenueDelta: delta(cur.revenue, prev.revenue),
       },
-      chart, byCategory: top, unseen,
+      chart, byCategory: top, unseen, money,
       today: today.sort((a, b) => slotHour24(a.slotTime) - slotHour24(b.slotTime)).slice(0, 8).map(adminBooking),
     });
   } catch (e) {

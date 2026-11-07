@@ -83,7 +83,7 @@ function TrackModal({ id, onClose }) {
 }
 
 /* ───────────── service job drawer: assign / reject / complete ───────────── */
-function ServiceDrawer({ id, onClose, onChanged }) {
+export function ServiceDrawer({ id, onClose, onChanged }) {
   const [d, setD] = useState(null)
   const [q, setQ] = useState('')
   const [pick, setPick] = useState('')

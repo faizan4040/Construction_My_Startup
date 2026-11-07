@@ -2,9 +2,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import axios from 'axios'
-import { AnimatePresence, motion } from 'framer-motion'
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { CalendarCheck, CheckCircle2, Clock, IndianRupee, Loader2, MapPin, Phone, RefreshCcw, Search, TrendingDown, TrendingUp, X } from 'lucide-react'
+import { Banknote, CalendarCheck, CheckCircle2, Clock, Hourglass, IndianRupee, Loader2, Percent, RefreshCcw, RotateCcw, Search, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
+import { ServiceDrawer } from '@/components/Application/LabourAdmin/AdminLabourJobs'
+import { CommissionSettings, CompanyEarning } from '@/components/Application/LabourAdmin/AdminLabourMoney'
 import useAdminLive from '@/hooks/useAdminLive'
 import AdminBell from './AdminBell'
 import { Badge, Pagination } from '@/components/Services/Badge'
@@ -26,63 +27,6 @@ function Kpi({ icon: I, label, value, delta, tone }) {
   )
 }
 
-function Drawer({ b, onClose, onDone }) {
-  const [f, setF] = useState({ assignedName: b.assignedName, assignedPhone: b.assignedPhone, adminNote: b.adminNote })
-  const [busy, setBusy] = useState('')
-  const [err, setErr] = useState('')
-  useEffect(() => { axios.patch(`/api/admin/services/bookings/${b._id}`, { action: 'seen' }).catch(() => {}) }, [b._id])
-
-  const act = async (action) => {
-    if (action === 'cancel' && !window.confirm('Cancel this booking? Online payment will be refunded.')) return
-    setBusy(action); setErr('')
-    try { await axios.patch(`/api/admin/services/bookings/${b._id}`, { action, ...f }); onDone(); onClose() }
-    catch (e) { setErr(e.response?.data?.message || 'Action failed') } finally { setBusy('') }
-  }
-  const can = {
-    confirm: b.status === 'pending', assign: ['pending', 'confirmed', 'assigned'].includes(b.status),
-    start: b.status === 'assigned', complete: ['assigned', 'in_progress'].includes(b.status) && ['paid', 'cod'].includes(b.paymentStatus),
-    cancel: ['pending', 'confirmed', 'assigned'].includes(b.status),
-  }
-  const btn = (a, label, cls) => can[a] && <button type="button" disabled={!!busy} onClick={() => act(a)} className={`px-4 py-2.5 rounded-xl text-sm font-bold disabled:opacity-50 ${cls}`}>{busy === a ? '...' : label}</button>
-  const inp = 'w-full border border-zinc-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-emerald-600'
-
-  return (
-    <>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/40 z-[60]" />
-      <motion.aside initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-        className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white z-[70] shadow-2xl overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10"><div><p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Booking</p><b>#{b.code}</b></div><button onClick={onClose} aria-label="Close" className="w-9 h-9 rounded-full hover:bg-zinc-100 flex items-center justify-center"><X size={18} /></button></div>
-        <div className="p-6 space-y-5">
-          <div className="flex gap-2 flex-wrap"><Badge map={STATUS_UI} k={b.status} /><Badge map={PAY_UI} k={b.paymentStatus} /></div>
-          <div className="text-sm space-y-2">
-            {[['Service', `${b.categoryName} · ${b.providerName}`], ['Slot', `${fmtDate(b.slotDate)}, ${b.slotTime}`], ['Customer', b.contactName], ['Payment', `${b.paymentMethod || '—'} · ${inr(b.total)} (fee ${inr(b.fee)})`], ['Created', fmtDT(b.createdAt)]].map(([k, v]) => <div key={k} className="flex justify-between gap-4 border-b pb-2"><span className="text-zinc-500">{k}</span><b className="text-right">{v}</b></div>)}
-            <a href={`tel:${b.contactPhone}`} className="flex items-center gap-2 font-bold underline"><Phone size={14} />{b.contactPhone}</a>
-            <p className="flex gap-2"><MapPin size={14} className="mt-0.5 shrink-0 text-zinc-400" />{b.address.full}{b.address.landmark && `, ${b.address.landmark}`}, {b.address.city} - {b.address.pincode}</p>
-          </div>
-          {can.assign && (
-            <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 space-y-2">
-              <p className="text-xs font-black uppercase tracking-widest text-emerald-800">Send professional to site</p>
-              <input className={inp} placeholder="Professional name" value={f.assignedName} maxLength={60} onChange={(e) => setF({ ...f, assignedName: e.target.value })} />
-              <input className={inp} placeholder="Professional mobile (optional)" inputMode="numeric" value={f.assignedPhone} onChange={(e) => setF({ ...f, assignedPhone: e.target.value.replace(/\D/g, '').slice(0, 10) })} />
-              <textarea className={inp} rows={2} maxLength={300} placeholder="Internal note" value={f.adminNote} onChange={(e) => setF({ ...f, adminNote: e.target.value })} />
-              <button type="button" disabled={!!busy || f.assignedName.trim().length < 2} onClick={() => act('assign')} className="w-full bg-emerald-700 text-white py-2.5 rounded-xl text-sm font-bold disabled:opacity-40">{busy === 'assign' ? '...' : b.status === 'assigned' ? 'Update professional' : 'Send professional'}</button>
-            </div>
-          )}
-          {b.status === 'assigned' && b.assignedName && <p className="text-sm">Sent: <b>{b.assignedName}</b> {b.assignedPhone && `· ${b.assignedPhone}`}</p>}
-          {err && <p className="text-red-600 text-sm font-semibold">{err}</p>}
-          <div className="flex flex-wrap gap-2">
-            {btn('confirm', 'Confirm booking', 'bg-zinc-900 text-white')}{btn('start', 'Start work', 'bg-sky-600 text-white')}
-            {btn('complete', b.paymentStatus === 'cod' ? 'Complete · cash collected' : 'Complete', 'bg-emerald-600 text-white')}{btn('cancel', 'Cancel', 'border border-red-200 text-red-600')}
-          </div>
-          {b.status === 'assigned' && !can.complete && <p className="text-xs text-amber-600">Completion needs a paid or pay-on-service booking.</p>}
-          <div><p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-2">History</p>
-            {b.history.map((h, i) => <p key={i} className="text-xs flex justify-between py-1"><span className="font-semibold capitalize">{String(h.status).replace(/_/g, ' ')} <span className="text-zinc-400 font-normal">· {h.byRole}</span></span><span className="text-zinc-400">{fmtDT(h.at)}</span></p>)}</div>
-        </div>
-      </motion.aside>
-    </>
-  )
-}
-
 export default function AdminServicesDashboard() {
   const [stats, setStats] = useState(null)
   const [d, setD] = useState({ bookings: [], pages: 1, counts: {} })
@@ -91,6 +35,8 @@ export default function AdminServicesDashboard() {
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [sel, setSel] = useState(null)
+  const [settings, setSettings] = useState(null)
+  const [tick, setTick] = useState(0)
   const timer = useRef(null)
   const req = useRef(0)
 
@@ -100,7 +46,7 @@ export default function AdminServicesDashboard() {
       const params = { page, status: tab, ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)) }
       const [a, b] = await Promise.all([axios.get('/api/admin/services/stats'), axios.get('/api/admin/services/bookings', { params })])
       if (id !== req.current) return
-      setStats(a.data); setD(b.data)
+      setStats(a.data); setD(b.data); setTick((t) => t + 1)
     } catch (e) { console.log(e) } finally { if (id === req.current) setLoading(false) }
   }, [page, tab, filters])
 
@@ -108,6 +54,8 @@ export default function AdminServicesDashboard() {
   useEffect(() => { const t = setInterval(() => document.visibilityState === 'visible' && load(), 30000); return () => clearInterval(t) }, [load])
   const live = useAdminLive(() => { clearTimeout(timer.current); timer.current = setTimeout(load, 500) })
   const k = stats?.kpi
+  const m = stats?.money
+  useEffect(() => { axios.get('/api/admin/labour/settings').then((r) => setSettings(r.data.settings)).catch(() => {}) }, [])
 
   return (
     <div className="p-3 sm:p-6 space-y-5 bg-[#f4f7f5] min-h-screen">
@@ -155,6 +103,43 @@ export default function AdminServicesDashboard() {
         </section>
       </div>
 
+
+      <section className="bg-white border border-zinc-200 rounded-2xl p-4 space-y-4 min-w-0">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div><h2 className="font-black">Payments &amp; Commission</h2>
+            <p className="text-xs text-zinc-500">Company keeps the booking fee + {m?.percent ?? '—'}% of the service price. Labour gets the rest in their wallet.</p></div>
+          <p className="text-xs text-zinc-500">This month commission <b className="text-emerald-700 text-base">{inr(m?.commissionMonth)}</b></p>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-2">
+          {[
+            [Wallet, 'Online paid', m?.onlinePaid, `${m?.onlinePaidCount ?? 0} bookings · in Razorpay`, 'text-emerald-700 bg-emerald-50'],
+            [Clock, 'Cash on service · pending', m?.cashPending, `${m?.cashPendingCount ?? 0} to collect at site`, 'text-orange-600 bg-orange-50'],
+            [Banknote, 'Cash collected', m?.cashCollected, `${m?.cashCollectedCount ?? 0} jobs done`, 'text-sky-700 bg-sky-50'],
+            [Hourglass, 'Awaiting payment', m?.awaiting, `${m?.awaitingCount ?? 0} unpaid checkouts`, 'text-zinc-600 bg-zinc-100'],
+            [RotateCcw, 'Refunded', m?.refunded, m?.refundPending ? `${m.refundPending} refund pending` : 'cancelled online bookings', 'text-red-600 bg-red-50'],
+            [Percent, 'Commission earned', m?.commission, 'all completed jobs', 'text-emerald-700 bg-emerald-50'],
+          ].map(([I, l, v, sub, tone]) => (
+            <div key={l} className="border border-zinc-100 rounded-xl p-3 min-w-0">
+              <span className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${tone}`}><I size={16} /></span>
+              <p className="text-[11px] font-semibold text-zinc-500 truncate">{l}</p>
+              <p className="text-lg font-black">{m ? inr(v) : '—'}</p>
+              <p className="text-[10px] text-zinc-400 truncate">{sub}</p>
+            </div>
+          ))}
+        </div>
+        <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-x-6 text-sm">
+          {[['Commission from online jobs', m?.commissionOnline], ['Commission from cash jobs (due from labour)', m?.commissionCash],
+            ['Paid to app labours (wallet)', m?.labourShare], ['Payable to outside professionals', m?.outsideShare]].map(([l, v]) => (
+            <div key={l} className="flex justify-between gap-3 py-2 border-b"><span className="text-zinc-500">{l}</span><b>{inr(v)}</b></div>
+          ))}
+        </div>
+      </section>
+
+      <div className="grid xl:grid-cols-[1fr_380px] gap-4 items-start">
+        <CompanyEarning refreshKey={tick} onChanged={load} />
+        {settings && <CommissionSettings settings={settings} only={['serviceCommissionPercent', 'settlementHoldHours', 'minPayout']} onChanged={load} />}
+      </div>
+
       <section className="bg-white border border-zinc-200 rounded-2xl p-4 min-w-0">
         <div className="flex gap-1 overflow-x-auto border-b mb-4">
           {TABS.map(([key, l]) => <button key={key} type="button" onClick={() => { setTab(key); setPage(1) }} className={`px-3 py-2.5 text-sm font-bold whitespace-nowrap border-b-2 -mb-px ${tab === key ? 'border-emerald-700 text-emerald-700' : 'border-transparent text-zinc-500'}`}>{l} ({d.counts[key] ?? 0})</button>)}
@@ -178,10 +163,10 @@ export default function AdminServicesDashboard() {
                     <td className="px-4 py-3"><b className="block">{b.categoryName}</b><span className="text-xs text-zinc-500">{b.providerName}</span></td>
                     <td className="px-4 py-3 max-w-[220px]"><span className="text-xs line-clamp-2">{b.address.full}, {b.address.city}</span></td>
                     <td className="px-4 py-3 whitespace-nowrap text-xs"><b className="block">{fmtDate(b.slotDate)}</b>{b.slotTime}</td>
-                    <td className="px-4 py-3 text-xs">{b.assignedName || <span className="text-zinc-300">Not sent</span>}</td>
+                    <td className="px-4 py-3 text-xs">{b.assignedName ? <><b className="block">{b.assignedName}</b><span className={b.assignedLabour ? (b.assignStatus === 'accepted' ? 'text-emerald-600' : 'text-amber-600') : 'text-zinc-400'}>{b.assignedLabour ? (b.assignStatus === 'accepted' ? 'Accepted' : 'Waiting accept') : 'Outside pro'}</span></> : <span className="text-zinc-300">Not sent</span>}</td>
                     <td className="px-4 py-3"><Badge map={STATUS_UI} k={b.status} /></td>
                     <td className="px-4 py-3 space-y-1"><b className="text-xs capitalize block">{b.paymentMethod || '—'}</b><Badge map={PAY_UI} k={b.paymentStatus} /></td>
-                    <td className="px-4 py-3 font-black whitespace-nowrap">{inr(b.total)}</td>
+                    <td className="px-4 py-3 whitespace-nowrap"><b className="block">{inr(b.total)}</b>{b.status === 'completed' && <span className="text-[10px] text-emerald-700 font-bold">+{inr(b.adminCommission)} comm.</span>}</td>
                     <td className="px-4 py-3"><button type="button" className="text-xs font-bold border px-3 py-1.5 rounded-lg">View</button></td>
                   </tr>
                 ))}
@@ -193,7 +178,7 @@ export default function AdminServicesDashboard() {
         <Pagination page={page} pages={d.pages} onChange={setPage} />
       </section>
 
-      <AnimatePresence>{sel && <Drawer key={sel._id} b={sel} onClose={() => setSel(null)} onDone={load} />}</AnimatePresence>
+      {sel && <ServiceDrawer key={sel._id} id={sel._id} onClose={() => setSel(null)} onChanged={load} />}
     </div>
   )
 }
