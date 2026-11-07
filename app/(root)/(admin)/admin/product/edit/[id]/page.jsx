@@ -1,7 +1,8 @@
 "use client"
 
 import BreadCrumb from '@/components/Application/Admin/BreadCrumb'
-import Editor from '@/components/Application/Admin/Editor'
+import dynamic from 'next/dynamic'
+const Editor = dynamic(() => import('@/components/Application/Admin/Editor'), { ssr: false })
 import MediaModal from '@/components/Application/Admin/MediaModal'
 import ButtonLoading from '@/components/Application/ButtonLoading'
 import Select from '@/components/Application/Select'

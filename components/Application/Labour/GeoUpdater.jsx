@@ -1,31 +1,32 @@
 'use client'
-import { connectSocket } from '@/lib/socket-client';
-import React, { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
+import { connectSocket } from '@/lib/socket-client'
 
-const MIN_INTERVAL_MS = 10000;
-const MIN_MOVE_M = 25;
-const HEARTBEAT_MS = 60000;
+const MIN_INTERVAL_MS = 8000
+const MIN_MOVE_M = 20
+const HEARTBEAT_MS = 45000
 
-const toRad = (d) => (d * Math.PI) / 180;
+const toRad = (d) => (d * Math.PI) / 180
 const distM = (aLat, aLon, bLat, bLon) => {
   const x =
     Math.sin(toRad(bLat - aLat) / 2) ** 2 +
-    Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(toRad(bLon - aLon) / 2) ** 2;
-  return 6371000 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
-};
+    Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(toRad(bLon - aLon) / 2) ** 2
+  return 6371000 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x))
+}
 
-function GeoUpdater({ userId }) {
-   console.log("GeoUpdater mounted, userId =", userId)
-  const latestRef = useRef(null) // newest GPS fix, kept even while the socket is down
+/**
+ * Streams the labour's GPS to the socket server while they are ON duty.
+ * The server saves it (live search, "I've reached" check, admin map) and, if a live job
+ * is running, forwards it to that job's map room — so tracking works on every page.
+ * Mount it ONCE (LabourShell does that). `enabled=false` stops GPS completely.
+ */
+function GeoUpdater({ userId, enabled = true }) {
+  const latestRef = useRef(null)
   const sentRef = useRef({ t: 0, lat: null, lon: null })
 
   useEffect(() => {
-    console.log("[GeoUpdater] mounted, userId =", userId)
-    if (!userId) return
-    if (!navigator.geolocation) {
-      console.warn("[GeoUpdater] Geolocation not supported on this device")
-      return
-    }
+    if (!userId || !enabled) return
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return
 
     const socket = connectSocket({ userId })
 
@@ -36,35 +37,26 @@ function GeoUpdater({ userId }) {
       const moved = s.lat == null ? Infinity : distM(s.lat, s.lon, fix.lat, fix.lon)
       if (!force && Date.now() - s.t < MIN_INTERVAL_MS && moved < MIN_MOVE_M) return
       sentRef.current = { t: Date.now(), lat: fix.lat, lon: fix.lon }
-      console.log("[GeoUpdater] update-location sent", fix)
-      socket.emit("update-location", {
-        latitude: fix.lat,
-        longitude: fix.lon,
-        accuracy: fix.accuracy,
+      socket.emit('update-location', {
+        latitude: fix.lat, longitude: fix.lon, accuracy: fix.accuracy, heading: fix.heading, speed: fix.speed,
       })
     }
 
-    // on every (re)connect: announce identity, then push the latest known fix
-    const onConnect = () => {
-      console.log("[GeoUpdater] socket connected, emitting identity", userId)
-      socket.emit("identity", userId)
-      send(true)
-    }
-    const onConnectError = (err) =>
-      console.error("[GeoUpdater] socket connect_error:", err.message)
-
-    socket.on("connect", onConnect)
-    socket.on("connect_error", onConnectError)
+    const onConnect = () => send(true)
+    socket.on('connect', onConnect)
     if (socket.connected) onConnect()
 
     const watchId = navigator.geolocation.watchPosition(
       ({ coords }) => {
-        console.log("[GeoUpdater] GPS fix", coords.latitude, coords.longitude, "accuracy", coords.accuracy)
-        latestRef.current = { lat: coords.latitude, lon: coords.longitude, accuracy: coords.accuracy }
+        latestRef.current = {
+          lat: coords.latitude, lon: coords.longitude, accuracy: coords.accuracy,
+          heading: Number.isFinite(coords.heading) ? coords.heading : null,
+          speed: Number.isFinite(coords.speed) ? coords.speed : null,
+        }
         send()
       },
-      (err) => console.warn("[GeoUpdater] Geolocation error:", err.code, err.message), // code 1 = permission denied
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+      (err) => console.warn('[GeoUpdater] geolocation error:', err.code, err.message), // 1 = permission denied
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 }
     )
 
     // keeps a stationary labour "fresh" for the nearby search
@@ -73,10 +65,9 @@ function GeoUpdater({ userId }) {
     return () => {
       navigator.geolocation.clearWatch(watchId)
       clearInterval(heartbeat)
-      socket.off("connect", onConnect)
-      socket.off("connect_error", onConnectError)
+      socket.off('connect', onConnect)
     }
-  }, [userId])
+  }, [userId, enabled])
 
   return null
 }

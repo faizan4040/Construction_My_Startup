@@ -10,10 +10,8 @@ import FeatureProduct from "@/components/Website/FeatureProduct";
 import JustDropped from "@/components/Website/JustDropped";
 import HireLabour from "@/components/Website/HireLabour";
 import ShopBySlider from "@/components/Website/ShopBySlider";
-import PartnerDashboard from "@/components/Application/Labour/PartnerDashboard";
 // import BookNow from "@/components/Application/Labour/BookNow";
 import QuickActionCards from "@/components/Website/QuickActionCards";
-import GeoUpdater from "@/components/Application/Labour/GeoUpdater";
 import DeliveryDashboard from "@/components/Application/Delivery/DeliveryDashboard"; 
 import Testimonial from '@/components/Website/Testimonial'
 import Shopservicecards from "@/components/Website/Shopservicecards";
@@ -27,6 +25,10 @@ const Home = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const category = searchParams.get("category");
+
+  useEffect(() => {
+    if (auth?.role === "laber") router.replace("/partner/dashboard");
+  }, [auth?.role, router]);
 
   const [products, setProducts] = useState([]);
   const [categoryName, setCategoryName] = useState("");
@@ -53,13 +55,12 @@ const Home = () => {
     fetchFiltered();
   }, [category]);
 
-  // ── Labour partner: same pattern as before ──
+  // ── Labour partner: their home is the partner dashboard ──
   if (auth?.role === "laber") {
     return (
-      <>
-        <GeoUpdater userId={auth?._id} />
-        <PartnerDashboard />
-      </>
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="animate-spin text-gray-400" size={28} />
+      </div>
     );
   }
 

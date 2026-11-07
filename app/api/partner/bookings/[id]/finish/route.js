@@ -6,7 +6,7 @@ import Booking from "@/models/Booking.model";
 import Labour from "@/models/Labour.model";
 import { emitToUser, emitToAdmins } from "@/lib/socketEmit";
 import { decrypt, safeEqual } from "@/lib/crypto";
-import { calcSplit } from "@/lib/commission";
+import { calcSplitLive } from "@/lib/commission";
 import { settleBooking } from "@/lib/finance";
 
 const MAX_ATTEMPTS = 5;
@@ -41,7 +41,7 @@ export async function POST(req, context) {
     if (b.paymentMethod === "online" && b.paymentStatus !== "paid")
       return NextResponse.json({ message: "online payment is not confirmed yet" }, { status: 409 });
 
-    const split = calcSplit(b.fare);
+    const split = await calcSplitLive(b.fare);
     const done = await Booking.findOneAndUpdate(
       { _id: id, labour: s.userId, bookingStatus: "work_completed" },
       {

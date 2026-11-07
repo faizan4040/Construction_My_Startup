@@ -31,6 +31,41 @@ function WorkTimer({ startedAt }) {
   return <>{fmtDur(Math.max(0, Math.round((Date.now() - new Date(startedAt)) / 1000)))}</>
 }
 
+const STEPS = [
+  { key: 'confirmed', label: 'On the way', at: 'acceptedAt' },
+  { key: 'arrived', label: 'Arrived', at: 'arrivedAt' },
+  { key: 'started', label: 'Working', at: 'startedAt' },
+  { key: 'work_completed', label: 'Done', at: 'completedAt' },
+]
+const ORDER = { confirmed: 0, arrived: 1, started: 2, work_completed: 3, completed: 4 }
+const hhmm = (d) => (d ? new Date(d).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '')
+
+// Zomato-style progress: filled dots up to the current step, time under each finished step
+function Stepper({ status, b }) {
+  const cur = ORDER[status] ?? 0
+  return (
+    <div className="bg-zinc-50 border border-zinc-100 rounded-2xl px-4 pt-4 pb-3">
+      <div className="flex items-start">
+        {STEPS.map((s, i) => {
+          const done = i < cur, now = i === cur
+          return (
+            <React.Fragment key={s.key}>
+              <div className="flex flex-col items-center w-16 shrink-0">
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border-2 ${done ? 'bg-emerald-600 border-emerald-600 text-white' : now ? 'bg-white border-emerald-600 text-emerald-700' : 'bg-white border-zinc-200 text-zinc-300'}`}>
+                  {done ? '✓' : i + 1}
+                </span>
+                <span className={`mt-1 text-[10px] font-bold text-center ${done || now ? 'text-zinc-900' : 'text-zinc-400'}`}>{s.label}</span>
+                <span className="text-[9px] text-zinc-400 h-3">{done || now ? hhmm(b[s.at]) : ''}</span>
+              </div>
+              {i < STEPS.length - 1 && <div className={`flex-1 h-0.5 mt-3 rounded ${i < cur ? 'bg-emerald-600' : 'bg-zinc-200'}`} />}
+            </React.Fragment>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function ReviewCard({ bookingId, onDone }) {
   const [rating, setRating] = useState(0)
   const [hover, setHover] = useState(0)
@@ -76,6 +111,7 @@ export default function UserBookingTracker({ bookingId }) {
   const [b, setB] = useState(null)
   const [state, setState] = useState('loading')
   const [pos, setPos] = useState(null)
+  const [fix, setFix] = useState({ heading: null, at: 0 })
   const [stats, setStats] = useState(null)
   const [chat, setChat] = useState(false)
   const [cancelOpen, setCancelOpen] = useState(false)
@@ -88,7 +124,7 @@ export default function UserBookingTracker({ bookingId }) {
       const { data } = await axios.get(`/api/booking/${bookingId}`)
       const x = data.booking
       setB(x); setState('ready')
-      if (x.labourPosition && x.labourPosition.at > posAt.current) { posAt.current = x.labourPosition.at; setPos([x.labourPosition.lat, x.labourPosition.lon]) }
+      if (x.labourPosition && x.labourPosition.at > posAt.current) { posAt.current = x.labourPosition.at; setPos([x.labourPosition.lat, x.labourPosition.lon]); setFix((f) => ({ ...f, at: x.labourPosition.at })) }
       // payment not decided yet -> back to the payment screen
       if (['confirmed', 'arrived'].includes(x.bookingStatus) && !(x.paymentMethod === 'cash' || x.paymentStatus === 'paid')) router.replace('/user/checkout')
     } catch (e) {
@@ -103,7 +139,11 @@ export default function UserBookingTracker({ bookingId }) {
     const s = connectSocket()
     const join = () => joinJobRoom(bookingId)
     const onUpdate = () => load()
-    const onLoc = (p) => { posAt.current = p.at || Date.now(); setPos([p.latitude, p.longitude]) }
+    const onLoc = (p) => {
+      const at = p.at || Date.now()
+      if (at < posAt.current) return // older fix arrived late
+      posAt.current = at; setPos([p.latitude, p.longitude]); setFix({ heading: p.heading ?? null, at })
+    }
     s.on('connect', join); s.on('booking-update', onUpdate); s.on('labour-location', onLoc)
     if (s.connected) join()
     const poll = setInterval(() => document.visibilityState === 'visible' && load(), 15000)
@@ -148,7 +188,7 @@ export default function UserBookingTracker({ bookingId }) {
     <div className="pt-24 h-screen bg-zinc-100 overflow-hidden">
       <div className="h-full flex flex-col lg:flex-row">
         <div className="relative h-[42vh] lg:h-full lg:flex-1">
-          <LiveLabourMap sitePos={site} labourPos={pos} category={b.category} status={st} onStats={setStats} />
+          <LiveLabourMap sitePos={site} labourPos={pos} heading={fix.heading} lastAt={fix.at} category={b.category} status={st} onStats={setStats} />
           <div className="absolute top-4 left-4 z-[500]"><BackButton /></div>
           {cfg && (
             <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[500] flex items-center gap-2 bg-white/95 backdrop-blur px-4 py-2 rounded-full shadow-lg border border-zinc-100">
@@ -167,6 +207,7 @@ export default function UserBookingTracker({ bookingId }) {
                 : <ReviewCard bookingId={bookingId} onDone={() => router.push('/')} />
             ) : (
               <>
+                <Stepper status={st} b={b} />
                 {st === 'confirmed' && (
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-zinc-50 border border-zinc-100 rounded-2xl p-4">

@@ -292,6 +292,18 @@ function SearchPage() {
                 >
                   <RefreshCcw size={14} /> Retry Search
                 </motion.button>
+                {/* option 2: live labour busy / offline -> book a verified professional for a time slot */}
+                <div className="mt-6 w-full max-w-sm border border-zinc-200 rounded-2xl p-4 text-left bg-white">
+                  <p className="text-sm font-black text-zinc-900">Live labour busy?</p>
+                  <p className="text-xs text-zinc-500 mt-0.5">Book a verified professional for a fixed date & time. Pay online or cash after the work.</p>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/services')}
+                    className="mt-3 w-full bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold py-2.5 rounded-xl transition-colors"
+                  >
+                    Schedule a professional
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

@@ -33,7 +33,7 @@ export async function POST(request) {
     const getUser = await UserModel.findOne({
       email,
       deletedAt: null,   // ← fixed typo from original (was "deleteAt")
-    }).select("+password isEmailVerified email name role");
+    }).select("+password isEmailVerified email name role isBlocked blockReason");
 
     if (!getUser) {
       return response(false, 404, "Invalid login credentials.");
@@ -67,6 +67,15 @@ export async function POST(request) {
     const isPasswordValid = await getUser.comparePassword(password);
     if (!isPasswordValid) {
       return response(false, 400, "Invalid login credentials.");
+    }
+
+    /* ── Admin blocked this account (checked only after the password is right) ── */
+    if (getUser.isBlocked) {
+      return response(
+        false,
+        403,
+        `Your account has been blocked by admin${getUser.blockReason ? `: ${getUser.blockReason}` : "."} Please contact support.`
+      );
     }
 
     /* ── Generate & store OTP ── */

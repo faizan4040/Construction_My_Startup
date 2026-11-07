@@ -1,7 +1,7 @@
 import React from 'react'
 import {ListItemIcon, MenuItem} from '@mui/material'
 import Link from 'next/link'
-import { RemoveRedEye } from '@mui/icons-material'
+import RemoveRedEye from '@mui/icons-material/RemoveRedEye'
 
 
 const ViewAction = ({ href }) => {

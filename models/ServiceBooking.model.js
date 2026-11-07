@@ -45,7 +45,22 @@ const schema = new S(
     adminNote: { type: String, default: "" },
     adminSeen: { type: Boolean, default: false },
 
+    // registered labour account the admin assigned (gets the job on their dashboard)
+    assignedLabour: { type: S.Types.ObjectId, ref: "User", default: null },
+    labourProfile: { type: S.Types.ObjectId, ref: "Labour", default: null },
+    assignStatus: { type: String, enum: ["", "offered", "accepted", "declined"], default: "" },
+    offeredAt: Date,
+    labourAcceptedAt: Date,
+    declinedBy: [{ type: S.Types.ObjectId, ref: "User" }],
+
+    // money split, frozen when the job is completed
+    commissionRate: { type: Number, default: 0 },
+    adminCommission: { type: Number, default: 0 },
+    labourAmount: { type: Number, default: 0 },
+    cashCollectedBy: { type: String, enum: ["", "labour", "admin"], default: "" },
+
     confirmedAt: Date,
+    startedAt: Date,
     completedAt: Date,
     cancelledBy: { type: String, enum: ["", "customer", "admin", "system"], default: "" },
     cancelReason: { type: String, default: "" },
@@ -59,5 +74,6 @@ schema.index({ user: 1, createdAt: -1 });
 schema.index({ status: 1, createdAt: -1 });
 schema.index({ provider: 1, slotDate: 1, slotTime: 1 });
 schema.index({ razorpayOrderId: 1 }, { sparse: true });
+schema.index({ assignedLabour: 1, status: 1 });
 
 export default mongoose.models.ServiceBooking || mongoose.model("ServiceBooking", schema);

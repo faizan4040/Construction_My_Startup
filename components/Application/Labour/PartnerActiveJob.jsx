@@ -31,6 +31,7 @@ export default function PartnerActiveJob() {
   const [b, setB] = useState(null)
   const [state, setState] = useState('loading')
   const [myPos, setMyPos] = useState(null)
+  const [myHeading, setMyHeading] = useState(null)
   const [stats, setStats] = useState(null)
   const [chat, setChat] = useState(false)
   const [acting, setActing] = useState('')
@@ -46,6 +47,8 @@ export default function PartnerActiveJob() {
     try {
       const { data } = await axios.get('/api/partner/bookings/active')
       setB(data.booking); setState('ready')
+      const mp = data.booking?.myPosition
+      if (mp && !posRef.current) setMyPos([mp.lat, mp.lon])
     } catch (e) {
       if (e.response?.status === 401) router.push('/auth/login')
       else setState((s) => (s === 'ready' ? s : 'error'))
@@ -72,8 +75,15 @@ export default function PartnerActiveJob() {
     if (!bid || !live || !navigator.geolocation) return
     const id = navigator.geolocation.watchPosition(
       ({ coords }) => {
-        posRef.current = { latitude: coords.latitude, longitude: coords.longitude, accuracy: coords.accuracy }
+        const first = !posRef.current
+        posRef.current = {
+          latitude: coords.latitude, longitude: coords.longitude, accuracy: coords.accuracy,
+          heading: Number.isFinite(coords.heading) ? coords.heading : null,
+          speed: Number.isFinite(coords.speed) ? coords.speed : null,
+        }
         setMyPos([coords.latitude, coords.longitude])
+        setMyHeading(posRef.current.heading)
+        if (first) sendLabourLocationUpdate({ bookingId: bid, ...posRef.current }) // customer sees you at once
       },
       (e) => console.warn('gps', e.message),
       { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 }
@@ -131,7 +141,7 @@ export default function PartnerActiveJob() {
     <div className="pt-24 h-screen bg-zinc-100 overflow-hidden">
       <div className="h-full flex flex-col lg:flex-row">
         <div className="relative h-[42vh] lg:h-full lg:flex-1">
-          <LiveLabourMap sitePos={site} labourPos={myPos} category={b.category} status={st} onStats={setStats} />
+          <LiveLabourMap sitePos={site} labourPos={myPos} heading={myHeading} lastAt={Date.now()} category={b.category} status={st} onStats={setStats} labourLabel="You" />
           <div className="absolute top-4 left-4 z-[500]"><BackButton href="/partner/dashboard" /></div>
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[500] bg-white/95 backdrop-blur px-4 py-2 rounded-full shadow-lg border border-zinc-100">
             <span className="text-xs font-bold text-zinc-900 whitespace-nowrap">{LABEL[st]}</span>

@@ -3,11 +3,11 @@ import connectDB from "@/lib/databaseConnection";
 import { isAuthenticated } from "@/lib/authentication";
 import Booking from "@/models/Booking.model";
 import "@/models/User.model";
-import { calcSplit } from "@/lib/commission";
+import { calcSplit, getCommissionPercent } from "@/lib/commission";
 
 const ACTIVE = ["confirmed", "arrived", "started", "work_completed"];
 
-const shape = (b) => ({
+const shape = (b, pct) => ({
   _id: String(b._id),
   bookingStatus: b.bookingStatus,
   category: b.category,
@@ -21,7 +21,7 @@ const shape = (b) => ({
   duration: b.duration,
   ratePerUnit: b.ratePerUnit,
   fare: b.fare,
-  youEarn: b.labourAmount > 0 ? b.labourAmount : calcSplit(b.fare).labourAmount,
+  youEarn: b.labourAmount > 0 ? b.labourAmount : calcSplit(b.fare, pct).labourAmount,
   paymentMethod: b.paymentMethod || "",
   paymentStatus: b.paymentStatus,
   acceptedAt: b.acceptedAt,
@@ -36,6 +36,7 @@ export async function GET() {
     const session = await isAuthenticated("laber");
     if (!session.isAuth) return NextResponse.json({ message: "unauthorized" }, { status: 401 });
 
+    const pct = await getCommissionPercent("labour");
     const [active, history] = await Promise.all([
       Booking.find({ labour: session.userId, bookingStatus: { $in: ACTIVE } })
         .sort({ acceptedAt: -1 }).populate("user", "name").lean(),
@@ -43,7 +44,7 @@ export async function GET() {
         .sort({ updatedAt: -1 }).limit(20).populate("user", "name").lean(),
     ]);
 
-    return NextResponse.json({ active: active.map(shape), history: history.map(shape) });
+    return NextResponse.json({ active: active.map((b) => shape(b, pct)), history: history.map((b) => shape(b, pct)) });
   } catch (error) {
     console.error("partner bookings error", error);
     return NextResponse.json({ message: "something went wrong" }, { status: 500 });

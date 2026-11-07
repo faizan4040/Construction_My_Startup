@@ -15,6 +15,7 @@ const NAV_LINKS = [
   { label: "Home", href: "/partner/dashboard" },
   { label: "Pending Requests", href: "/partner/pending-requests", badge: true },
   { label: "Active Job", href: "/partner/active-job" },
+  { label: "Service Jobs", href: "/partner/service-jobs" },
   { label: "Wallet", href: "/partner/wallet" },
   { label: "Bookings", href: "/partner/bookings" },
 ];
@@ -165,7 +166,7 @@ export default function LabourHeader() {
     if (loggingOut) return;
     try {
       setLoggingOut(true);
-      await axios.get("/api/auth/logout");
+      await axios.post("/api/auth/logout"); // the route only accepts POST
     } catch (error) {
       console.log(error);
     } finally {

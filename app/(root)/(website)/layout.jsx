@@ -8,7 +8,7 @@ import Footer from '@/components/Website/Footer'
 import Header from '@/components/Website/Header'
 import CategoryMiniNavbar from '@/components/Website/CategoryMiniNavbar'
 import LabourHeader from '@/components/Website/LabourHeader'
-import GeoUpdater from '@/components/Application/Labour/GeoUpdater'
+import LabourBackground from '@/components/Application/Labour/LabourBackground'
 
 const Layout = ({ children }) => {
   const auth = useSelector(store => store.authStore.auth)
@@ -23,7 +23,7 @@ const Layout = ({ children }) => {
 
        {/* keeps this labour's live GPS location flowing to the server
            on every page they visit, not just the public homepage */}
-       {isLabour && <GeoUpdater userId={auth?._id ?? auth?.id} />}
+       {isLabour && <LabourBackground />}
 
           <main>
            {children}

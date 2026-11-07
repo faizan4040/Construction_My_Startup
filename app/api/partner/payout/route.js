@@ -5,7 +5,8 @@ import { isAuthenticated } from "@/lib/authentication";
 import Payout from "@/models/Payout.model";
 import PayoutAccount from "@/models/PayoutAccount.model";
 import Ledger from "@/models/Ledger.model";
-import { getLabourWallet, MIN_PAYOUT } from "@/lib/finance";
+import { getLabourWallet } from "@/lib/finance";
+import { getSettings } from "@/lib/settings";
 import { executePayout } from "@/lib/payouts";
 import { emitToAdmins } from "@/lib/socketEmit";
 
@@ -19,6 +20,7 @@ export async function POST(req) {
     const s = await isAuthenticated("laber");
     if (!s.isAuth) return NextResponse.json({ message: "unauthorized" }, { status: 401 });
 
+    const { minPayout: MIN_PAYOUT } = await getSettings();
     const amount = Math.floor(Number((await req.json()).amount));
     if (!Number.isFinite(amount) || amount < MIN_PAYOUT) throw new HttpError(400, `minimum withdrawal is ₹${MIN_PAYOUT}`);
 
@@ -41,7 +43,7 @@ export async function POST(req) {
       await Payout.updateOne({ _id: payout._id, status: "requested" }, { $set: { status: "approved", reviewedAt: new Date() } });
       await executePayout(payout._id);
     }
-    await emitToAdmins("admin-booking-update", { status: "payout_requested" });
+    await emitToAdmins("admin-booking-update", { kind: "wallet", status: "payout_requested" });
     return NextResponse.json({ success: true, payoutId: payout._id });
   } catch (error) {
     if (error instanceof HttpError) return NextResponse.json({ message: error.message }, { status: error.status });

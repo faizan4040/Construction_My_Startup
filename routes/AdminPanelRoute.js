@@ -94,3 +94,8 @@ export const ADMIN_ORDER_DETAILS = (order_id) => order_id ? `/admin/orders/detai
 
 
 export const ADMIN_TRACK_EARNING = '/admin/track-earning'
+
+// Labour system
+export const ADMIN_LABOUR_JOBS = '/admin/labour-jobs'
+export const ADMIN_LABOURS = '/admin/labours'
+export const ADMIN_LABOUR_ADD = '/admin/services/labours'

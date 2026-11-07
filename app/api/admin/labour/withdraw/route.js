@@ -5,7 +5,8 @@ import { isAuthenticated } from "@/lib/authentication";
 import Payout from "@/models/Payout.model";
 import PayoutAccount from "@/models/PayoutAccount.model";
 import Ledger from "@/models/Ledger.model";
-import { getPlatformSummary, MIN_PAYOUT } from "@/lib/finance";
+import { getPlatformSummary } from "@/lib/finance";
+import { getSettings } from "@/lib/settings";
 import { executePayout } from "@/lib/payouts";
 
 class HttpError extends Error { constructor(status, message) { super(message); this.status = status; } }
@@ -17,6 +18,7 @@ export async function POST(req) {
     const s = await isAuthenticated("admin");
     if (!s.isAuth) return NextResponse.json({ message: "unauthorized" }, { status: 401 });
 
+    const { minPayout: MIN_PAYOUT } = await getSettings();
     const amount = Math.floor(Number((await req.json()).amount));
     if (!Number.isFinite(amount) || amount < MIN_PAYOUT) throw new HttpError(400, `minimum is ₹${MIN_PAYOUT}`);
 

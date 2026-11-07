@@ -1,7 +1,8 @@
 'use client'
 
 import BreadCrumb from '@/components/Application/Admin/BreadCrumb'
-import Editor from '@/components/Application/Admin/Editor'
+import dynamic from 'next/dynamic'
+const Editor = dynamic(() => import('@/components/Application/Admin/Editor'), { ssr: false })
 import ButtonLoading from '@/components/Application/ButtonLoading'
 import { Card, CardContent } from '@/components/ui/card'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'

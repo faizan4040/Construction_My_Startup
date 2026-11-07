@@ -12,7 +12,6 @@ import PricingModal from "./PricingModal";
 import PartnerLiveRequests from "./PartnerLiveRequests";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "@/store/reducer/authReducer";
-import GeoUpdater from "@/components/Application/Labour/GeoUpdater";
 /* ================= STEPS (Labour flow) ================= */
 
 const STEPS = [
@@ -124,8 +123,7 @@ function PartnerDashboard() {
   const isLive = activeStep === 8 && userData?.partnerStatus === "approved";
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-100 to-gray-200 px-4 pt-40 pb-20">
-    {isLive && <GeoUpdater userId={userData?._id ?? userData?.id} />}
+    <div className="min-h-screen bg-linear-to-br from-gray-100 to-gray-200 px-4 pt-28 pb-20">
       <div className="max-w-7xl mx-auto space-y-16">
         <div>
           <h1 className="text-4xl font-bold">Partner Onboarding</h1>

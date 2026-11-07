@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import connectDb from "@/lib/databaseConnection";
 import Booking from "@/models/Booking.model";
 import Payout from "@/models/Payout.model";
-import { verifyWebhookSignature } from "@/lib/razorpay";
-import { markBookingPaid } from "@/lib/finance";
+import { rzp, verifyWebhookSignature } from "@/lib/razorpay";
+import { markBookingPaid, recordDuesPayment } from "@/lib/finance";
 import { failPayout } from "@/lib/payouts";
 import { markServicePaid } from "@/lib/serviceFinance";
 
@@ -31,11 +31,19 @@ export async function POST(req) {
       });
 
       if (!labourJob) {
-        await markServicePaid({
+        const service = await markServicePaid({
           orderId: pay.order_id,
           paymentId: pay.id,
           amountPaise: pay.amount
         });
+
+        // labour paying their cash-commission dues
+        if (!service) {
+          const order = evt.payload?.order?.entity || (await rzp().orders.fetch(pay.order_id).catch(() => null));
+          if (order?.notes?.kind === "labour_dues" && order.notes.labour) {
+            await recordDuesPayment({ labourId: order.notes.labour, amount: pay.amount / 100, paymentId: pay.id, channel: "online" });
+          }
+        }
       }
     } else if (evt.event === "refund.processed") {
       const refund = evt.payload?.refund?.entity;
